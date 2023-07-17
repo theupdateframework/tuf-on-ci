@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+# for git dependencies
+allow-direct-references = true
+
+[project]
+name = "playground-sign"
+version = "0.0.1"
+description = "TUF signing tool for Repository Plaground"
+readme = "README.md"
+dependencies = [
+  "sigstore @ git+https://github.com/sigstore/sigstore-python@7d4af6c5f6732ef12e5bb455962321ebe5cce137",
+  "securesystemslib[gcpkms,hsm,sigstore] @ git+https://github.com/secure-systems-lab/securesystemslib",
+  "tuf @ git+https://github.com/theupdateframework/python-tuf",
+  "click",
+]
+requires-python = ">=3.10"
+
+[project.scripts]
+playground-delegate = "playground_sign:delegate"
+playground-sign = "playground_sign:sign"
+
+[[tool.mypy.overrides]]
+module = [
+  "securesystemslib.*",
+]
+ignore_missing_imports = "True"
+
+[tool.ruff]
+# pycodestyle errors(E) and Pyflakes (F) are enabled by default.
+# Also enable isort (I) and pep8-naming (N) .
+select = ["E", "F", "I", "N"]

@@ -1,0 +1,64 @@
+name: 'Online version bump'
+description: 'Produce new versions of online metadata that is about to expire'
+
+inputs:
+  gcp_workload_identity_provider:
+    description: 'Google Cloud workload identity provider'
+    required: false
+    default: ''
+  gcp_service_account:
+    description: 'Google Cloud service account name'
+    required: false
+    default: ''
+  metadata_path:
+    description: 'Path where to store the metadata files in the published repository'
+    required: true
+  targets_path:
+    description: 'Path where to store the target files in the published repository'
+    required: true
+
+outputs:
+  generated:
+    description: "'true' if a new repository version was uploaded"
+    value: ${{ steps.online-bump.outputs.generated }}
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+      with:
+        path: repository
+
+    - name: Authenticate to Google Cloud
+      if: inputs.gcp_workload_identity_provider != ''
+      uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d
+      with:
+        token_format: access_token
+        workload_identity_provider: ${{ inputs.gcp_workload_identity_provider }}
+        service_account: ${{ inputs.gcp_service_account }}
+
+    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435
+      with:
+        python-version: 3.11
+
+    - run: pip install $GITHUB_ACTION_PATH/../../repo/
+      shell: bash
+
+    - name: Bump online role versions
+      id: online-bump
+      run: |
+        mkdir publish
+        cd repository
+        if playground-bump-online --push --metadata ${{ inputs.metadata_path}} --targets ${{ inputs.targets_path}} ../publish; then
+          find "../publish" -type f | xargs ls -lh
+          echo "generated=true" >> $GITHUB_OUTPUT
+        else
+          echo "generated=false" >> $GITHUB_OUTPUT
+        fi
+      shell: bash
+
+    - name: Upload repository artifact for GitHub Pages
+      if: steps.online-bump.outputs.generated == 'true'
+      uses: actions/upload-pages-artifact@253fd476ed429e83b7aae64a92a75b4ceb1a17cf
+      with:
+        path: publish/

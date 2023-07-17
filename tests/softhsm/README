@@ -1,0 +1,7 @@
+# How to create a new SoftHSM "environment"
+
+echo "directories.tokendir = tokens-user1/" > softhsm2.conf
+openssl genpkey -out eckey.pem -algorithm EC -pkeyopt ec_paramgen_curve:secp384r1 -pkeyopt ec_param_enc:named_curve
+SOFTHSM2_CONF="softhsm2.conf" softhsm2-util --init-token --slot 0 --label "mytoken" --so-pin 0000 --pin 0000
+SOFTHSM2_CONF="softhsm2.conf" softhsm2-util --import eckey.pem --token mytoken --label "mykey" --id 02 --pin 0000
+

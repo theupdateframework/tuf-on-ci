@@ -1,0 +1,72 @@
+name: 'Signing event'
+description: 'TUF signing event management for Repository Playground'
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+      with:
+        fetch-depth: 0
+
+    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435
+      with:
+        python-version: 3.11
+
+    - run: pip install $GITHUB_ACTION_PATH/../../repo/
+      shell: bash
+
+    - id: status
+      run: |
+        if playground-status >> status-output;  then
+          echo "status=success" >> $GITHUB_OUTPUT
+        else
+          echo "status=failure" >> $GITHUB_OUTPUT
+        fi
+        cat status-output
+      shell: bash
+
+    - id: file-issue
+      uses: actions/github-script@d556feaca394842dc55e4734bf3bb9f685482fa0
+      env:
+        STATUS: ${{ steps.status.outputs.status }}
+      with:
+        script: |
+          const fs = require('fs')
+          message = fs.readFileSync('./status-output').toString()
+
+          issue = 0
+          const repo = context.repo.owner + "/" + context.repo.repo
+          const issues = await github.rest.search.issuesAndPullRequests({
+            q: "label:" + process.env.GITHUB_REF_NAME + "+state:open+type:issue+repo:" + repo,
+          })
+          if (issues.data.total_count > 1) {
+            core.setFailed("Found more than one issue with same label")
+          } else if (issues.data.total_count == 0) {
+            const response = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: "Signing event: " + process.env.GITHUB_REF_NAME,
+              body: "Processing signing event " + process.env.GITHUB_REF_NAME + ", please wait.",
+              labels: [process.env.GITHUB_REF_NAME],
+            })
+            issue = response.data.number
+            console.log("Created issue #" + issue)
+          } else {
+            issue = issues.data.items[0].number
+            console.log("Found existing issue #" + issue)
+          }
+
+          if (process.env.STATUS == 'success') {
+            pr_url = new URL("https://github.com/" + repo + "/compare/main..." + process.env.GITHUB_REF_NAME)
+            pr_url.searchParams.set("expand", "1")
+            pr_url.searchParams.set("title", "Signing event " + process.env.GITHUB_REF_NAME)
+            pr_url.searchParams.set("body", "Signing event " + process.env.GITHUB_REF_NAME + " is successful and ready to merge.\n\nCloses #" + issue + ".")
+            message += "### Signing event is successful\n\n"
+            message += "Threshold of signatures has been reached. A [pull request](" + pr_url + ") can be opened."
+          }
+
+          github.rest.issues.createComment({
+            issue_number: issue,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: message,
+          })

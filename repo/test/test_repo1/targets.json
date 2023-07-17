@@ -1,0 +1,17 @@
+{
+ "signatures": [
+  {
+   "keyid": "95da323daa78f7b2557ae91e23be619ff932f9aec035abd4e40301405b363999",
+   "sig": "XXX"
+  }
+ ],
+ "signed": {
+  "_type": "targets",
+  "expires": "2022-02-03T01:02:03Z",
+  "spec_version": "1.0.31",
+  "targets": {},
+  "version": 1,
+  "x-playground-expiry-period": 123,
+  "x-playground-signing-period": 40
+ }
+}

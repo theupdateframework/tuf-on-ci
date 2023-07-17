@@ -1,0 +1,41 @@
+name: 'Offline version bump'
+description: 'Create signing events for offline signed metadata that is about to expire'
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+      with:
+        fetch-depth: 0
+
+    - uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435
+      with:
+        python-version: 3.11
+
+    - run: pip install $GITHUB_ACTION_PATH/../../repo/
+      shell: bash
+
+    - name: Bump offline role versions
+      id: offline-bump
+      run: |
+        events=$(playground-bump-offline --push)
+        echo events="$events"
+        echo events="$events" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Dispatch signing events
+      if: steps.offline-bump.outputs.events != ''
+      env:
+        EVENTS: ${{ steps.offline-bump.outputs.events }}
+      uses: actions/github-script@d556feaca394842dc55e4734bf3bb9f685482fa0
+      with:
+        script: |
+          console.log('Dispatching events: ', process.env.EVENTS)
+          process.env.EVENTS.trim().split(' ').forEach(event => {
+            github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'signing-event.yml',
+              ref: event,
+            })
+          })
