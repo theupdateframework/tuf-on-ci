@@ -11,7 +11,7 @@
   "spec_version": "1.0.31",
   "targets": {},
   "version": 1,
-  "x-playground-expiry-period": 123,
-  "x-playground-signing-period": 40
+  "x-tuf-on-ci-expiry-period": 123,
+  "x-tuf-on-ci-signing-period": 40
  }
 }

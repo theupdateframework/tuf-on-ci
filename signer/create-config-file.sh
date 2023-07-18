@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Run this script in the folder where the TUF repository resides to
+# Run this script in the folder where the TUF-on-CI repository resides to
 # initialize the config.
 
 set -u
@@ -35,10 +35,10 @@ if [ ! -f ${YKSLIB} ]; then
     echo "Could not find a PKCS library at path ${YKSLIB}"
     echo "Please install a PKCS library, or enter a path where one is installed:"
     read YKSLIB
-    echo "Using ${YKSLIB}. This can changed later via 'pykcs11lib' in file .playground-sign.ini"
+    echo "Using ${YKSLIB}. This can changed later via 'pykcs11lib' in file .tuf-on-ci-sign.ini"
 fi
 
-cat > .playground-sign.ini <<EOF
+cat > .tuf-on-ci-sign.ini <<EOF
 [settings]
 # Path to PKCS#11 module
 pykcs11lib = ${YKSLIB}

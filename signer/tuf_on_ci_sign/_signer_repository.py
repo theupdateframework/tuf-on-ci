@@ -1,6 +1,6 @@
 # Copyright 2023 Google LLC
 
-"""Internal repository module for playground signer tool"""
+"""Internal repository module for TUF-on-CI signer tools"""
 
 import filecmp
 import json
@@ -148,7 +148,7 @@ class SignerRepository(Repository):
         """Return true if current role metadata is unsigned by user"""
         md = self.open(rolename)
         for key in self._get_keys(rolename):
-            keyowner = key.unrecognized_fields["x-playground-keyowner"]
+            keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
             if keyowner == self.user_name:
                 try:
                     payload = CanonicalJSONSerializer().serialize(md.signed)
@@ -160,7 +160,7 @@ class SignerRepository(Repository):
         # the current version
         if rolename == "root":
             for key in self._get_keys(rolename, True):
-                keyowner = key.unrecognized_fields["x-playground-keyowner"]
+                keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
                 if keyowner == self.user_name:
                     try:
                         payload = CanonicalJSONSerializer().serialize(md.signed)
@@ -241,7 +241,7 @@ class SignerRepository(Repository):
             return self._get_secret(secret, role)
 
         if key.keyid not in self._signers:
-            # TODO Get key uri from .playground-sign.ini, avoid if-else here
+            # TODO Get key uri from config file, avoid if-else here
             if key.keytype == "sigstore-oidc":
                 self._signers[key.keyid] = Signer.from_priv_key_uri(
                     "sigstore:?ambient=false", key, secret_handler
@@ -285,8 +285,8 @@ class SignerRepository(Repository):
                 md: Metadata = Metadata(Root())
             else:
                 md = Metadata(Targets())
-            md.signed.unrecognized_fields["x-playground-expiry-period"] = 0
-            md.signed.unrecognized_fields["x-playground-signing-period"] = 0
+            md.signed.unrecognized_fields["x-tuf-on-ci-expiry-period"] = 0
+            md.signed.unrecognized_fields["x-tuf-on-ci-signing-period"] = 0
         else:
             with open(fname, "rb") as f:
                 md = Metadata.from_bytes(f.read())
@@ -303,7 +303,7 @@ class SignerRepository(Repository):
         md.signed.version = self._known_good_version(role) + 1
 
         # Set expiry based on custom metadata
-        days = md.signed.unrecognized_fields["x-playground-expiry-period"]
+        days = md.signed.unrecognized_fields["x-tuf-on-ci-expiry-period"]
         md.signed.expires = datetime.utcnow() + timedelta(days=days)
 
         # figure out if there are open invites to delegations of this role
@@ -343,7 +343,7 @@ class SignerRepository(Repository):
             md.signatures[key.keyid] = Signature(key.keyid, "")
 
             # Mark role as unsigned if user is a signer (and there are no open invites)
-            keyowner = key.unrecognized_fields["x-playground-keyowner"]
+            keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
             if keyowner == self.user_name and not open_invites:
                 if role not in self.unsigned:
                     self.unsigned.append(role)
@@ -366,16 +366,14 @@ class SignerRepository(Repository):
         timestamp_role = root.get_delegated_role("timestamp")
         snapshot_role = root.get_delegated_role("snapshot")
         timestamp_expiry = timestamp_role.unrecognized_fields[
-            "x-playground-expiry-period"
+            "x-tuf-on-ci-expiry-period"
         ]
         timestamp_signing = timestamp_role.unrecognized_fields.get(
-            "x-playground-signing-period"
+            "x-tuf-on-ci-signing-period"
         )
-        snapshot_expiry = snapshot_role.unrecognized_fields[
-            "x-playground-expiry-period"
-        ]
+        snapshot_expiry = snapshot_role.unrecognized_fields["x-tuf-on-ci-expiry-period"]
         snapshot_signing = snapshot_role.unrecognized_fields.get(
-            "x-playground-signing-period"
+            "x-tuf-on-ci-signing-period"
         )
 
         if timestamp_signing is None:
@@ -410,16 +408,16 @@ class SignerRepository(Repository):
 
             # set online role periods
             timestamp.unrecognized_fields[
-                "x-playground-expiry-period"
+                "x-tuf-on-ci-expiry-period"
             ] = online_config.timestamp_expiry
             timestamp.unrecognized_fields[
-                "x-playground-signing-period"
+                "x-tuf-on-ci-signing-period"
             ] = online_config.timestamp_signing
             snapshot.unrecognized_fields[
-                "x-playground-expiry-period"
+                "x-tuf-on-ci-expiry-period"
             ] = online_config.snapshot_expiry
             snapshot.unrecognized_fields[
-                "x-playground-signing-period"
+                "x-tuf-on-ci-signing-period"
             ] = online_config.snapshot_signing
 
     def get_role_config(self, rolename: str) -> OfflineConfig | None:
@@ -442,8 +440,8 @@ class SignerRepository(Repository):
         except ValueError:
             return None
 
-        expiry = delegated.unrecognized_fields["x-playground-expiry-period"]
-        signing = delegated.unrecognized_fields["x-playground-signing-period"]
+        expiry = delegated.unrecognized_fields["x-tuf-on-ci-expiry-period"]
+        signing = delegated.unrecognized_fields["x-tuf-on-ci-signing-period"]
         threshold = role.threshold
         signers = []
         # Include current invitees on config
@@ -454,7 +452,7 @@ class SignerRepository(Repository):
         for keyid in role.keyids:
             try:
                 key = delegator.get_key(keyid)
-                signers.append(key.unrecognized_fields["x-playground-keyowner"])
+                signers.append(key.unrecognized_fields["x-tuf-on-ci-keyowner"])
             except ValueError:
                 pass
 
@@ -483,7 +481,7 @@ class SignerRepository(Repository):
             # Find signers key
             is_signer = False
             for key in self._get_keys(rolename):
-                if signer == key.unrecognized_fields["x-playground-keyowner"]:
+                if signer == key.unrecognized_fields["x-tuf-on-ci-keyowner"]:
                     is_signer = True
 
             # If signer does not have key, add invitation
@@ -514,10 +512,10 @@ class SignerRepository(Repository):
 
             for keyid in role.keyids:
                 key = delegator.get_key(keyid)
-                if key.unrecognized_fields["x-playground-keyowner"] in config.signers:
+                if key.unrecognized_fields["x-tuf-on-ci-keyowner"] in config.signers:
                     # signer is still a signer
                     config.signers.remove(
-                        key.unrecognized_fields["x-playground-keyowner"]
+                        key.unrecognized_fields["x-tuf-on-ci-keyowner"]
                     )
                 else:
                     # signer was removed
@@ -530,9 +528,7 @@ class SignerRepository(Repository):
                 and rolename in self._invites[self.user_name]
             )
             if invited and signing_key:
-                signing_key.unrecognized_fields[
-                    "x-playground-keyowner"
-                ] = self.user_name
+                signing_key.unrecognized_fields["x-tuf-on-ci-keyowner"] = self.user_name
                 delegator.add_key(signing_key, rolename)
 
                 self._invites[self.user_name].remove(rolename)
@@ -554,16 +550,16 @@ class SignerRepository(Repository):
 
         # Modify the role itself
         with self.edit(rolename) as signed:
-            expiry = signed.unrecognized_fields.get("x-playground-expiry-period")
-            signing = signed.unrecognized_fields.get("x-playground-signing-period")
+            expiry = signed.unrecognized_fields.get("x-tuf-on-ci-expiry-period")
+            signing = signed.unrecognized_fields.get("x-tuf-on-ci-signing-period")
             if expiry == config.expiry_period and signing == config.signing_period:
                 raise AbortEdit(f"No changes to {rolename}")
 
             signed.unrecognized_fields[
-                "x-playground-expiry-period"
+                "x-tuf-on-ci-expiry-period"
             ] = config.expiry_period
             signed.unrecognized_fields[
-                "x-playground-signing-period"
+                "x-tuf-on-ci-signing-period"
             ] = config.signing_period
 
         state_file_path = os.path.join(self._dir, ".signing-event-state")
@@ -585,10 +581,10 @@ class SignerRepository(Repository):
             signed = self.targets(rolename)
             old_signed = self._known_good_targets(rolename)
 
-        expiry = signed.unrecognized_fields["x-playground-expiry-period"]
-        signing = signed.unrecognized_fields["x-playground-signing-period"]
-        old_expiry = old_signed.unrecognized_fields.get("x-playground-expiry-period")
-        old_signing = old_signed.unrecognized_fields.get("x-playground-signing-period")
+        expiry = signed.unrecognized_fields["x-tuf-on-ci-expiry-period"]
+        signing = signed.unrecognized_fields["x-tuf-on-ci-signing-period"]
+        old_expiry = old_signed.unrecognized_fields.get("x-tuf-on-ci-expiry-period")
+        old_signing = old_signed.unrecognized_fields.get("x-tuf-on-ci-signing-period")
 
         output.append(blue(f"{rolename} v{signed.version}"))
 
@@ -612,9 +608,9 @@ class SignerRepository(Repository):
         def _get_signer_name(key: Key) -> str:
             if name in ["timestamp", "snapshot"]:
                 # there's no "signer" in the online case: use signing system as signer
-                uri = key.unrecognized_fields["x-playground-online-uri"]
+                uri = key.unrecognized_fields["x-tuf-on-ci-online-uri"]
                 return uri.split(":")[0]
-            return key.unrecognized_fields["x-playground-keyowner"]
+            return key.unrecognized_fields["x-tuf-on-ci-keyowner"]
 
         output = []
         delegations: dict[str, Role] = {}
@@ -718,7 +714,7 @@ class SignerRepository(Repository):
         """Sign without payload changes"""
         md = self.open(rolename)
         for key in self._get_keys(rolename):
-            keyowner = key.unrecognized_fields["x-playground-keyowner"]
+            keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
             if keyowner == self.user_name:
                 self._sign(rolename, md, key)
                 self._write(rolename, md)
@@ -728,7 +724,7 @@ class SignerRepository(Repository):
         # in previous version
         if rolename == "root":
             for key in self._get_keys(rolename, True):
-                keyowner = key.unrecognized_fields["x-playground-keyowner"]
+                keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
                 if keyowner == self.user_name:
                     self._sign(rolename, md, key)
                     self._write(rolename, md)

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Run a end-to-end test of repository-playground locally
+# Run a end-to-end test of TUF-on-CI locally
 # This emulates:
 # * GitHub Actions
 # * Hardware signing
@@ -14,8 +14,8 @@
 # $ brew install softhsm swig libfaketime
 #
 # Python dependencies
-# * signer: pip install ./playground/signer/
-# * repo: pip install ./playground/repo/
+# * signer: pip install ./signer/
+# * repo: pip install ./repo/
 # * pynacl: pip install pynacl  # for the testing ed25519 key
 #
 #
@@ -28,7 +28,7 @@
 #   + repo/
 #      + git/ -- the repository used for emulate GitHub Actions, like snapshot
 #   + signer/
-#      + git/ -- the repository used to emulate human user running playground-delegate and sign
+#      + git/ -- the repository used to emulate human user running tuf-on-ci-delegate and sign
 
 set -euo pipefail
 
@@ -68,7 +68,7 @@ git_repo()
 {
     git \
         -C $REPO_GIT \
-        -c user.name=repository-playground \
+        -c user.name=tuf-on-ci \
         -c user.email=41898282+github-actions[bot]@users.noreply.github.com \
         -c commit.gpgsign=false \
         $@
@@ -107,14 +107,14 @@ signer_setup()
     # Set user configuration
     echo -e "[settings]\n" \
          "pykcs11lib = $SOFTHSMLIB\n" \
-         "user-name = @playground$USER\n" \
+         "user-name = @tuf-on-ci-$USER\n" \
          "push-remote = origin\n" \
-         "pull-remote = origin\n" > $SIGNER_GIT/.playground-sign.ini
+         "pull-remote = origin\n" > $SIGNER_GIT/.tuf-on-ci-sign.ini
 }
 
 signer_init()
 {
-    # run playground-delegate: creates a commit, pushes it to remote branch
+    # run tuf-on-ci-delegate: creates a commit, pushes it to remote branch
     USER=$1
     EVENT=$2
 
@@ -139,12 +139,12 @@ signer_init()
 
     for line in "${INPUT[@]}"; do
         echo $line
-    done | playground-delegate $EVENT >> $SIGNER_DIR/out 2>&1
+    done | tuf-on-ci-delegate $EVENT >> $SIGNER_DIR/out 2>&1
 }
 
 signer_change_root_signer()
 {
-    # run playground-delegate to change root signer from user1 to user2:
+    # run tuf-on-ci-delegate to change root signer from user1 to user2:
     USER1=$1
     USER2=$2
     EVENT=$3
@@ -158,7 +158,7 @@ signer_change_root_signer()
     INPUT=(
         "root"              # select role to modify
         "1"                 # Configure root? [1: configure signers]
-        "@playground$USER2"  # Enter list of signers
+        "@tuf-on-ci-$USER2"  # Enter list of signers
         ""                 # Configure root? [enter to continue]
         ""                  # press enter to push
     )
@@ -167,12 +167,12 @@ signer_change_root_signer()
 
     for line in "${INPUT[@]}"; do
         echo $line
-    done | playground-delegate $EVENT >> $SIGNER_DIR/out 2>&1
+    done | tuf-on-ci-delegate $EVENT >> $SIGNER_DIR/out 2>&1
 }
 
 signer_init_shorter_snapshot_expiry()
 {
-    # run playground-delegate: creates a commit, pushes it to remote branch
+    # run tuf-on-ci-delegate: creates a commit, pushes it to remote branch
     USER=$1
     EVENT=$2
 
@@ -200,12 +200,12 @@ signer_init_shorter_snapshot_expiry()
 
     for line in "${INPUT[@]}"; do
         echo $line
-    done | playground-delegate $EVENT >> $SIGNER_DIR/out 2>&1
+    done | tuf-on-ci-delegate $EVENT >> $SIGNER_DIR/out 2>&1
 }
 
 signer_init_multiuser()
 {
-    # run playground-delegate: creates a commit, pushes it to remote branch
+    # run tuf-on-ci-delegate: creates a commit, pushes it to remote branch
     USER=$1
     EVENT=$2
 
@@ -216,7 +216,7 @@ signer_init_multiuser()
     INPUT=(
         ""                  # Configure root? [enter to continue]
         "1"                 # Configure targets? [1: configure signers]
-        "@playgrounduser1, @playgrounduser2" # Enter signers
+        "@tuf-on-ci-user1, @tuf-on-ci-user2" # Enter signers
         "2"                 # Enter threshold
         ""                  # Configure targets? [enter to continue]
         "1"                 # Configure online roles? [1: configure key]
@@ -232,12 +232,12 @@ signer_init_multiuser()
 
     for line in "${INPUT[@]}"; do
         echo $line
-    done | playground-delegate $EVENT >> $SIGNER_DIR/out 2>&1
+    done | tuf-on-ci-delegate $EVENT >> $SIGNER_DIR/out 2>&1
 }
 
 signer_accept_invite()
 {
-    # run playground-sign: creates a commit, pushes it to remote branch
+    # run tuf-on-ci-sign: creates a commit, pushes it to remote branch
     USER=$1
     EVENT=$2
 
@@ -256,13 +256,13 @@ signer_accept_invite()
 
     for line in "${INPUT[@]}"; do
         echo $line
-    done | playground-sign $EVENT >> $SIGNER_DIR/out 2>&1
+    done | tuf-on-ci-sign $EVENT >> $SIGNER_DIR/out 2>&1
 
 }
 
 signer_sign()
 {
-    # run playground-sign: creates a commit, pushes it to remote branch
+    # run tuf-on-ci-sign: creates a commit, pushes it to remote branch
     USER=$1
 
     EVENT=$2
@@ -280,7 +280,7 @@ signer_sign()
 
     for line in "${INPUT[@]}"; do
         echo $line
-    done | playground-sign $EVENT >> $SIGNER_DIR/out 2>&1
+    done | tuf-on-ci-sign $EVENT >> $SIGNER_DIR/out 2>&1
 }
 
 signer_add_targets()
@@ -328,7 +328,7 @@ signer_modify_targets()
 
 non_signer_change_online_delegation()
 {
-    # run playground-delegate: creates a commit, pushes it to remote branch
+    # run tuf-on-ci-delegate: creates a commit, pushes it to remote branch
     # this is called by someone who is not a root signer
     USER=$1
     EVENT=$2
@@ -349,7 +349,7 @@ non_signer_change_online_delegation()
 
     for line in "${INPUT[@]}"; do
         echo $line
-    done | playground-delegate $EVENT timestamp >> $SIGNER_DIR/out 2>&1
+    done | tuf-on-ci-delegate $EVENT timestamp >> $SIGNER_DIR/out 2>&1
 }
 
 repo_merge()
@@ -361,9 +361,9 @@ repo_merge()
     git_repo fetch --quiet origin
     git_repo merge --quiet origin/$EVENT
 
-    # run playground-status to check that all is ok
+    # run tuf-on-ci-status to check that all is ok
     cd $REPO_GIT
-    playground-status >> $REPO_DIR/out
+    tuf-on-ci-status >> $REPO_DIR/out
 
     git_repo push --quiet
 }
@@ -377,12 +377,12 @@ repo_status_fail()
     git_repo checkout --quiet $EVENT
     git_repo pull --quiet
 
-    # run playground-status, expect failure
-    # Note that playground-status may make a commit (to modify targets metadata) even if end result is failure
+    # run tuf-on-ci-status, expect failure
+    # Note that tuf-on-ci-status may make a commit (to modify targets metadata) even if end result is failure
     # TODO: check output for specifics
     cd $REPO_GIT
 
-    if playground-status >> $REPO_DIR/out; then
+    if tuf-on-ci-status >> $REPO_DIR/out; then
         return 1
     fi
     git_repo checkout --quiet main
@@ -396,7 +396,7 @@ repo_snapshot()
     cd $REPO_GIT
 
 
-    if LOCAL_TESTING_KEY=$ONLINE_KEY playground-snapshot --push --metadata metadata --targets targets $PUBLISH_DIR >> $REPO_DIR/out 2>&1; then
+    if LOCAL_TESTING_KEY=$ONLINE_KEY tuf-on-ci-snapshot --push --metadata metadata --targets targets $PUBLISH_DIR >> $REPO_DIR/out 2>&1; then
         echo "generated=true" >> $REPO_DIR/out
     else
         echo "generated=false" >> $REPO_DIR/out
@@ -410,13 +410,13 @@ repo_bump_versions()
 
     cd $REPO_GIT
 
-    if LOCAL_TESTING_KEY=$ONLINE_KEY playground-bump-online --push --metadata metadata --targets targets $PUBLISH_DIR >> $REPO_DIR/out 2>&1; then
+    if LOCAL_TESTING_KEY=$ONLINE_KEY tuf-on-ci-bump-online --push --metadata metadata --targets targets $PUBLISH_DIR >> $REPO_DIR/out 2>&1; then
         echo "generated=true" >> $REPO_DIR/out
     else
         echo "generated=false" >> $REPO_DIR/out
     fi
 
-    events=$(playground-bump-offline --push)
+    events=$(tuf-on-ci-bump-offline --push)
     echo "events=$events"  >> $REPO_DIR/out
 
     # TODO: run signing events

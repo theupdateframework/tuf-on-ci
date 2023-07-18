@@ -1,6 +1,6 @@
 # Copyright 2023 Google LLC
 
-"""playground-modify: A command line tool to modify Repository Playground delegations"""
+"""tuf-on-ci-delegate: A command line tool to modify TUF-on-CI delegations"""
 
 import copy
 import logging
@@ -18,7 +18,7 @@ from securesystemslib.signer import (
     SSlibKey,
 )
 
-from playground_sign._common import (
+from tuf_on_ci_sign._common import (
     SignerConfig,
     bold,
     get_signing_key_input,
@@ -26,7 +26,7 @@ from playground_sign._common import (
     git_expect,
     signing_event,
 )
-from playground_sign._signer_repository import (
+from tuf_on_ci_sign._signer_repository import (
     OfflineConfig,
     OnlineConfig,
     SignerRepository,
@@ -137,7 +137,7 @@ def _sigstore_import(pull_remote: str) -> list[SigstoreKey]:
         key = SigstoreKey(
             keyid, "sigstore-oidc", "Fulcio", {"issuer": issuer, "identity": id}
         )
-        key.unrecognized_fields["x-playground-online-uri"] = "sigstore:"
+        key.unrecognized_fields["x-tuf-on-ci-online-uri"] = "sigstore:"
         keys.append(key)
     return keys
 
@@ -146,7 +146,7 @@ def _get_online_input(config: OnlineConfig, user_config: SignerConfig) -> Online
     config = copy.deepcopy(config)
     click.echo("\nConfiguring online roles")
     while True:
-        keyuri = config.keys[0].unrecognized_fields["x-playground-online-uri"]
+        keyuri = config.keys[0].unrecognized_fields["x-tuf-on-ci-online-uri"]
         click.echo(f" 1. Configure online key: {keyuri}")
         click.echo(
             f" 2. Configure timestamp: Expires in {config.timestamp_expiry} days,"
@@ -211,7 +211,7 @@ def _collect_online_keys(user_config: SignerConfig) -> list[SSlibKey]:
             key_id = _collect_string("Enter a Google Cloud KMS key id")
             try:
                 uri, key = GCPSigner.import_(key_id)
-                key.unrecognized_fields["x-playground-online-uri"] = uri
+                key.unrecognized_fields["x-tuf-on-ci-online-uri"] = uri
                 return [key]
             except Exception as e:
                 raise click.ClickException(f"Failed to read Google Cloud KMS key: {e}")
@@ -220,7 +220,7 @@ def _collect_online_keys(user_config: SignerConfig) -> list[SSlibKey]:
             key_name = _collect_string("Enter key name")
             try:
                 uri, key = AzureSigner.import_(vault_name, key_name)
-                key.unrecognized_fields["x-playground-online-uri"] = uri
+                key.unrecognized_fields["x-tuf-on-ci-online-uri"] = uri
                 return [key]
             except Exception as e:
                 raise click.ClickException(f"Failed to read Azure Keyvault key: {e}")
@@ -234,7 +234,7 @@ def _collect_online_keys(user_config: SignerConfig) -> list[SSlibKey]:
                 "ed25519",
                 "ed25519",
                 {"public": pub_key},
-                {"x-playground-online-uri": uri},
+                {"x-tuf-on-ci-online-uri": uri},
             )
             return [key]
 
@@ -249,7 +249,7 @@ def _collect_string(prompt: str) -> str:
 
 
 def _init_repository(repo: SignerRepository, user_config: SignerConfig) -> bool:
-    click.echo("Creating a new Playground TUF repository")
+    click.echo("Creating a new TUF-on-CI repository")
 
     root_config = _get_offline_input(
         "root", OfflineConfig([repo.user_name], 1, 365, 60)
@@ -316,11 +316,11 @@ def _update_offline_role(repo: SignerRepository, role: str) -> bool:
 @click.argument("event-name", metavar="SIGNING-EVENT")
 @click.argument("role", required=False)
 def delegate(verbose: int, push: bool, event_name: str, role: str | None):
-    """Tool for modifying Repository Playground delegations."""
+    """Tool for modifying TUF-on-CI delegations."""
     logging.basicConfig(level=logging.WARNING - verbose * 10)
 
     toplevel = git_expect(["rev-parse", "--show-toplevel"])
-    settings_path = os.path.join(toplevel, ".playground-sign.ini")
+    settings_path = os.path.join(toplevel, ".tuf-on-ci-sign.ini")
     user_config = SignerConfig(settings_path)
 
     with signing_event(event_name, user_config) as repo:

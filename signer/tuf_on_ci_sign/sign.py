@@ -1,13 +1,13 @@
 # Copyright 2023 Google LLC
 
-"""playground-sign: A command line tool to sign Repository Playground changes"""
+"""tuf-on-ci-sign: A command line signing tool for TUF-on-CI signing events"""
 
 import logging
 import os
 
 import click
 
-from playground_sign._common import (
+from tuf_on_ci_sign._common import (
     SignerConfig,
     bold,
     get_signing_key_input,
@@ -15,7 +15,7 @@ from playground_sign._common import (
     git_expect,
     signing_event,
 )
-from playground_sign._signer_repository import SignerState
+from tuf_on_ci_sign._signer_repository import SignerState
 
 logger = logging.getLogger(__name__)
 
@@ -25,11 +25,11 @@ logger = logging.getLogger(__name__)
 @click.option("--push/--no-push", default=True)
 @click.argument("event-name", metavar="signing-event")
 def sign(verbose: int, push: bool, event_name: str):
-    """Signing tool for Repository Playground signing events."""
+    """Signing tool for TUF-on-CI signing events."""
     logging.basicConfig(level=logging.WARNING - verbose * 10)
 
     toplevel = git_expect(["rev-parse", "--show-toplevel"])
-    settings_path = os.path.join(toplevel, ".playground-sign.ini")
+    settings_path = os.path.join(toplevel, ".tuf-on-ci-sign.ini")
     user_config = SignerConfig(settings_path)
 
     with signing_event(event_name, user_config) as repo:

@@ -9,7 +9,7 @@ from glob import glob
 
 import click
 
-from playground._playground_repository import PlaygroundRepository
+from tuf_on_ci._repository import CIRepository
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ def _git(cmd: list[str]) -> subprocess.CompletedProcess:
     cmd = [
         "git",
         "-c",
-        "user.name=repository-playground",
+        "user.name=TUF-on-CI",
         "-c",
         "user.email=41898282+github-actions[bot]@users.noreply.github.com",
     ] + cmd
@@ -47,7 +47,7 @@ def bump_online(
     logging.basicConfig(level=logging.WARNING - verbose * 10)
 
     msg = "Periodic online role version bump and resign\n\n"
-    repo = PlaygroundRepository("metadata")
+    repo = CIRepository("metadata")
     snapshot_version = repo.bump_expiring("snapshot")
     if snapshot_version is None:
         timestamp_version = repo.bump_expiring("timestamp")
@@ -90,7 +90,7 @@ def bump_offline(verbose: int, push: bool) -> None:
     """
     logging.basicConfig(level=logging.WARNING - verbose * 10)
 
-    repo = PlaygroundRepository("metadata")
+    repo = CIRepository("metadata")
     events = []
     for filename in glob("*.json", root_dir="metadata"):
         if filename in ["timestamp.json", "snapshot.json"]:

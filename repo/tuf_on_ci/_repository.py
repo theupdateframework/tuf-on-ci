@@ -95,7 +95,7 @@ class SigningEventState:
         return roles
 
 
-class PlaygroundRepository(Repository):
+class CIRepository(Repository):
     """A online repository implementation for use in GitHub Actions
 
     Arguments:
@@ -172,12 +172,12 @@ class PlaygroundRepository(Repository):
         """
         if rolename in ["timestamp", "snapshot"]:
             role = self.root().get_delegated_role(rolename)
-            expiry_days = role.unrecognized_fields["x-playground-expiry-period"]
-            signing_days = role.unrecognized_fields.get("x-playground-signing-period")
+            expiry_days = role.unrecognized_fields["x-tuf-on-ci-expiry-period"]
+            signing_days = role.unrecognized_fields.get("x-tuf-on-ci-signing-period")
         else:
             signed = self.root() if rolename == "root" else self.targets(rolename)
-            expiry_days = signed.unrecognized_fields["x-playground-expiry-period"]
-            signing_days = signed.unrecognized_fields.get("x-playground-signing-period")
+            expiry_days = signed.unrecognized_fields["x-tuf-on-ci-expiry-period"]
+            signing_days = signed.unrecognized_fields.get("x-tuf-on-ci-signing-period")
 
         if signing_days is None:
             signing_days = expiry_days // 2
@@ -198,7 +198,7 @@ class PlaygroundRepository(Repository):
         md.signatures.clear()
         for key in self._get_keys(rolename):
             if rolename in ["timestamp", "snapshot"]:
-                uri = key.unrecognized_fields["x-playground-online-uri"]
+                uri = key.unrecognized_fields["x-tuf-on-ci-online-uri"]
                 # WORKAROUND while sigstoresigner is not finished
                 if uri == "sigstore:":
                     signer = SigstoreSigner(detect_credential(), key)
@@ -274,7 +274,7 @@ class PlaygroundRepository(Repository):
             if md.signed.version <= prev_md.signed.version:
                 return False, f"Version {md.signed.version} is not valid for {rolename}"
 
-        days = md.signed.unrecognized_fields["x-playground-expiry-period"]
+        days = md.signed.unrecognized_fields["x-tuf-on-ci-expiry-period"]
         if md.signed.expires > datetime.utcnow() + timedelta(days=days):
             return False, f"Expiry date is further than expected {days} days ahead"
 
@@ -421,7 +421,7 @@ class PlaygroundRepository(Repository):
 
         # Build lists of signed signers and not signed signers
         for key in self._get_keys(rolename, known_good):
-            keyowner = key.unrecognized_fields["x-playground-keyowner"]
+            keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
             try:
                 payload = CanonicalJSONSerializer().serialize(md.signed)
                 key.verify_signature(md.signatures[key.keyid], payload)
