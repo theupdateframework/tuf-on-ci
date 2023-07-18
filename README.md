@@ -15,6 +15,7 @@ This is a Work-In-Progress and no stable releases have been made yet. See
 ## Documentation
 
 * [Design document](https://docs.google.com/document/d/140jiFHGc3wwEmNaJmUdgkNeNK4i4CC-lm5-eVQYXiL0/edit?resourcekey=0-CLZhA-H2jtd3WQD-lBLsqQ)
+* [Developer notes](docs/DEVELOPMENT.md)
 
 ## Setup
 
