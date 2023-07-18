@@ -26,13 +26,10 @@ jobs:
       run: python -m pip install tox
 
     - name: Lint
-      working-directory: playground
       run: tox -m lint
 
     - name: Repository unit tests
-      working-directory: playground
       run: tox -e test-repo
 
     - name: End-to-end tests
-      working-directory: playground
       run: tox -e test-e2e
