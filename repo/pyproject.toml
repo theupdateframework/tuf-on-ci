@@ -7,9 +7,9 @@ build-backend = "hatchling.build"
 allow-direct-references = true
 
 [project]
-name = "playground"
+name = "tuf-on-ci"
 version = "0.0.1"
-description = "CI tools for Repository Plaground"
+description = "TUF-on-CI repository tools, intended to be executed on a CI system"
 readme = "README.md"
 dependencies = [
   "sigstore @ git+https://github.com/sigstore/sigstore-python@7d4af6c5f6732ef12e5bb455962321ebe5cce137",
@@ -20,10 +20,10 @@ dependencies = [
 requires-python = ">=3.10"
 
 [project.scripts]
-playground-status = "playground:status"
-playground-snapshot = "playground:snapshot"
-playground-bump-online = "playground:bump_online"
-playground-bump-offline = "playground:bump_offline"
+tuf-on-ci-status = "tuf_on_ci:status"
+tuf-on-ci-snapshot = "tuf_on_ci:snapshot"
+tuf-on-ci-bump-online = "tuf_on_ci:bump_online"
+tuf-on-ci-bump-offline = "tuf_on_ci:bump_offline"
 
 [[tool.mypy.overrides]]
 module = [

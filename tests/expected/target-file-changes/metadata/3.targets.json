@@ -22,7 +22,7 @@
    }
   },
   "version": 3,
-  "x-playground-expiry-period": 365,
-  "x-playground-signing-period": 60
+  "x-tuf-on-ci-expiry-period": 365,
+  "x-tuf-on-ci-signing-period": 60
  }
 }

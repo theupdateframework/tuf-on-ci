@@ -7,9 +7,9 @@ build-backend = "hatchling.build"
 allow-direct-references = true
 
 [project]
-name = "playground-sign"
+name = "tuf-on-ci-sign"
 version = "0.0.1"
-description = "TUF signing tool for Repository Plaground"
+description = "Signing tools for TUF-on-CI"
 readme = "README.md"
 dependencies = [
   "sigstore @ git+https://github.com/sigstore/sigstore-python@7d4af6c5f6732ef12e5bb455962321ebe5cce137",
@@ -20,8 +20,8 @@ dependencies = [
 requires-python = ">=3.10"
 
 [project.scripts]
-playground-delegate = "playground_sign:delegate"
-playground-sign = "playground_sign:sign"
+tuf-on-ci-delegate = "tuf_on_ci_sign:delegate"
+tuf-on-ci-sign = "tuf_on_ci_sign:sign"
 
 [[tool.mypy.overrides]]
 module = [

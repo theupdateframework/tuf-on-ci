@@ -9,6 +9,8 @@ permissions: {}
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
     - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
 
@@ -16,6 +18,7 @@ jobs:
       with:
         python-version: "3.11"
         cache: 'pip'
+        cache-dependency-path: "**/pyproject.toml"
 
     - name: Install system dependencies for e2e test
       run: |
@@ -26,13 +29,10 @@ jobs:
       run: python -m pip install tox
 
     - name: Lint
-      working-directory: playground
       run: tox -m lint
 
     - name: Repository unit tests
-      working-directory: playground
       run: tox -e test-repo
 
     - name: End-to-end tests
-      working-directory: playground
       run: tox -e test-e2e

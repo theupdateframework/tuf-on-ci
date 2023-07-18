@@ -1,5 +1,5 @@
 name: 'Signing event'
-description: 'TUF signing event management for Repository Playground'
+description: 'TUF-on-CI Signing event management'
 runs:
   using: "composite"
   steps:
@@ -16,7 +16,7 @@ runs:
 
     - id: status
       run: |
-        if playground-status >> status-output;  then
+        if tuf-on-ci-status >> status-output;  then
           echo "status=success" >> $GITHUB_OUTPUT
         else
           echo "status=failure" >> $GITHUB_OUTPUT

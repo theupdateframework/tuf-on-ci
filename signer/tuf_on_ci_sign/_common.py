@@ -13,7 +13,7 @@ from tempfile import TemporaryDirectory
 import click
 from securesystemslib.signer import HSMSigner, Key, SigstoreSigner
 
-from playground_sign._signer_repository import SignerRepository
+from tuf_on_ci_sign._signer_repository import SignerRepository
 
 
 class SignerConfig:

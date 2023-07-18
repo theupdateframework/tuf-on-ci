@@ -49,7 +49,7 @@ runs:
       run: |
         mkdir publish
         cd repository
-        playground-snapshot --push --metadata ${{ inputs.metadata_path}} --targets ${{ inputs.targets_path}} ../publish
+        tuf-on-ci-snapshot --push --metadata ${{ inputs.metadata_path}} --targets ${{ inputs.targets_path}} ../publish
 
         find "../publish" -type f | xargs ls -lh
       shell: bash

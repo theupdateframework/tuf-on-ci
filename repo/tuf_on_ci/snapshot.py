@@ -1,13 +1,13 @@
 # Copyright 2023 Google LLC
 
-"""Command line tool to update snapshot (and timestamp) for Repository Playground CI"""
+"""Command line tool to update snapshot (and timestamp) for TUF-on-CI"""
 
 import logging
 import subprocess
 
 import click
 
-from playground._playground_repository import PlaygroundRepository
+from tuf_on_ci._repository import CIRepository
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ def _git(cmd: list[str]) -> subprocess.CompletedProcess:
     cmd = [
         "git",
         "-c",
-        "user.name=repository-playground",
+        "user.name=tuf-on-ci",
         "-c",
         "user.email=41898282+github-actions[bot]@users.noreply.github.com",
     ] + cmd
@@ -42,7 +42,7 @@ def snapshot(
     """
     logging.basicConfig(level=logging.WARNING - verbose * 10)
 
-    repo = PlaygroundRepository("metadata")
+    repo = CIRepository("metadata")
     snapshot_updated, _ = repo.do_snapshot()
     if not snapshot_updated:
         click.echo("No snapshot needed")

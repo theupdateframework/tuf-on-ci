@@ -16,7 +16,7 @@
      "public": "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEJ3pswWmx9Bx2VBcpqaooQFA7dQnhRafh\ntj942eg086x6EMHdfgdox9TbwGm7sU2sn/gyjyDr1ez8Ld2ORnyYJ8cAlegfTqNq\nE0eSrLrb+YpzQJxLwh6qWcSngF99Unft\n-----END PUBLIC KEY-----\n"
     },
     "scheme": "ecdsa-sha2-nistp384",
-    "x-playground-keyowner": "@playgrounduser1"
+    "x-tuf-on-ci-keyowner": "@tuf-on-ci-user1"
    },
    "fa47289": {
     "keytype": "ed25519",
@@ -24,7 +24,7 @@
      "public": "fa472895c9756c2b9bcd1440bf867d0fa5c4edee79e9792fa9822be3dd6fcbb3"
     },
     "scheme": "ed25519",
-    "x-playground-online-uri": "envvar:LOCAL_TESTING_KEY"
+    "x-tuf-on-ci-online-uri": "envvar:LOCAL_TESTING_KEY"
    }
   },
   "roles": {
@@ -39,7 +39,7 @@
      "fa47289"
     ],
     "threshold": 1,
-    "x-playground-expiry-period": 365
+    "x-tuf-on-ci-expiry-period": 365
    },
    "targets": {
     "keyids": [
@@ -52,12 +52,12 @@
      "fa47289"
     ],
     "threshold": 1,
-    "x-playground-expiry-period": 4
+    "x-tuf-on-ci-expiry-period": 4
    }
   },
   "spec_version": "1.0.31",
   "version": 1,
-  "x-playground-expiry-period": 365,
-  "x-playground-signing-period": 60
+  "x-tuf-on-ci-expiry-period": 365,
+  "x-tuf-on-ci-signing-period": 60
  }
 }

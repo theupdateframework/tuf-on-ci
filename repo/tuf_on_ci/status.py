@@ -1,6 +1,6 @@
 # Copyright 2023 Google LLC
 
-"""Command line signing event status output tool for Repository Playground CI"""
+"""Command line signing event status output tool for TUF-on-CI"""
 
 import filecmp
 import logging
@@ -12,7 +12,7 @@ from tempfile import TemporaryDirectory
 
 import click
 
-from playground._playground_repository import PlaygroundRepository
+from tuf_on_ci._repository import CIRepository
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ def _git(cmd: list[str]) -> subprocess.CompletedProcess:
     cmd = [
         "git",
         "-c",
-        "user.name=repository-playground",
+        "user.name=TUF-on-CI",
         "-c",
         "user.email=41898282+github-actions[bot]@users.noreply.github.com",
     ] + cmd
@@ -83,7 +83,7 @@ def _find_changed_target_roles(
     return changed_roles
 
 
-def _role_status(repo: PlaygroundRepository, role: str, event_name) -> bool:
+def _role_status(repo: CIRepository, role: str, event_name) -> bool:
     status, prev_status = repo.status(role)
     role_is_valid = status.valid
     sig_counts = f"{len(status.signed)}/{status.threshold}"
@@ -109,7 +109,7 @@ def _role_status(repo: PlaygroundRepository, role: str, event_name) -> bool:
         )
         click.echo(
             "Invitees can accept the invitations by running "
-            f"`playground-sign {event_name}`"
+            f"`tuf-on-ci-sign {event_name}`"
         )
 
     if not status.invites:
@@ -136,7 +136,7 @@ def _role_status(repo: PlaygroundRepository, role: str, event_name) -> bool:
             click.echo(f"Still missing signatures from {', '.join(missing)}")
             click.echo(
                 "Signers can sign these changes by running "
-                f"`playground-sign {event_name}`"
+                f"`tuf-on-ci-sign {event_name}`"
             )
 
     if status.message:
@@ -149,7 +149,7 @@ def _role_status(repo: PlaygroundRepository, role: str, event_name) -> bool:
 @click.option("-v", "--verbose", count=True, default=0)
 @click.option("--push/--no-push", default=True)
 def status(verbose: int, push: bool) -> None:
-    """Status markdown output tool for Repository Playground CI"""
+    """Status markdown output tool"""
     logging.basicConfig(level=logging.WARNING - verbose * 10)
 
     event_name = _git(["branch", "--show-current"]).stdout.strip()
@@ -160,7 +160,7 @@ def status(verbose: int, push: bool) -> None:
     if not os.path.exists("metadata/root.json"):
         click.echo(
             "Repository does not exist yet. Create one with "
-            f"`playground-delegate {event_name}`."
+            f"`tuf-on-ci-delegate {event_name}`."
         )
         sys.exit(1)
 
@@ -181,7 +181,7 @@ def status(verbose: int, push: bool) -> None:
 
         # Compare current repository and the known good version.
         # Print status for each role, count invalid roles
-        repo = PlaygroundRepository("metadata", good_metadata)
+        repo = CIRepository("metadata", good_metadata)
 
         # first create a list of roles with metadata or artifact changes or invites
         roles = list(

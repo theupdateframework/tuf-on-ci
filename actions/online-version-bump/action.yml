@@ -49,7 +49,7 @@ runs:
       run: |
         mkdir publish
         cd repository
-        if playground-bump-online --push --metadata ${{ inputs.metadata_path}} --targets ${{ inputs.targets_path}} ../publish; then
+        if tuf-on-ci-bump-online --push --metadata ${{ inputs.metadata_path}} --targets ${{ inputs.targets_path}} ../publish; then
           find "../publish" -type f | xargs ls -lh
           echo "generated=true" >> $GITHUB_OUTPUT
         else

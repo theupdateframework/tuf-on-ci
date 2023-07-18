@@ -1,21 +1,21 @@
-# CI-based TUF implementation
+# TUF-on-CI: A TUF repository and signing tool implementation
 
 This is a TUF implementation that operates on Continuous Integration platform.
 Supported features include:
 * Threshold signing with offline keys, guided by CI
 * Automated online signing
-* Streamlined, opinionated user experience
+* Polished signer and maintainer experience
 * No custom code required
 
-The optimal use case (at least to begin with) is TUF repositories with a low
-to moderate frequency of change, both for target files and keys.
+The optimal use case is TUF repositories with a low to moderate frequency of change, both for target files and keys.
 
-This is a Work-In-Progress: any code should be seen as experimental for now. See [example](https://github.com/jku/test-repo-for-playground/) for an instance running repository-playground.
+This is a Work-In-Progress and no stable releases have been made yet. See
+[example](https://github.com/jku/test-repo-for-playground/) for an instance running TUF-on-CI.
 
 ## Documentation
 
 * [Design document](https://docs.google.com/document/d/140jiFHGc3wwEmNaJmUdgkNeNK4i4CC-lm5-eVQYXiL0/edit?resourcekey=0-CLZhA-H2jtd3WQD-lBLsqQ)
-* [Implementation notes](IMPLEMENTATION-NOTES.md)
+* [Developer notes](docs/DEVELOPMENT.md)
 
 ## Setup
 
@@ -31,7 +31,7 @@ Current signing requirements are:
    ```shell
    yubico-piv-tool -a generate -a verify-pin -a selfsign -a import-certificate -s 9c -k -A ECCP256 -S '/CN=piv_auth/OU=example/O=example.com/'
    ```
-1. Install a PKCS#11 module. Playground has been tested with the Yubico implementation,
+1. Install a PKCS#11 module. TUF-on-CI has been tested with the Yubico implementation,
    Debian users can install it with
    ```shell
    $ apt install ykcs11
@@ -40,14 +40,14 @@ Current signing requirements are:
    ```shell
    $ brew install yubico-piv-tool
    ```
-1. install playground-sign
+1. install tuf-on-ci-sign
    ```shell
-   $ pip install git+https://git@github.com/jku/repository-playground#subdirectory=playground/signer
+   $ pip install git+https://git@github.com/theupdateframework/tuf-on-ci#subdirectory=signer
    ```
 
 ### Configure signer
 
-Whenever you run signing tools, you need a configuration file `.playground-sign.ini` in the root dir of the git repository that contains the metadata:
+Whenever you run signing tools, you need a configuration file `.tuf-on-ci-sign.ini` in the root dir of the git repository that contains the metadata:
    ```
    [settings]
    # Path to PKCS#11 module
@@ -61,12 +61,12 @@ Whenever you run signing tools, you need a configuration file `.playground-sign.
    ```
 
 A [provided
-script](https://github.com/jku/repository-playground/blob/main/playground/signer/create-config-file.sh)
+script](https://github.com/theupdateframework/tuf-on-ci/blob/main/signer/create-config-file.sh)
 exists that can generate one.
 
-### Setup a new Playground repository
+### Setup a new TUF-on-CI repository
 
-1. Fork the [template](https://github.com/jku/playground-template).
+1. Fork the [template](https://github.com/theupdateframework/tuf-on-ci-template).
 1. To enable repository publishing, set _Settings->Pages->Source_ to `Github Actions`
 
 #### Using a KMS
@@ -102,7 +102,7 @@ If you intend to use a Cloud KMS for online signing (instead of the default
                  tenant-id: ${{ secrets.AZURE_TENANT_ID }}
                  subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
              - id: snapshot
-               uses: jku/repository-playground/playground/actions/snapshot@main
+               uses: theupdateframework/tuf-on-ci/actions/snapshot@main
          ...
          deploy:
 
@@ -111,7 +111,7 @@ If you intend to use a Cloud KMS for online signing (instead of the default
    environment for accessing the cloud KMS.
     1. For GCP use [gcloud](https://cloud.google.com/sdk/docs/install)
        and authenticate in the environment where you plan to run
-       playground-delegate tool (you will need
+       tuf-on-ci-delegate tool (you will need
        _roles/cloudkms.publicKeyViewer_ permission)
 
     1. For Azure use [az
@@ -121,7 +121,7 @@ If you intend to use a Cloud KMS for online signing (instead of the default
 
 ## Operation
 
-Both tools (`playground-delegate` and `playground-sign`) take one required argument, the
+Both tools (`tuf-on-ci-delegate` and `tuf-on-ci-sign`) take one required argument, the
 signing event name (it is used as a git branch name). Typically the signing event exists
 and you know its name but in some cases (delegation, target modification) you can choose
 a name for a new signing event: anything starting with "sign/" is fine.
@@ -130,7 +130,7 @@ The tools will fetch the current signing event content from a matching branch in
 _pull-remote_. After signing or delegation changes, the tools will push the changes
 to matching branch on _push-remote_.
 
-Notes on remotes configured in `.playground-sign.ini`:
+Notes on remotes configured in `.tuf-on-ci-sign.ini`:
 * _pull-remote_ should always be the actual TUF repository
 * If you have permissions to push to the TUF repository, you can set _push-remote_ to same value
 * Otherwise you can set _push-remote_ to your fork: in this case after running the tools, you
@@ -140,7 +140,7 @@ Notes on remotes configured in `.playground-sign.ini`:
 
 1. Run delegate tool to create initial metadata
    ```shell
-   $ playground-delegate <event-name>
+   $ tuf-on-ci-delegate <event-name>
    ```
 1. Respond to the prompts
 
@@ -148,7 +148,7 @@ Notes on remotes configured in `.playground-sign.ini`:
 
 1. Run delegate tool when you want to modify a roles delegation
    ```shell
-   $ playground-delegate <event-name> <role>
+   $ tuf-on-ci-delegate <event-name> <role>
    ```
 1. Respond to the prompts
 
@@ -173,7 +173,7 @@ Signing should be done when the signing event (GitHub issue) asks for it:
 
 1. Run signer tool in the signing event branch
    ```shell
-   $ playground-sign <event-name>
+   $ tuf-on-ci-sign <event-name>
    ```
 1. Respond to the prompts
 
@@ -181,12 +181,12 @@ Signing should be done when the signing event (GitHub issue) asks for it:
 
 ### Repository template
 
-Status: Implemented in the playground-template project. Workflows include
+Status: Implemented in the tuf-on-ci-template project. Workflows include
 * signing-event
 * snapshot
 * version-bumps
 
-See [here](https://github.com/jku/playground-template).
+See [here](https://github.com/theupdateframework/tuf-on-ci-template).
 
 ### Repository actions
 
@@ -208,8 +208,8 @@ See [repo/](repo/), See [actions/](actions/)
 ### signing tool
 
 Status:
-* playground-delegate mostly implemented
-* playground-sign mostly implemented, although output is a work in progress
+* tuf-on-ci-delegate mostly implemented
+* tuf-on-ci-sign mostly implemented, although output is a work in progress
 
 See [signer/](signer/)
 
@@ -224,15 +224,15 @@ TODO: Client is currently not up-to-date WRT repository implementation.
 
 ### Initialize a new repository
 
-1. Instantiate  [template](https://github.com/jku/playground-template)
+1. Instantiate  [template](https://github.com/theupdateframework/tuf-on-ci-template)
 1. Enable publishing to GitHub Pages: `Settings > Pages > Source:
    GitHub Actions`
 1. Install the signer tools as described
-   [here](https://github.com/jku/repository-playground/blob/main/playground/signer/README.md)
+   [here](https://github.com/theupdateframework/tuf-on-ci/blob/main/signer/README.md)
    on your local computer
 1. Clone the instantiated repository
-1. Prepate the configuration file (`.playground-sign.ini`)
-1. Run `playground-delegate <event-name>`
+1. Prepate the configuration file (`.tuf-on-ci-sign.ini`)
+1. Run `tuf-on-ci-delegate <event-name>`
 1. Follow the instructions to configure the root, after this is done a
    new branch with `<event-name>` is pushed to `origin`
 1. Once the new metadata is pushed, reivew the change and merge into
@@ -242,10 +242,10 @@ TODO: Client is currently not up-to-date WRT repository implementation.
 
 ### Adding a new signer
 
-Adding a new root signer is done via the `playground-sign` command.
+Adding a new root signer is done via the `tuf-on-ci-sign` command.
 
 ```shell
-$ playground-delegate sign/add-fakeuser-2
+$ tuf-on-ci-delegate sign/add-fakeuser-2
 
 Remote branch not found: branching off from main
 Enter name of role to modify: root
@@ -268,18 +268,15 @@ which in the above example is `sign/add-fakueuser-2`.
 
 By naming the event with `sign/<event-name>` automation will pick up
 this branch and run the [signing
-automation](https://github.com/jku/playground-template/blob/main/.github/workflows/signing-event.yml)
+automation](https://github.com/theupdateframework/tuf-on-ci-template/blob/main/.github/workflows/signing-event.yml)
 that creates issues with the current signing state and tags each
 signer on what's expected to do. This always provides a clear state of
 the situation.
 
 To accept the invitation and become a signer, the invitee runs
-`playground-sign <event-name>` and provides information on what key to
+`tuf-on-ci-sign <event-name>` and provides information on what key to
 use. After completion the updated metadata will be pushed to
-`origin`. Currently the invitee must execute `playground-sign
-<event-name>` twice, the first run will only add the key to the
-metadata, the second invocation will actually sign the metadata. This
-will be changed in a future release.
+`origin`. 
 
 When adding or changing root signer, remember that a quorum of
 _current_ key-holders **must** sign the updated root metadata for it
@@ -308,19 +305,19 @@ The branch can now be pushed to `origin` and an issue will be created
 that tracks the changes and the required signaturesby the correct key
 holders.
 
-Run the `playground-sign <event-name>` command to sign the metadata
+Run the `tuf-on-ci-sign <event-name>` command to sign the metadata
 and push the branch to `origin`, once pushed, and signed by all key
 holders create a PR and merge. The snapshot workflow will then run an
 publish the repository for consumption.
 
 ## Debug tools
 
-The same tool (`playground-status`) that runs during the automation
+The same tool (`tuf-on-ci-status`) that runs during the automation
 can be run locally too to inspect the current status of a branch
 (signing event).
 
 To install the repository tools, run pip install from the
-`playground/repo` directory where the
+`repo/` directory where the
 [pyproject.toml](repo/pyproject.toml) file exists:
 
 ```shell
@@ -331,11 +328,11 @@ As an example, this would be the output when an open invitation exists
 for a new user to become a root key holder:
 
 ```shell
-$ playground-status
+$ tuf-on-ci-status
 ### Current signing event state
 Event [sign/add-fakeuser-1](../compare/sign/add-fakeuser-1)
 #### :x: root
 root delegations have open invites (@-fakeuser-2).
-Invitees can accept the invitations by running `playground-sign add-fakeuser-2`
+Invitees can accept the invitations by running `tuf-on-ci-sign add-fakeuser-2`
 $
 ```
