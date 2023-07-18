@@ -8,7 +8,7 @@ python3 -m venv .venv
 # Enter environment
 source .venv/bin/activate
 # install the signing and repository tools as editable
-pip install -e signer/ repo/
+pip install -e ./signer -e ./repo
 # install tox for a reproducible testing environment
 pip install tox
 ```
