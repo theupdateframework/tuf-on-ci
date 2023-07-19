@@ -13,9 +13,9 @@ description = "TUF-on-CI repository tools, intended to be executed on a CI syste
 readme = "README.md"
 dependencies = [
   "sigstore @ git+https://github.com/sigstore/sigstore-python@7d4af6c5f6732ef12e5bb455962321ebe5cce137",
-  "securesystemslib[azurekms, gcpkms, sigstore, pynacl] @ git+https://github.com/secure-systems-lab/securesystemslib",
-  "tuf @ git+https://github.com/theupdateframework/python-tuf",
-  "click",
+  "securesystemslib[azurekms, gcpkms, sigstore, pynacl] @ git+https://github.com/secure-systems-lab/securesystemslib@bf63e1b0a58e35c3d5087d5ddd53e43d25e7250a",
+  "tuf ~= 3.0.0",
+  "click ~= 8.1.0",
 ]
 requires-python = ">=3.10"
 
