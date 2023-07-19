@@ -25,7 +25,7 @@ Current signing requirements are:
 
 ### Setup signer
 
-1. Create a PIV signing key on your HW key if you don't have one. For Yubikey owners the easiest tool is Yubikey manager:![Yubikey manager UI](yubikey-manager.png)
+1. Create a PIV signing key on your HW key if you don't have one. For Yubikey owners the easiest tool is Yubikey manager:![Yubikey manager UI](docs/yubikey-manager.png)
 
    [yubico-piv-tool](https://developers.yubico.com/yubico-piv-tool/) can also do it (just copy-paste the public key and certificate when requested):
    ```shell
