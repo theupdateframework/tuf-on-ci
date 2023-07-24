@@ -9,7 +9,7 @@ runs:
 
     - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1
       with:
-        python-version: 3.11
+        python-version: "3.11"
 
     - run: pip install $GITHUB_ACTION_PATH/../../repo/
       shell: bash
