@@ -32,7 +32,7 @@ runs:
 
     - name: Authenticate to Google Cloud
       if: inputs.gcp_workload_identity_provider != ''
-      uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d
+      uses: google-github-actions/auth@35b0e87d162680511bf346c299f71c9c5c379033
       with:
         token_format: access_token
         workload_identity_provider: ${{ inputs.gcp_workload_identity_provider }}
