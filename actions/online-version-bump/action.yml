@@ -59,6 +59,6 @@ runs:
 
     - name: Upload repository artifact for GitHub Pages
       if: steps.online-bump.outputs.generated == 'true'
-      uses: actions/upload-pages-artifact@253fd476ed429e83b7aae64a92a75b4ceb1a17cf
+      uses: actions/upload-pages-artifact@a753861a5debcf57bf8b404356158c8e1e33150c
       with:
         path: publish/
