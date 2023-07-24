@@ -1,0 +1,44 @@
+version: 2
+updates:
+
+- package-ecosystem: "pip"
+  directory: "signer/"
+  schedule:
+    interval: "daily"
+    time: "10:25"
+
+- package-ecosystem: "pip"
+  directory: "repo/"
+  schedule:
+    interval: "daily"
+    time: "10:25"
+
+- package-ecosystem: "github-actions"
+  directory: "/"
+  schedule:
+    interval: "daily"
+    time: "10:25"
+
+- package-ecosystem: "github-actions"
+  directory: "actions/offline-version-bump/"
+  schedule:
+    interval: "daily"
+    time: "10:25"
+
+- package-ecosystem: "github-actions"
+  directory: "actions/online-version-bump/"
+  schedule:
+    interval: "daily"
+    time: "10:25"
+
+- package-ecosystem: "github-actions"
+  directory: "actions/signing-event/"
+  schedule:
+    interval: "daily"
+    time: "10:25"
+
+- package-ecosystem: "github-actions"
+  directory: "actions/snapshot/"
+  schedule:
+    interval: "daily"
+    time: "10:25"
