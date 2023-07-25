@@ -12,6 +12,11 @@ Features include:
 * Polished signing user experience
 * No custom code required
 
-The signer is available from PyPI: `pip install tuf-on-ci-sign`.
-See [README.md](../README.md) for repository setup instructions.
 
+The signer is *not* available from PyPI in this release but will be in future releases.
+See [README.md](../README.md) for repository and signer setup instructions.
+
+### Upgrading an existing repository installation
+
+* Start pinning tuf-on-ci actions in your workflows (see example in https://github.com/theupdateframework/tuf-on-ci-template/pull/3)
+* Use Dependabot in your GitHub project to get automatic update PRs in the future
