@@ -10,3 +10,6 @@
 6. Push the tag to GitHub `git push origin vA.B.C`. This triggers release workflow
 7. [Review deployment](https://docs.github.com/en/actions/managing-workflow-runs/reviewing-deployments)
 on GitHub. On approval both the PyPI signer release and the GitHub release will be deployed
+
+
+After release, update tuf-on-ci-template actions to use the new release.
