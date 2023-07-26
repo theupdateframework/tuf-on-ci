@@ -134,7 +134,13 @@ class CIRepository(Repository):
         keys = []
         for keyid in r.keyids:
             try:
-                keys.append(delegator.get_key(keyid))
+                key = delegator.get_key(keyid)
+                if known_good and "x-tuf-on-ci-keyowner" not in key.unrecognized_fields:
+                    # this is allowed for repo import case: we cannot identify known
+                    # good keys and have to trust that delegations have not changed
+                    continue
+
+                keys.append(key)
             except ValueError:
                 pass
         return keys
