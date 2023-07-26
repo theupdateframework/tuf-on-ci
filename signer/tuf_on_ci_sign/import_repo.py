@@ -150,8 +150,6 @@ def import_repo(verbose: int, push: bool, event_name: str, import_file: str | No
 
             role_data = import_data[rolename]
             if rolename == "root":
-                # BUG: this does not work because edit_root tries to sing with
-                # old keys as well: they won't have the correct custom metadata
                 with repo.edit_root() as root:
                     ok = _update_expiry(root, role_data) and ok
                     ok = _update_signing(root, role_data) and ok
