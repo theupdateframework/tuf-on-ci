@@ -121,10 +121,10 @@ class SignerRepository(Repository):
             self._invites = config["invites"]
 
         # Figure out needed signatures
-        self.unsigned = []
+        self.unsigned = set()
         for rolename in _find_changed_roles(self._prev_dir, self._dir):
             if self._user_signature_needed(rolename) and rolename not in self.invites:
-                self.unsigned.append(rolename)
+                self.unsigned.add(rolename)
 
         # Find current state
         if not os.path.exists(os.path.join(self._dir, "root.json")):
@@ -338,6 +338,7 @@ class SignerRepository(Repository):
         # wipe signatures, update "unsigned" list
         if role in self.unsigned:
             self.unsigned.remove(role)
+
         md.signatures.clear()
         for key in keys:
             md.signatures[key.keyid] = Signature(key.keyid, "")
@@ -345,8 +346,7 @@ class SignerRepository(Repository):
             # Mark role as unsigned if user is a signer (and there are no open invites)
             keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
             if keyowner == self.user_name and not open_invites:
-                if role not in self.unsigned:
-                    self.unsigned.append(role)
+                self.unsigned.add(role)
 
         self._write(role, md)
 
@@ -536,8 +536,7 @@ class SignerRepository(Repository):
                     del self._invites[self.user_name]
 
                 # Add role to unsigned list even if the role itself does not change
-                if rolename not in self.unsigned:
-                    self.unsigned.append(rolename)
+                self.unsigned.add(rolename)
 
                 changed = True
 
