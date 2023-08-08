@@ -19,7 +19,6 @@ from securesystemslib.signer import (
 )
 
 from tuf_on_ci_sign._common import (
-    SignerConfig,
     bold,
     get_signing_key_input,
     git_echo,
@@ -32,6 +31,7 @@ from tuf_on_ci_sign._signer_repository import (
     SignerRepository,
     SignerState,
 )
+from tuf_on_ci_sign._user import User
 
 # sigstore is not a supported key by default
 KEY_FOR_TYPE_AND_SCHEME[("sigstore-oidc", "Fulcio")] = SigstoreKey
@@ -142,7 +142,7 @@ def _sigstore_import(pull_remote: str) -> list[SigstoreKey]:
     return keys
 
 
-def _get_online_input(config: OnlineConfig, user_config: SignerConfig) -> OnlineConfig:
+def _get_online_input(config: OnlineConfig, user_config: User) -> OnlineConfig:
     config = copy.deepcopy(config)
     click.echo("\nConfiguring online roles")
     while True:
@@ -192,7 +192,7 @@ def _get_online_input(config: OnlineConfig, user_config: SignerConfig) -> Online
     return config
 
 
-def _collect_online_keys(user_config: SignerConfig) -> list[SSlibKey]:
+def _collect_online_keys(user_config: User) -> list[SSlibKey]:
     # TODO use value_proc argument to validate the input
 
     while True:
@@ -248,11 +248,11 @@ def _collect_string(prompt: str) -> str:
             return data
 
 
-def _init_repository(repo: SignerRepository, user_config: SignerConfig) -> bool:
+def _init_repository(repo: SignerRepository, user_config: User) -> bool:
     click.echo("Creating a new TUF-on-CI repository")
 
     root_config = _get_offline_input(
-        "root", OfflineConfig([repo.user_name], 1, 365, 60)
+        "root", OfflineConfig([repo.user.name], 1, 365, 60)
     )
     targets_config = _get_offline_input("targets", deepcopy(root_config))
 
@@ -265,8 +265,8 @@ def _init_repository(repo: SignerRepository, user_config: SignerConfig) -> bool:
 
     key = None
     if (
-        repo.user_name in root_config.signers
-        or repo.user_name in targets_config.signers
+        repo.user.name in root_config.signers
+        or repo.user.name in targets_config.signers
     ):
         key = get_signing_key_input()
 
@@ -276,11 +276,11 @@ def _init_repository(repo: SignerRepository, user_config: SignerConfig) -> bool:
     return True
 
 
-def _update_online_roles(repo: SignerRepository, user_config: SignerConfig) -> bool:
+def _update_online_roles(repo: SignerRepository) -> bool:
     click.echo("Modifying online roles")
 
     config = repo.get_online_config()
-    new_config = _get_online_input(config, user_config)
+    new_config = _get_online_input(config, repo.user)
     if new_config == config:
         return False
 
@@ -294,7 +294,7 @@ def _update_offline_role(repo: SignerRepository, role: str) -> bool:
         # Non existent role
         click.echo(f"Creating a new delegation for {role}")
         new_config = _get_offline_input(
-            role, OfflineConfig([repo.user_name], 1, 365, 60)
+            role, OfflineConfig([repo.user.name], 1, 365, 60)
         )
     else:
         click.echo(f"Modifying delegation for {role}")
@@ -303,7 +303,7 @@ def _update_offline_role(repo: SignerRepository, role: str) -> bool:
             return False
 
     key = None
-    if repo.user_name in new_config.signers:
+    if repo.user.name in new_config.signers:
         key = get_signing_key_input()
 
     repo.set_role_config(role, new_config, key)
@@ -321,7 +321,7 @@ def delegate(verbose: int, push: bool, event_name: str, role: str | None):
 
     toplevel = git_expect(["rev-parse", "--show-toplevel"])
     settings_path = os.path.join(toplevel, ".tuf-on-ci-sign.ini")
-    user_config = SignerConfig(settings_path)
+    user_config = User(settings_path)
 
     with signing_event(event_name, user_config) as repo:
         if repo.state == SignerState.UNINITIALIZED:
@@ -331,7 +331,7 @@ def delegate(verbose: int, push: bool, event_name: str, role: str | None):
                 role = click.prompt(bold("Enter name of role to modify"))
 
             if role in ["timestamp", "snapshot"]:
-                changed = _update_online_roles(repo, user_config)
+                changed = _update_online_roles(repo)
             else:
                 changed = _update_offline_role(repo, role)
 
@@ -351,7 +351,7 @@ def delegate(verbose: int, push: bool, event_name: str, role: str | None):
                     repo.sign(rolename)
 
                 git_expect(["add", "metadata/"])
-                git_expect(["commit", "-m", f"Signed by {user_config.user_name}"])
+                git_expect(["commit", "-m", f"Signed by {user_config.name}"])
 
             if push:
                 branch = f"{user_config.push_remote}/{event_name}"

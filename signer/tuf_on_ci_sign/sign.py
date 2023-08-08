@@ -8,7 +8,6 @@ import os
 import click
 
 from tuf_on_ci_sign._common import (
-    SignerConfig,
     bold,
     get_signing_key_input,
     git_echo,
@@ -16,6 +15,7 @@ from tuf_on_ci_sign._common import (
     signing_event,
 )
 from tuf_on_ci_sign._signer_repository import SignerState
+from tuf_on_ci_sign._user import User
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ def sign(verbose: int, push: bool, event_name: str):
 
     toplevel = git_expect(["rev-parse", "--show-toplevel"])
     settings_path = os.path.join(toplevel, ".tuf-on-ci-sign.ini")
-    user_config = SignerConfig(settings_path)
+    user_config = User(settings_path)
 
     with signing_event(event_name, user_config) as repo:
         if repo.state == SignerState.UNINITIALIZED:
@@ -67,7 +67,7 @@ def sign(verbose: int, push: bool, event_name: str):
 
         if changed:
             git_expect(["add", "metadata"])
-            git_expect(["commit", "-m", f"Signed by {user_config.user_name}"])
+            git_expect(["commit", "-m", f"Signed by {user_config.name}"])
             if push:
                 branch = f"{user_config.push_remote}/{event_name}"
                 msg = f"Press enter to push signature(s) to {branch}"

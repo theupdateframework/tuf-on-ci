@@ -6,7 +6,6 @@ import filecmp
 import json
 import logging
 import os
-from collections.abc import Callable
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -36,6 +35,8 @@ from tuf.api.metadata import (
 )
 from tuf.api.serialization.json import CanonicalJSONSerializer, JSONSerializer
 from tuf.repository import AbortEdit, Repository
+
+from tuf_on_ci_sign._user import User
 
 logger = logging.getLogger(__name__)
 
@@ -103,13 +104,11 @@ class SignerRepository(Repository):
         self,
         dir: str,
         prev_dir: str,
-        user_name: str,
-        secret_func: Callable[[str, str], str],
+        user: User,
     ):
-        self.user_name = user_name
+        self.user = user
         self._dir = dir
         self._prev_dir = prev_dir
-        self._get_secret = secret_func
         self._invites: dict[str, list[str]] = {}
         self._signers: dict[str, Signer] = {}
 
@@ -140,7 +139,7 @@ class SignerRepository(Repository):
     def invites(self) -> list[str]:
         """Return the list of roles the user has been invited to"""
         try:
-            return self._invites[self.user_name]
+            return self._invites[self.user.name]
         except KeyError:
             return []
 
@@ -149,7 +148,7 @@ class SignerRepository(Repository):
         md = self.open(rolename)
         for key in self._get_keys(rolename):
             keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
-            if keyowner == self.user_name:
+            if keyowner == self.user.name:
                 try:
                     payload = CanonicalJSONSerializer().serialize(md.signed)
                     key.verify_signature(md.signatures[key.keyid], payload)
@@ -161,7 +160,7 @@ class SignerRepository(Repository):
         if rolename == "root":
             for key in self._get_keys(rolename, True):
                 keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
-                if keyowner == self.user_name:
+                if keyowner == self.user.name:
                     try:
                         payload = CanonicalJSONSerializer().serialize(md.signed)
                         key.verify_signature(md.signatures[key.keyid], payload)
@@ -237,28 +236,13 @@ class SignerRepository(Repository):
         return keys
 
     def _sign(self, role: str, md: Metadata, key: Key) -> None:
-        def secret_handler(secret: str) -> str:
-            return self._get_secret(secret, role)
-
-        if key.keyid not in self._signers:
-            # TODO Get key uri from config file, avoid if-else here
-            if key.keytype == "sigstore-oidc":
-                self._signers[key.keyid] = Signer.from_priv_key_uri(
-                    "sigstore:?ambient=false", key, secret_handler
-                )
-            else:
-                self._signers[key.keyid] = Signer.from_priv_key_uri(
-                    "hsm:", key, secret_handler
-                )
-
-        signer = self._signers[key.keyid]
-
+        signer = self.user.get_signer(key)
         while True:
             try:
                 md.sign(signer, True)
                 break
             except UnsignedMetadataError:
-                print(f"Failed to sign {role} with {self.user_name} key. Try again?")
+                print(f"Failed to sign {role} with {self.user.name} key. Try again?")
 
     def _write(self, role: str, md: Metadata) -> None:
         filename = self._get_filename(role)
@@ -345,7 +329,7 @@ class SignerRepository(Repository):
 
             # Mark role as unsigned if user is a signer (and there are no open invites)
             keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
-            if keyowner == self.user_name and not open_invites:
+            if keyowner == self.user.name and not open_invites:
                 self.unsigned.add(role)
 
         self._write(role, md)
@@ -478,7 +462,7 @@ class SignerRepository(Repository):
 
         # Handle new invitations
         for signer in config.signers:
-            # Find signers key
+            # Does signer already have a key?
             is_signer = False
             for key in self._get_keys(rolename):
                 if signer == key.unrecognized_fields["x-tuf-on-ci-keyowner"]:
@@ -524,16 +508,16 @@ class SignerRepository(Repository):
 
             # Add user themselves
             invited = (
-                self.user_name in self._invites
-                and rolename in self._invites[self.user_name]
+                self.user.name in self._invites
+                and rolename in self._invites[self.user.name]
             )
             if invited and signing_key:
-                signing_key.unrecognized_fields["x-tuf-on-ci-keyowner"] = self.user_name
+                signing_key.unrecognized_fields["x-tuf-on-ci-keyowner"] = self.user.name
                 delegator.add_key(signing_key, rolename)
 
-                self._invites[self.user_name].remove(rolename)
-                if not self._invites[self.user_name]:
-                    del self._invites[self.user_name]
+                self._invites[self.user.name].remove(rolename)
+                if not self._invites[self.user.name]:
+                    del self._invites[self.user.name]
 
                 # Add role to unsigned list even if the role itself does not change
                 self.unsigned.add(rolename)
@@ -714,7 +698,7 @@ class SignerRepository(Repository):
         md = self.open(rolename)
         for key in self._get_keys(rolename):
             keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
-            if keyowner == self.user_name:
+            if keyowner == self.user.name:
                 self._sign(rolename, md, key)
                 self._write(rolename, md)
                 return
@@ -724,9 +708,9 @@ class SignerRepository(Repository):
         if rolename == "root":
             for key in self._get_keys(rolename, True):
                 keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
-                if keyowner == self.user_name:
+                if keyowner == self.user.name:
                     self._sign(rolename, md, key)
                     self._write(rolename, md)
                     return
 
-        raise ValueError(f"{rolename} signing key for {self.user_name} not found")
+        raise ValueError(f"{rolename} signing key for {self.user.name} not found")
