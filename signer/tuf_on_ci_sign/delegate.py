@@ -248,7 +248,7 @@ def _collect_string(prompt: str) -> str:
             return data
 
 
-def _init_repository(repo: SignerRepository, user_config: User) -> bool:
+def _init_repository(repo: SignerRepository) -> bool:
     click.echo("Creating a new TUF-on-CI repository")
 
     root_config = _get_offline_input(
@@ -257,11 +257,11 @@ def _init_repository(repo: SignerRepository, user_config: User) -> bool:
     targets_config = _get_offline_input("targets", deepcopy(root_config))
 
     # As default we offer sigstore online key(s)
-    keys = _sigstore_import(user_config.pull_remote)
+    keys = _sigstore_import(repo.user.pull_remote)
     default_config = OnlineConfig(
         keys, 2, 1, root_config.expiry_period, root_config.signing_period
     )
-    online_config = _get_online_input(default_config, user_config)
+    online_config = _get_online_input(default_config, repo.user)
 
     key = None
     if (
@@ -325,7 +325,7 @@ def delegate(verbose: int, push: bool, event_name: str, role: str | None):
 
     with signing_event(event_name, user_config) as repo:
         if repo.state == SignerState.UNINITIALIZED:
-            changed = _init_repository(repo, user_config)
+            changed = _init_repository(repo)
         else:
             if role is None:
                 role = click.prompt(bold("Enter name of role to modify"))
