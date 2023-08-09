@@ -4,9 +4,7 @@
 
 import os
 import subprocess
-import sys
 from collections.abc import Generator
-from configparser import ConfigParser
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
 
@@ -14,29 +12,11 @@ import click
 from securesystemslib.signer import HSMSigner, Key, SigstoreSigner
 
 from tuf_on_ci_sign._signer_repository import SignerRepository
-
-
-class SignerConfig:
-    def __init__(self, path: str):
-        config = ConfigParser()
-        config.read(path)
-
-        # TODO: create config if missing, ask/confirm values from user
-        if not config:
-            raise click.ClickException(f"Settings file {path} not found")
-        try:
-            self.user_name = config["settings"]["user-name"]
-            self.pykcs11lib = config["settings"]["pykcs11lib"]
-            self.push_remote = config["settings"]["push-remote"]
-            self.pull_remote = config["settings"]["pull-remote"]
-        except KeyError as e:
-            raise click.ClickException(f"Failed to find required setting {e} in {path}")
+from tuf_on_ci_sign._user import User
 
 
 @contextmanager
-def signing_event(
-    name: str, config: SignerConfig
-) -> Generator[SignerRepository, None, None]:
+def signing_event(name: str, config: User) -> Generator[SignerRepository, None, None]:
     toplevel = git(["rev-parse", "--show-toplevel"])
 
     # PyKCS11 (Yubikey support) needs the module path
@@ -63,10 +43,7 @@ def signing_event(
             metadata_dir = os.path.join(toplevel, "metadata")
 
             click.echo(bold_blue(f"Signing event {name} (commit {event_sha[:7]})"))
-            repo = SignerRepository(
-                metadata_dir, base_metadata_dir, config.user_name, get_secret_input
-            )
-            yield repo
+            yield SignerRepository(metadata_dir, base_metadata_dir, config)
     finally:
         # go back to original branch
         git_expect(["checkout", "-"])
@@ -114,21 +91,6 @@ def get_signing_key_input() -> Key:
             raise click.ClickException(f"Failed to read HW key: {e}")
 
     return key
-
-
-def get_secret_input(secret: str, role: str) -> str:
-    # TODO: Fix this so it prints role as well
-    # This currently has an issue when it's called from SignerRepository._sign(): The
-    # role name is always whatever the first calls argument was...
-    # It seems like the role variable becomes part of the closure in _sign() somehow
-    # and then the role value gets reused in later calls.
-    msg = f"Enter {secret} to sign"
-
-    # special case for tests -- prompt() will lockup trying to hide STDIN:
-    if not sys.stdin.isatty():
-        return sys.stdin.readline().rstrip()
-
-    return click.prompt(bold(msg), hide_input=True)
 
 
 def git(cmd: list[str]) -> str:
