@@ -226,13 +226,20 @@ class SignerRepository(Repository):
             else:
                 delegator = self.targets()
 
-        r = delegator.get_delegated_role(role)
         keys = []
-        for keyid in r.keyids:
-            try:
-                keys.append(delegator.get_key(keyid))
-            except ValueError:
-                pass
+        try:
+            r = delegator.get_delegated_role(role)
+            for keyid in r.keyids:
+                key = delegator.get_key(keyid)
+                if known_good and "x-tuf-on-ci-keyowner" not in key.unrecognized_fields:
+                    # this is allowed for repo import case: we cannot identify known
+                    # good keys and have to trust that delegations have not changed
+                    continue
+
+                keys.append(key)
+        except ValueError:
+            pass  # role is not delegated or key was not found
+
         return keys
 
     def _sign(self, role: str, md: Metadata, key: Key) -> None:
