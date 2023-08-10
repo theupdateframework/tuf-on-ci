@@ -43,11 +43,13 @@ def snapshot(
     logging.basicConfig(level=logging.WARNING - verbose * 10)
 
     repo = CIRepository("metadata")
-    snapshot_updated, _ = repo.do_snapshot()
+    verified = repo.is_verified("snapshot")
+    snapshot_updated, _ = repo.do_snapshot(not verified)
     if not snapshot_updated:
         click.echo("No snapshot needed")
     else:
-        repo.do_timestamp()
+        verified = repo.is_verified("timestamp")
+        repo.do_timestamp(not verified)
 
         msg = "Snapshot & timestamp"
         _git(["add", "metadata/timestamp.json", "metadata/snapshot.json"])

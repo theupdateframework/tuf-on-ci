@@ -539,3 +539,14 @@ class CIRepository(Repository):
             return True
 
         return False
+
+    def is_verified(self, rolename: str) -> bool:
+        if rolename in ["root", "timestamp", "snapshot", "targets"]:
+            delegator = self.open("root")
+        else:
+            delegator = self.open("targets")
+        try:
+            delegator.verify_delegate(rolename, self.open(rolename))
+            return True
+        except UnsignedMetadataError:
+            return False
