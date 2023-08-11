@@ -47,7 +47,7 @@ jobs:
 
       - name: Publish binary wheel and source tarball on PyPI
         if: github.repository == 'theupdateframework/tuf-on-ci'
-        uses: pypa/gh-action-pypi-publish@f8c70e705ffc13c3b4d1221169b84f12a75d6ca8
+        uses: pypa/gh-action-pypi-publish@b7f401de30cb6434a1e19f805ff006643653240e
 
   release-gh:
     name: Release
