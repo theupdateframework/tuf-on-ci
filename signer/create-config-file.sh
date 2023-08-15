@@ -13,7 +13,7 @@ read GITHUB_HANDLE
 
 case ${OS} in
     Darwin)
-        if [ -f /opt/homebrew/lib/libykcs11.dyliba ]; then
+        if [ -f /opt/homebrew/lib/libykcs11.dylib ]; then
             YKSLIB=/opt/homebrew/lib/libykcs11.dylib
         elif [ -f /usr/local/lib/libykcs11.dylib ]; then
             YKSLIB=/usr/local/lib/libykcs11.dylib
