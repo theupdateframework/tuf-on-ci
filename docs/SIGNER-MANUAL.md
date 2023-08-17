@@ -1,0 +1,101 @@
+# TUF-on-CI Signer Manual
+
+The purpose of A TUF-on-CI repository is to secure artifact delivery to
+downloaders. This is accomplished by _signers_ digitally signing TUF metadata using 
+the `tuf-on-ci-sign` tool. 
+
+This page documents `tuf-on-ci-sign` usage.
+
+:exclamation: For installation and configuration, see [SIGNER-SETUP.md](SIGNER-SETUP.md)
+
+### Terms
+
+_Signer_: A person who has agreed to verify the integrity of artifact hashes and other
+metadata of a _role_ by signing that roles metadata with their personal signing method
+(e.g. a Yubikey).
+
+_Signing event_: Collaboration of one or more signers to produce and sign a new version of 
+a roles metadata. A signing event happens in a GitHub issue and there is an associated git
+branch where the changes and signatures are stored. Signing event names start with "sign/".
+
+_Role_: A role manages a set of artifacts and (optionally) a set of delegations to other
+roles. A role has a set of _signers_ (defined by the delegating role): their signatures
+are needed when the role is changed.
+The default delegation structure includes only a `root` role and a `targets`
+role (delegated by root). targets role can further delegate to other roles.  
+
+## Usage
+
+Metadata is signed in a _signing event_. Signing event process is:
+* A signing event GitHub issue gets created by the repository. This happens as a
+  response to either a timed event (like an expiry date approaching) or as a response to
+  artifact changes: either way, the signing event contains new metadata versions that need
+  to be signed before they are considered valid.
+* Signing event directs _signers_ to sign the changes using `tuf-on-ci-sign`. By signing
+  they confirm that the proposed changes are correct. The signing tool updates the signing
+  event branch with the signatures
+  * If signers are not GitHub repository maintainer, they also create PRs from their fork
+    to the signing event
+* Finally a Pull Request to merge the signing event into main is created
+
+Throughout the process, the repository updates the signing event issue with status
+reports. These reports in the  signing event issue function as a notification mechanism
+but *signers should only ever fully trust their local signing tool*.
+
+The signing tool works in the repository (git clone) directory -- note that
+fetching, pushing or switching branches is not necessary: the tool will always use an
+up-to-date signing event branch and when the signer decides to sign, the signature is
+automatically pushed to the signing event branch.
+
+### Accepting an invitation 
+
+When a signing event instructs to accept an invitation to become a signer:
+```shell
+$ tuf-on-ci-sign <event>
+```
+* The tool prompts to select a signing method and prompts to push the public key
+  and signature to the repository
+* If push and pull remotes are different in signer configuration, signer creates a
+  Pull Request _from their fork to the signing event branch_.
+
+### Signing a change
+
+When a signing event instructs to sign a change:
+```shell
+$ tuf-on-ci-sign <event>
+```
+* The tool describes the changes, prompts to sign and prompts to push the signature to the repository
+* If push and pull remotes are different in signer configuration, signer creates a
+  Pull Request _from their fork to the signing event branch_.
+
+
+### Modifying artifacts
+
+Artifacts are stored in git (in the `targets/` directory) and are modified using normal
+git tools: the signing tool is not used. Artifact modification commits should get pushed to a
+branch on the repository: this creates a signing event for the artifact change allowing signers
+to sign that change.
+
+The role where the artifact belongs to is chosen with pathname: 
+* files in the targets directory are artifacts managed by top level role "targets" 
+* files in a subdirectory are artifacts of the role with the same name (so
+  `targets/A/file.txt` is an artifact managed by role "A")
+
+<details>
+  <summary>Example</summary>
+
+  First, artifact changes are done with git to a signing event branch:
+  ```shell
+  # Add a new artifact managed by top level role targets
+  $ git fetch && git switch -c sign/add-a-target origin/main
+  $ echo "artifact" > targets/file1.txtv
+  $ git add targets/file1.txt
+  $ git commit -m "New artifact file1.txt, managed by targets"
+
+  # Pushing the branch starts a signing event: Repository will create a new metadata
+  # version for the role and signers can then review and sign that version.
+  $ git push origin sign/add-a-target
+  ```
+
+  After the signing event is created, signers can follow instructions to sign the changes.
+</details>
