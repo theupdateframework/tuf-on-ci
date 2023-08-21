@@ -15,7 +15,7 @@ ongoing maintenance.
    first signing event
    * The tool prompts for various repository details and finally prompts to 
      sign and push the initial metadata to a signing event branch
-1. when this initial signing event branch is merged, the repository generates the
+1. When this initial signing event branch is merged, the repository generates the
    first snapshot and timestamp, and publishes the first repository version
 
 ## Modifying roles and creating new ones
@@ -23,15 +23,15 @@ ongoing maintenance.
 The same process handles:
 * Creating a new delegated role
 * Inviting a new signer to a role
-* removing a signer from a role
+* Removing a signer from a role
 
 Roles are modified with `tuf-on-ci-delegate <event> <role>`.
 * The event name can be chosen freely (and will be used as a branch name). If the signing
   event does not exist yet, it will be created as a result. 
 * The tool will prompt for new signers and other details, and then prompt to push changes
-  to repository.
+  to the repository.
 * The push triggers creation of a signing event GitHub issue. The repository will report the
-  status of the signing event and will notify signers with advice   
+  status of the signing event and will notify signers with advice.
 
 ### Examples
 
@@ -45,7 +45,7 @@ In this example the root signers list contains a single signer, but it is modifi
 two signers instead. The process is:
 
 * tuf-on-ci-delegate is used to modify signers
-* the new signers accepts invitation and adds their keys to the delegating roles metadata
+* the new signer accepts the invitation and adds their keys to the delegating role's metadata
 * the signers of the delegating role must accept the new key by signing the new
   version of delegating metadata
 

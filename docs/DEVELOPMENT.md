@@ -27,9 +27,9 @@ tox -m lint
 tox -m test
 ```
 
-### Trying thing sout without pushing changes to remote
+### Trying things out without pushing changes to remote
 
-tuf-on-ci-sign and tuf-on-ci-delegate can be run with `--no-push` to prevent the push to
+`tuf-on-ci-sign` and `tuf-on-ci-delegate` can be run with `--no-push` to prevent the push to
 the remote signing event branch: instead a local branch of the same name will be created
 (note that you are responsible for that being possible). This branch can be pushed
 manually after inspection and it will work as if the push was done by the tool itself.
@@ -42,7 +42,7 @@ event branch.
 
 To install the repository tools, run pip install from the
 `repo/` directory where the
-[pyproject.toml](repo/pyproject.toml) file exists:
+[pyproject.toml](../repo/pyproject.toml) file exists:
 
 ```shell
 $ pip install -e .

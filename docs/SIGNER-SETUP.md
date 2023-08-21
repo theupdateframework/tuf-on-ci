@@ -14,7 +14,7 @@ TUF-on-CI also needs access to a PKCS#11 module.
    Yubikey owners the easiest tool is Yubikey manager:
    ![Yubikey manager UI](yubikey-manager.png)
 
-1. Install a PKCS#11 module. TUF-on-CI has been tested with the Yubicos ykcs11. Debian users can install it with
+1. Install a PKCS#11 module. TUF-on-CI has been tested with the Yubico ykcs11. Debian users can install it with
    ```shell
    $ apt install ykcs11
    ```

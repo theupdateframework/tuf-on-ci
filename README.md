@@ -1,11 +1,11 @@
 # TUF-on-CI: A TUF repository and signing tool implementation
 
-TUF-on-CI is secure artifact delivery system that operates on a Continuous Integration
-platform. It contains a [TUF](https://theupdateframework.io) repository implementation and a
+TUF-on-CI is a secure artifact delivery system that operates on a Continuous Integration
+platform. It contains a [TUF](https://theupdateframework.io) repository implementation and an
 easy-to-use local signing system that supports hardware keys (e.g. Yubikeys).
 
 TUF-on-CI can be used to publish a TUF repository that contains digitally signed metadata.
-Any TUF-compatible download clients can use this repository to securely download
+Any TUF-compatible download client can use this repository to securely download
 the artifacts described in the repository.
 
 This system is highly secure against infrastructure compromise: Even a fully compromised

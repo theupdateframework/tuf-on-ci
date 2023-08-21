@@ -1,7 +1,7 @@
 # Online Signing in TUF-on-CI
 
-When a TUF-on-CI repository is initialized, a online signing method is chosen. This
-choice can be changed later. The choen method will be used by the repository to sign
+When a TUF-on-CI repository is initialized, an online signing method is chosen. This
+choice can be changed later. The chosen method will be used by the repository to sign
 `timestamp` and `snapshot` roles automatically.
 
 Currently supported signing methods include
