@@ -20,10 +20,11 @@ ongoing maintenance.
 
 ## Modifying roles and creating new ones
 
-The same process handles:
-* Creating a new delegated role
-* Inviting a new signer to a role
-* Removing a signer from a role
+Modifying a role is needed when:
+* A new delegated role is created
+* A new signer is invited to a role
+* A signer is removed from a role
+* The required threshold of signatures is changed
 
 Roles are modified with `tuf-on-ci-delegate <event> <role>`.
 * The event name can be chosen freely (and will be used as a branch name). If the signing
