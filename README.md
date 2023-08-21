@@ -1,4 +1,4 @@
-# TUF-on-CI: A TUF repository and signing tool implementation
+# TUF-on-CI: A TUF Repository and Signing Tool
 
 TUF-on-CI is a secure artifact delivery system that operates on a Continuous Integration
 platform. It contains a [TUF](https://theupdateframework.io) repository implementation and an
