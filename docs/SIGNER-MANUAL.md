@@ -29,12 +29,13 @@ role (delegated by root). The targets role can further delegate to other roles.
 Metadata is signed in a _signing event_. The signing event process is:
 * A signing event GitHub issue gets created by the repository. This happens as a
   response to either a timed event (like an expiry date approaching) or as a response to
-  artifact changes. Either way, the signing event contains new metadata versions that need
-  to be signed before they are considered valid.
-* The signing event directs _signers_ to sign the changes using `tuf-on-ci-sign`. By signing
-  they confirm that the proposed changes are correct. The local signing tool updates the remote signing
-  event branch with the signatures.
-  * If a signer does not have push permissions for the GitHub repository, their signature is added to the signing event via PR from their fork.
+  artifact changes. Either way, the signing event contains new metadata versions that
+  need to be signed before they are considered valid.
+* The signing event directs _signers_ to sign the changes using `tuf-on-ci-sign`. By
+  signing they confirm that the proposed changes are correct. The local signing tool
+  updates the remote signing event branch with the signatures.
+  * If a signer does not have push permissions for the GitHub repository, their signature
+    is added to the signing event via PR from their fork.
 * Finally, a Pull Request to merge the signing event into main is created.
 
 Throughout the process, the repository updates the signing event issue with status
@@ -48,7 +49,7 @@ automatically pushed to the signing event branch.
 
 ### Accepting an invitation 
 
-When a signing event instructs to accept an invitation to become a signer:
+When a signing event GitHub issue invites to become a signer:
 ```shell
 $ tuf-on-ci-sign <event>
 ```
@@ -59,11 +60,12 @@ $ tuf-on-ci-sign <event>
 
 ### Signing a change
 
-When a signing event instructs to sign a change:
+When a signing event GitHub issue instructs to sign a change:
 ```shell
 $ tuf-on-ci-sign <event>
 ```
-* The tool describes the changes, prompts to sign and prompts to push the signature to the repository
+* The tool describes the changes, prompts to sign and prompts to push the signature to
+  the repository
 * If push and pull remotes are different in signer configuration, signer creates a
   Pull Request _from their fork to the signing event branch_.
 
