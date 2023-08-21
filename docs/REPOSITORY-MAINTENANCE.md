@@ -7,7 +7,7 @@ ongoing maintenance.
 
 1. Fork the [template](https://github.com/theupdateframework/tuf-on-ci-template).
 1. To enable repository publishing, set _Settings->Pages->Source_ to `Github Actions`
-1. Clone the repository locally and [configure your signer tool](SIGNER-SETUP.md)
+1. Clone the repository locally and [configure your local signing tool](SIGNER-SETUP.md)
 1. Choose your online signing method and [configure it](ONLINE-SIGNING-SETUP.md):
    * Google Cloud KMS and Azure Key Vault are fully supported 
    * Sigstore requires no configuration (but is experimental)
