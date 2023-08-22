@@ -44,7 +44,9 @@ pip install git+https://git@github.com/theupdateframework/tuf-on-ci#subdirectory
 1. `git clone` the repository you are a signer for
 1. If you are not a GitHub maintainer of the repository, fork the repository on GitHub
    and add your fork as a remote in your local git clone
-1. Create a local configuration file `.tuf-on-ci-sign.ini` in the repository directory:
+1. Create a local configuration file `.tuf-on-ci-sign.ini` in the repository directory
+   (either manually or by running the `signer/create-config-file.sh` script included in
+   TUF-on-CI sources):
 
   ```
   [settings]
