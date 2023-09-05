@@ -3,7 +3,10 @@
 A development install can be made in any environment but venv is recommended:
 
 ```shell
-# Create environment
+# Clone the project
+git clone https://github.com/theupdateframework/tuf-on-ci.git
+cd tuf-on-ci
+# Create virtual environment
 python3 -m venv .venv
 # Enter environment
 source .venv/bin/activate
@@ -36,27 +39,22 @@ manually after inspection and it will work as if the push was done by the tool i
 
 ### Debugging repository tools
 
-The same tool (`tuf-on-ci-status`) that runs during the automation
-can be run locally too to inspect the current status of the signing
-event branch.
+The same tool (`tuf-on-ci-status`) that runs during the signing event automation
+can be run locally to inspect the current status of the signing event branch. Note
+that the repository tools only operate on current commit (unlike the signing tools 
+that always checkout the remote branch) 
 
-To install the repository tools, run pip install from the
-`repo/` directory where the
-[pyproject.toml](../repo/pyproject.toml) file exists:
-
-```shell
-$ pip install -e .
-```
-
-As an example, this would be the output when an open invitation exists
+As an example, this would be the markdown output when an open invitation exists
 for a new user to become a root key holder:
 
 ```shell
+$ git fetch && git checkout sign/add-fakeuser
+...
 $ tuf-on-ci-status
 ### Current signing event state
-Event [sign/add-fakeuser-1](../compare/sign/add-fakeuser-1)
+Event [sign/add-fakeuser](../compare/sign/add-fakeuser)
 #### :x: root
-root delegations have open invites (@-fakeuser-2).
-Invitees can accept the invitations by running `tuf-on-ci-sign add-fakeuser-2`
+root delegations have open invites (@-fakeuser).
+Invitees can accept the invitations by running `tuf-on-ci-sign sign/add-fakeuser`
 $
 ```
