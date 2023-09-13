@@ -501,9 +501,11 @@ class SignerRepository(Repository):
                 delegator.delegations.roles[rolename] = role
                 changed = True
 
-            for keyid in role.keyids:
+            keyids = role.keyids.copy()
+            for keyid in keyids:
                 key = delegator.get_key(keyid)
-                if key.unrecognized_fields["x-tuf-on-ci-keyowner"] in config.signers:
+                key_owner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
+                if key_owner in config.signers:
                     # signer is still a signer
                     config.signers.remove(
                         key.unrecognized_fields["x-tuf-on-ci-keyowner"]
