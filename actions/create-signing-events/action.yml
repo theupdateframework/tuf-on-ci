@@ -1,4 +1,4 @@
-name: 'Offline version bump'
+name: 'Create signing events'
 description: 'Create signing events for offline signed metadata that is about to expire'
 
 runs:
