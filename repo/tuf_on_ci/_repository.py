@@ -463,6 +463,7 @@ class CIRepository(Repository):
 
         return signing_event_status, known_good_status
 
+    # TODO remove publish once refactoring to use build() is complete
     def publish(self, directory: str, metadata_path: str, targets_path: str):
         def clean_path(p: str):
             if p.startswith("/"):
@@ -505,6 +506,35 @@ class CIRepository(Repository):
                 for hash in target.hashes.values():
                     dst_path = os.path.join(targets_dir, parent, f"{hash}.{name}")
                     shutil.copy(src_path, dst_path)
+
+    def build(self, metadata_path: str, artifact_path: str | None):
+        """Build a publishable directory of metadata and (optionally) artifacts"""
+        os.makedirs(metadata_path, exist_ok=True)
+        if artifact_path:
+            os.makedirs(artifact_path, exist_ok=True)
+
+        for src_path in glob(os.path.join(self._dir, "root_history", "*.root.json")):
+            shutil.copy(src_path, metadata_path)
+        shutil.copy(os.path.join(self._dir, "timestamp.json"), metadata_path)
+
+        snapshot = self.snapshot()
+        dst_path = os.path.join(metadata_path, f"{snapshot.version}.snapshot.json")
+        shutil.copy(os.path.join(self._dir, "snapshot.json"), dst_path)
+
+        for filename, metafile in snapshot.meta.items():
+            src_path = os.path.join(self._dir, filename)
+            dst_path = os.path.join(metadata_path, f"{metafile.version}.{filename}")
+            shutil.copy(src_path, dst_path)
+
+            if artifact_path:
+                targets = self.targets(filename[: -len(".json")])
+                for target in targets.targets.values():
+                    role, sep, name = target.path.rpartition("/")
+                    os.makedirs(os.path.join(artifact_path, role), exist_ok=True)
+                    src_path = os.path.join(self._dir, "..", "targets", role, name)
+                    for hash in target.hashes.values():
+                        dst_path = os.path.join(artifact_path, role, f"{hash}.{name}")
+                        shutil.copy(src_path, dst_path)
 
     def bump_expiring(self, rolename: str) -> int | None:
         """Create a new version of role if it is about to expire"""
