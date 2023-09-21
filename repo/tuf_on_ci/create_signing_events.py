@@ -1,6 +1,6 @@
 # Copyright 2023 Google LLC
 
-"""Command line tool to version bump roles that are about to expire"""
+"""Command line tool to create signing events for roles that are about to expire"""
 
 import logging
 import subprocess
@@ -29,7 +29,7 @@ def _git(cmd: list[str]) -> subprocess.CompletedProcess:
 @click.command()  # type: ignore[arg-type]
 @click.option("-v", "--verbose", count=True, default=0)
 @click.option("--push/--no-push", default=False)
-def bump_offline(verbose: int, push: bool) -> None:
+def create_signing_events(verbose: int, push: bool) -> None:
     """Create new branches with version bump commits for expiring offline roles
 
     Note that these offline role versions will not be signed yet.
