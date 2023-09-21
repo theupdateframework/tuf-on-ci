@@ -46,8 +46,21 @@ runs:
         fi
       shell: bash
 
-    - id: publish
+    - id: move-publish-branch
       if: inputs.force_publish || env.ONLINE_SIGNED == 'true'
       run: |
         git push origin HEAD:publish
       shell: bash
+
+    - id: dispatch-publish-workflow
+      if: inputs.force_publish || env.ONLINE_SIGNED == 'true'
+      uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
+      with:
+        script: |
+          console.log('Dispatching publish workflow:')
+          github.rest.actions.createWorkflowDispatch({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            workflow_id: 'publish.yml',
+            ref: 'publish',
+          })
