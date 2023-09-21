@@ -570,13 +570,24 @@ class CIRepository(Repository):
 
         return False
 
-    def is_verified(self, rolename: str) -> bool:
+    def is_valid(self, rolename: str) -> bool:
+        """Return True if role is considered valid by the repository
+
+        NOTE: Validity is defined as signed and and not in signing period.
+        So a role in signing period is valid for TUF clients but not "valid" here.
+        More checks could be added here.
+        """
+        role_md = self.open(rolename)
         if rolename in ["root", "timestamp", "snapshot", "targets"]:
             delegator = self.open("root")
         else:
             delegator = self.open("targets")
         try:
-            delegator.verify_delegate(rolename, self.open(rolename))
-            return True
+            delegator.verify_delegate(rolename, role_md)
         except UnsignedMetadataError:
             return False
+
+        signing_days, _ = self.signing_expiry_period(rolename)
+        delta = timedelta(days=signing_days)
+
+        return datetime.utcnow() + delta < role_md.signed.expires

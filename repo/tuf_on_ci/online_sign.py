@@ -47,13 +47,13 @@ def online_sign(verbose: int, push: bool) -> None:
 
     logging.basicConfig(level=logging.WARNING - verbose * 10)
     repo = CIRepository("metadata")
-    verified = repo.is_verified("snapshot")
-    snapshot_updated, _ = repo.do_snapshot(not verified)
+    valid = repo.is_valid("snapshot")
+    snapshot_updated, _ = repo.do_snapshot(not valid)
     if not snapshot_updated:
         click.echo("No snapshot needed")
     else:
-        verified = repo.is_verified("timestamp")
-        repo.do_timestamp(not verified)
+        valid = repo.is_valid("timestamp")
+        repo.do_timestamp(not valid)
 
         msg = "Snapshot & timestamp"
         _git(["add", "metadata/timestamp.json", "metadata/snapshot.json"])
