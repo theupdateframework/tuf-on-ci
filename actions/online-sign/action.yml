@@ -1,0 +1,53 @@
+name: 'Online sign'
+description: 'Creates a snapshot and timestamp if needed, moves publish branch if needed'
+
+inputs:
+  force_publish:
+    description: 'Publish even when snapshot and timestamp are not created'
+    required: true
+  gcp_workload_identity_provider:
+    description: 'Google Cloud workload identity provider'
+    required: false
+    default: ''
+  gcp_service_account:
+    description: 'Google Cloud service account name'
+    required: false
+    default: ''
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+
+    - name: Authenticate to Google Cloud
+      if: inputs.gcp_workload_identity_provider != ''
+      uses: google-github-actions/auth@35b0e87d162680511bf346c299f71c9c5c379033 # v1.1.1
+      with:
+        token_format: access_token
+        workload_identity_provider: ${{ inputs.gcp_workload_identity_provider }}
+        service_account: ${{ inputs.gcp_service_account }}
+
+    - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1 # v4.7.0
+      with:
+        python-version: "3.11"
+
+    - run: pip install $GITHUB_ACTION_PATH/../../repo/
+      shell: bash
+
+    - id: online-sign
+      run: |
+        tuf-on-ci-online-sign --push
+
+        # did we actually create a snapshot/timestamp commit?
+        if [[ $GITHUB_SHA == $(git rev-parse HEAD) ]]; then
+          echo "ONLINE_SIGNED=false" >> "$GITHUB_ENV"
+        else
+          echo "ONLINE_SIGNED=true" >> "$GITHUB_ENV"
+        fi
+      shell: bash
+
+    - id: publish
+      if: inputs.force_publish || env.ONLINE_SIGNED == 'true'
+      run: |
+        git push origin HEAD:publish
+      shell: bash
