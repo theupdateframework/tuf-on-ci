@@ -27,7 +27,7 @@ runs:
     - run: pip install $GITHUB_ACTION_PATH/../../repo/
       shell: bash
 
-    - id: Build repository
+    - id: build-repository
       run: |
         mkdir build
         tuf-on-ci-build-repository --metadata build/${{inputs.metadata_path}}  --artifacts build/build/${{inputs.artifacts_path}}
