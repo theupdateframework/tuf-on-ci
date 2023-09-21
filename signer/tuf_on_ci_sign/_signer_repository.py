@@ -55,8 +55,8 @@ class SignerState(Enum):
 
 @dataclass
 class OnlineConfig:
-    # All keys are used as signing keys for both snapshot and timestamp
-    keys: list[Key]
+    # key is used as signing key for both snapshot and timestamp
+    key: Key
     timestamp_expiry: int
     timestamp_signing: int
     snapshot_expiry: int
@@ -371,12 +371,12 @@ class SignerRepository(Repository):
             timestamp_signing = timestamp_expiry // 2
         if snapshot_signing is None:
             snapshot_signing = snapshot_expiry // 2
-        keys = []
-        for keyid in timestamp_role.keyids:
-            keys.append(root.get_key(keyid))
+
+        keyid = timestamp_role.keyids[0]
+        key = root.get_key(keyid)
 
         return OnlineConfig(
-            keys, timestamp_expiry, timestamp_signing, snapshot_expiry, snapshot_signing
+            key, timestamp_expiry, timestamp_signing, snapshot_expiry, snapshot_signing
         )
 
     def set_online_config(self, online_config: OnlineConfig):
@@ -393,9 +393,8 @@ class SignerRepository(Repository):
                 root.revoke_key(keyid, "snapshot")
 
             # Add new keys
-            for key in online_config.keys:
-                root.add_key(key, "timestamp")
-                root.add_key(key, "snapshot")
+            root.add_key(online_config.key, "timestamp")
+            root.add_key(online_config.key, "snapshot")
 
             # set online role periods
             timestamp.unrecognized_fields[
