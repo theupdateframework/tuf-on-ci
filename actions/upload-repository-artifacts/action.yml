@@ -30,7 +30,7 @@ runs:
     - id: Build repository
       run: |
         mkdir build
-        tuf-on-ci-build-repo --metadata build/${{inputs.metadata_path}}  --artifacts build/build/${{inputs.artifacts_path}}
+        tuf-on-ci-build-repository --metadata build/${{inputs.metadata_path}}  --artifacts build/build/${{inputs.artifacts_path}}
 
         find build -type f | xargs ls -lh
       shell: bash
