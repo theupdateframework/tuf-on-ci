@@ -51,14 +51,14 @@ runs:
       shell: bash
 
     - id: move-publish-branch
-      if: inputs.force_publish || env.ONLINE_SIGNED == 'true'
+      if: inputs.force_publish == 'true' || env.ONLINE_SIGNED == 'true'
       run: |
         git show --oneline --no-patch HEAD
         git push origin HEAD:publish
       shell: bash
 
     - id: dispatch-publish-workflow
-      if: inputs.force_publish || env.ONLINE_SIGNED == 'true'
+      if: inputs.force_publish == 'true' || env.ONLINE_SIGNED == 'true'
       uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
       with:
         script: |
