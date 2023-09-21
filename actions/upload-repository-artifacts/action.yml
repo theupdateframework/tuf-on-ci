@@ -13,7 +13,7 @@ inputs:
   artifacts_path:
     description: 'relative published artifact path (only useful with gh_pages)'
     required: false
-    default: "metadata"
+    default: "artifacts"
 
 runs:
   using: "composite"
@@ -30,7 +30,7 @@ runs:
     - id: build-repository
       run: |
         mkdir build
-        tuf-on-ci-build-repository --metadata build/${{inputs.metadata_path}}  --artifacts build/build/${{inputs.artifacts_path}}
+        tuf-on-ci-build-repository --metadata build/${{inputs.metadata_path}}  --artifacts build/${{inputs.artifacts_path}}
 
         find build -type f | xargs ls -lh
       shell: bash
