@@ -388,38 +388,28 @@ repo_status_fail()
     git_repo checkout --quiet main
 }
 
-repo_snapshot()
+repo_online_sign()
 {
     git_repo switch --quiet main
     git_repo pull --quiet
 
     cd $REPO_GIT
 
-
-    if LOCAL_TESTING_KEY=$ONLINE_KEY tuf-on-ci-snapshot --push --metadata metadata --targets targets $PUBLISH_DIR >> $REPO_DIR/out 2>&1; then
+    if LOCAL_TESTING_KEY=$ONLINE_KEY tuf-on-ci-online-sign --push >> $REPO_DIR/out 2>&1; then
         echo "generated=true" >> $REPO_DIR/out
     else
         echo "generated=false" >> $REPO_DIR/out
     fi
 }
 
-repo_bump_versions()
+repo_publish()
 {
     git_repo switch --quiet main
     git_repo pull --quiet
 
     cd $REPO_GIT
 
-    if LOCAL_TESTING_KEY=$ONLINE_KEY tuf-on-ci-bump-online --push --metadata metadata --targets targets $PUBLISH_DIR >> $REPO_DIR/out 2>&1; then
-        echo "generated=true" >> $REPO_DIR/out
-    else
-        echo "generated=false" >> $REPO_DIR/out
-    fi
-
-    events=$(tuf-on-ci-bump-offline --push)
-    echo "events=$events"  >> $REPO_DIR/out
-
-    # TODO: run signing events
+    tuf-on-ci-build-repository --metadata $PUBLISH_DIR/metadata --artifacts $PUBLISH_DIR/targets
 }
 
 setup_test() {
@@ -448,8 +438,10 @@ test_basic()
     signer_init user1 sign/initial
     # merge successful signing event, create snapshot
     repo_merge sign/initial
-    repo_snapshot
-    repo_bump_versions # no-op expected
+    repo_online_sign
+    repo_online_sign # no-op expected
+
+    repo_publish
 
     # Verify test result
     # ECDSA signatures are not deterministic: wipe all sigs so diffing is easy
@@ -472,14 +464,16 @@ test_online_bumps()
     signer_init_shorter_snapshot_expiry user1 sign/initial
     # merge successful signing event, create snapshot
     repo_merge sign/initial
-    repo_snapshot
+    repo_online_sign
     # run three version bumps
-    repo_bump_versions # no-op expected
+    repo_online_sign # no-op expected
     FAKETIME="2021-02-14 01:02:03"
-    repo_bump_versions # 11 days forward: snapshot v2 and timestamp v2 expected
+    repo_online_sign # 11 days forward: snapshot v2 and timestamp v2 expected
     FAKETIME="2021-02-16 01:02:03"
-    repo_bump_versions # 2 more days forward: timestamp v3 expected
+    repo_online_sign # 2 more days forward: timestamp v3 expected
     FAKETIME="2021-02-03 01:02:03"
+
+    repo_publish
 
     # Verify test result
     # ECDSA signatures are not deterministic: wipe all sigs so diffing is easy
@@ -508,7 +502,7 @@ test_multi_user_signing()
     signer_sign user1 sign/initial
     # merge successful signing event, create new snapshot
     repo_merge sign/initial
-    repo_snapshot
+    repo_online_sign
 
     # New signing event: Change online delegation
     non_signer_change_online_delegation user2 sign/change-online
@@ -517,7 +511,9 @@ test_multi_user_signing()
     signer_sign user1 sign/change-online
     # merge successful signing event, create new snapshot
     repo_merge sign/change-online
-    repo_snapshot
+    repo_online_sign
+
+    repo_publish
 
     # Verify test result
     # ECDSA signatures are not deterministic: wipe all sigs so diffing is easy
@@ -547,7 +543,7 @@ test_target_changes()
 
     # merge successful signing event, create new snapshot
     repo_merge sign/initial
-    repo_snapshot
+    repo_online_sign
 
     # This section modifies targets in a new signing event
     # User 1 adds target files, repository modifies metadata, user 1 signs
@@ -565,7 +561,9 @@ test_target_changes()
 
     # merge successful signing event, create new snapshot
     repo_merge sign/new-targets
-    repo_snapshot
+    repo_online_sign
+
+    repo_publish
 
     # Verify test result
     # ECDSA signatures are not deterministic: wipe all sigs so diffing is easy
@@ -588,7 +586,7 @@ test_root_key_rotation()
     signer_init user1 sign/initial
     # merge successful signing event, create snapshot
     repo_merge sign/initial
-    repo_snapshot
+    repo_online_sign
 
     # New signing event: change root signer
     signer_change_root_signer user1 user2 sign/new-root
@@ -604,7 +602,9 @@ test_root_key_rotation()
     signer_sign user1 sign/new-root
     # signing event is now finished
     repo_merge sign/new-root
-    repo_snapshot
+    repo_online_sign
+
+    repo_publish
 
     # Verify test result
     # ECDSA signatures are not deterministic: wipe all sigs so diffing is easy
