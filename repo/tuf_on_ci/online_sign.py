@@ -47,16 +47,19 @@ def online_sign(verbose: int, push: bool) -> None:
 
     logging.basicConfig(level=logging.WARNING - verbose * 10)
     repo = CIRepository("metadata")
-    valid = repo.is_valid("snapshot")
-    snapshot_updated, _ = repo.do_snapshot(not valid)
-    if not snapshot_updated:
-        click.echo("No snapshot needed")
-    else:
-        valid = repo.is_valid("timestamp")
-        repo.do_timestamp(not valid)
+    valid_snapshot = repo.is_valid("snapshot")
+    snapshot_updated, _ = repo.do_snapshot(not valid_snapshot)
+    valid_timestamp = repo.is_valid("timestamp")
+    timestamp_updated, _ = repo.do_timestamp(not valid_timestamp)
 
-        msg = "Snapshot & timestamp"
+    if timestamp_updated:
+        roles = "snapshot & timestamp" if snapshot_updated else "timestamp"
+        msg = f"Online sign ({roles})"
+
+        click.echo(msg)
         _git(["add", "metadata/timestamp.json", "metadata/snapshot.json"])
         _git(["commit", "-m", msg])
         if push:
             _git(["push", "origin", "HEAD"])
+    else:
+        click.echo("Online signing not needed")
