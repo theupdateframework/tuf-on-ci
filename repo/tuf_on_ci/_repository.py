@@ -526,12 +526,12 @@ class CIRepository(Repository):
 
         return False
 
-    def is_valid(self, rolename: str) -> bool:
-        """Return True if role is considered valid by the repository
+    def is_signed(self, rolename: str) -> bool:
+        """Return True if role is correctly signed and not in signing period
 
-        NOTE: Validity is defined as signed and and not in signing period.
-        So a role in signing period is valid for TUF clients but not "valid" here.
-        More checks could be added here.
+        NOTE: a role in signing period is valid for TUF clients but this method returns
+        false in this case: this is useful when repository decides if it needs a new
+        online role version.
         """
         role_md = self.open(rolename)
         if rolename in ["root", "timestamp", "snapshot", "targets"]:

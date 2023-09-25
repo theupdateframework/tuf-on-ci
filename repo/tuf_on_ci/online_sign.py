@@ -47,9 +47,9 @@ def online_sign(verbose: int, push: bool) -> None:
 
     logging.basicConfig(level=logging.WARNING - verbose * 10)
     repo = CIRepository("metadata")
-    valid_snapshot = repo.is_valid("snapshot")
+    valid_snapshot = repo.is_signed("snapshot")
     snapshot_updated, _ = repo.do_snapshot(not valid_snapshot)
-    valid_timestamp = repo.is_valid("timestamp")
+    valid_timestamp = repo.is_signed("timestamp")
     timestamp_updated, _ = repo.do_timestamp(not valid_timestamp)
 
     if timestamp_updated:
