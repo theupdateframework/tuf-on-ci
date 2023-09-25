@@ -3,7 +3,7 @@
 ## Unreleased
 
 NOTE: This is a major API break, users should **not** just upgrade the action versions but
-repalce their workflows with newworkflows from tuf-on-ci-template.
+should replace their workflows with new workflows from tuf-on-ci-template.
 
 Release contains:
 * Major refactoring of actions: New actions are more logical and enable separating
