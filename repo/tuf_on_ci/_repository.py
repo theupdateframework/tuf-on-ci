@@ -463,48 +463,34 @@ class CIRepository(Repository):
 
         return signing_event_status, known_good_status
 
-    def publish(self, directory: str, metadata_path: str, targets_path: str):
-        def clean_path(p: str):
-            if p.startswith("/"):
-                return p[1:]
-            return p
-
-        metadata_path = clean_path(metadata_path)
-        targets_path = clean_path(targets_path)
-
-        if metadata_path == "":
-            metadata_dir = directory
-        else:
-            metadata_dir = os.path.join(directory, metadata_path)
-
-        if targets_path == "":
-            targets_dir = directory
-        else:
-            targets_dir = os.path.join(directory, targets_path)
-
-        os.makedirs(metadata_dir, exist_ok=True)
+    def build(self, metadata_path: str, artifact_path: str | None):
+        """Build a publishable directory of metadata and (optionally) artifacts"""
+        os.makedirs(metadata_path, exist_ok=True)
+        if artifact_path:
+            os.makedirs(artifact_path, exist_ok=True)
 
         for src_path in glob(os.path.join(self._dir, "root_history", "*.root.json")):
-            shutil.copy(src_path, metadata_dir)
-        shutil.copy(os.path.join(self._dir, "timestamp.json"), metadata_dir)
+            shutil.copy(src_path, metadata_path)
+        shutil.copy(os.path.join(self._dir, "timestamp.json"), metadata_path)
 
         snapshot = self.snapshot()
-        dst_path = os.path.join(metadata_dir, f"{snapshot.version}.snapshot.json")
+        dst_path = os.path.join(metadata_path, f"{snapshot.version}.snapshot.json")
         shutil.copy(os.path.join(self._dir, "snapshot.json"), dst_path)
 
         for filename, metafile in snapshot.meta.items():
             src_path = os.path.join(self._dir, filename)
-            dst_path = os.path.join(metadata_dir, f"{metafile.version}.{filename}")
+            dst_path = os.path.join(metadata_path, f"{metafile.version}.{filename}")
             shutil.copy(src_path, dst_path)
 
-            targets = self.targets(filename[: -len(".json")])
-            for target in targets.targets.values():
-                parent, sep, name = target.path.rpartition("/")
-                os.makedirs(os.path.join(targets_dir, parent), exist_ok=True)
-                src_path = os.path.join(self._dir, "..", "targets", parent, name)
-                for hash in target.hashes.values():
-                    dst_path = os.path.join(targets_dir, parent, f"{hash}.{name}")
-                    shutil.copy(src_path, dst_path)
+            if artifact_path:
+                targets = self.targets(filename[: -len(".json")])
+                for target in targets.targets.values():
+                    role, sep, name = target.path.rpartition("/")
+                    os.makedirs(os.path.join(artifact_path, role), exist_ok=True)
+                    src_path = os.path.join(self._dir, "..", "targets", role, name)
+                    for hash in target.hashes.values():
+                        dst_path = os.path.join(artifact_path, role, f"{hash}.{name}")
+                        shutil.copy(src_path, dst_path)
 
     def bump_expiring(self, rolename: str) -> int | None:
         """Create a new version of role if it is about to expire"""
@@ -540,13 +526,24 @@ class CIRepository(Repository):
 
         return False
 
-    def is_verified(self, rolename: str) -> bool:
+    def is_signed(self, rolename: str) -> bool:
+        """Return True if role is correctly signed and not in signing period
+
+        NOTE: a role in signing period is valid for TUF clients but this method returns
+        false in this case: this is useful when repository decides if it needs a new
+        online role version.
+        """
+        role_md = self.open(rolename)
         if rolename in ["root", "timestamp", "snapshot", "targets"]:
             delegator = self.open("root")
         else:
             delegator = self.open("targets")
         try:
-            delegator.verify_delegate(rolename, self.open(rolename))
-            return True
+            delegator.verify_delegate(rolename, role_md)
         except UnsignedMetadataError:
             return False
+
+        signing_days, _ = self.signing_expiry_period(rolename)
+        delta = timedelta(days=signing_days)
+
+        return datetime.utcnow() + delta < role_md.signed.expires

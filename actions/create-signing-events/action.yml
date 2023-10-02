@@ -1,4 +1,4 @@
-name: 'Offline version bump'
+name: 'Create signing events'
 description: 'Create signing events for offline signed metadata that is about to expire'
 
 runs:
@@ -15,18 +15,18 @@ runs:
     - run: pip install $GITHUB_ACTION_PATH/../../repo/
       shell: bash
 
-    - name: Bump offline role versions
-      id: offline-bump
+    - name: Create signing event branches for expiring roles
+      id: create-signing-events
       run: |
-        events=$(tuf-on-ci-bump-offline --push)
+        events=$(tuf-on-ci-create-signing-events --push)
         echo events="$events"
         echo events="$events" >> $GITHUB_OUTPUT
       shell: bash
 
-    - name: Dispatch signing events
-      if: steps.offline-bump.outputs.events != ''
+    - name: Dispatch signing event workflow
+      if: steps.create-signing-events.outputs.events != ''
       env:
-        EVENTS: ${{ steps.offline-bump.outputs.events }}
+        EVENTS: ${{ steps.create-signing-events.outputs.events }}
       uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410
       with:
         script: |

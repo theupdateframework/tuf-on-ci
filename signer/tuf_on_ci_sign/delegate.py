@@ -14,6 +14,7 @@ from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
     AzureSigner,
     GCPSigner,
+    Key,
     SigstoreKey,
     SSlibKey,
 )
@@ -125,28 +126,24 @@ def _get_repo_name(remote: str):
     return repo.lstrip("/")
 
 
-def _sigstore_import(pull_remote: str) -> list[SigstoreKey]:
+def _sigstore_import(pull_remote: str) -> Key:
     # WORKAROUND: build sigstore key and uri here since there is no import yet
     issuer = "https://token.actions.githubusercontent.com"
     repo = _get_repo_name(pull_remote)
 
-    # Create separate keys for the two workflows that need keys
-    keys = []
-    for workflow, keyid in [("snapshot.yml", "abcd"), ("version-bumps.yml", "efgh")]:
-        id = f"https://github.com/{repo}/.github/workflows/{workflow}@refs/heads/main"
-        key = SigstoreKey(
-            keyid, "sigstore-oidc", "Fulcio", {"issuer": issuer, "identity": id}
-        )
-        key.unrecognized_fields["x-tuf-on-ci-online-uri"] = "sigstore:"
-        keys.append(key)
-    return keys
+    id = f"https://github.com/{repo}/.github/workflows/online-sign.yml@refs/heads/main"
+    key = SigstoreKey(
+        "abcd", "sigstore-oidc", "Fulcio", {"issuer": issuer, "identity": id}
+    )
+    key.unrecognized_fields["x-tuf-on-ci-online-uri"] = "sigstore:"
+    return key
 
 
 def _get_online_input(config: OnlineConfig, user_config: User) -> OnlineConfig:
     config = copy.deepcopy(config)
     click.echo("\nConfiguring online roles")
     while True:
-        keyuri = config.keys[0].unrecognized_fields["x-tuf-on-ci-online-uri"]
+        keyuri = config.key.unrecognized_fields["x-tuf-on-ci-online-uri"]
         click.echo(f" 1. Configure online key: {keyuri}")
         click.echo(
             f" 2. Configure timestamp: Expires in {config.timestamp_expiry} days,"
@@ -165,7 +162,7 @@ def _get_online_input(config: OnlineConfig, user_config: User) -> OnlineConfig:
         if choice == 0:
             break
         if choice == 1:
-            config.keys = _collect_online_keys(user_config)
+            config.key = _collect_online_key(user_config)
         if choice == 2:
             config.timestamp_expiry = click.prompt(
                 bold("Please enter timestamp expiry in days"),
@@ -192,7 +189,7 @@ def _get_online_input(config: OnlineConfig, user_config: User) -> OnlineConfig:
     return config
 
 
-def _collect_online_keys(user_config: User) -> list[SSlibKey]:
+def _collect_online_key(user_config: User) -> Key:
     # TODO use value_proc argument to validate the input
 
     while True:
@@ -212,7 +209,7 @@ def _collect_online_keys(user_config: User) -> list[SSlibKey]:
             try:
                 uri, key = GCPSigner.import_(key_id)
                 key.unrecognized_fields["x-tuf-on-ci-online-uri"] = uri
-                return [key]
+                return key
             except Exception as e:
                 raise click.ClickException(f"Failed to read Google Cloud KMS key: {e}")
         if choice == 3:
@@ -221,7 +218,7 @@ def _collect_online_keys(user_config: User) -> list[SSlibKey]:
             try:
                 uri, key = AzureSigner.import_(vault_name, key_name)
                 key.unrecognized_fields["x-tuf-on-ci-online-uri"] = uri
-                return [key]
+                return key
             except Exception as e:
                 raise click.ClickException(f"Failed to read Azure Keyvault key: {e}")
         if choice == 4:
@@ -236,7 +233,7 @@ def _collect_online_keys(user_config: User) -> list[SSlibKey]:
                 {"public": pub_key},
                 {"x-tuf-on-ci-online-uri": uri},
             )
-            return [key]
+            return key
 
 
 def _collect_string(prompt: str) -> str:

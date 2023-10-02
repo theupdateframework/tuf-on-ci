@@ -18,7 +18,7 @@ currently experimental (and not supported by all TUF client libraries)
 
 ### Google Cloud KMS
 
-1. Make sure Google Cloud Workload Identity Federation allows your Github repositorys OIDC identity to sign
+1. Make sure Google Cloud Workload Identity Federation allows your GitHub repositorys OIDC identity to sign
    with a KMS key.
 1. Define your authentication details as repository variables in _Settings->Secrets and variables->Actions->Variables_:
    ```
@@ -35,28 +35,28 @@ currently experimental (and not supported by all TUF client libraries)
 1. Make sure Azure allows this repository OIDC identity to sign with a Key Vault key.
 1. Define `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `AZURE_SUBSCRIPTION_ID` as repository
    secrets in _Settings->Secrets and variables->Actions->Secrets_
-1. Modify the workflows that use snapshot and online-version-bump actions like this:
+1. Modify the online-sign workflow like this:
     ```yaml
     jobs:
-        snapshot:
+        online-sign:
         runs-on: ubuntu-latest
 
         permissions:
             id-token: 'write' # for OIDC identity access
             contents: 'write' # for committing snapshot/timestamp changes
-        ...
+            actions: 'write' # for dispatching publish workflow
+
         steps:
+        ...
             - name: Login to Azure
-            uses: azure/login@v1
-            with:
+              uses: azure/login@v1
+              with:
                 client-id: ${{ secrets.AZURE_CLIENT_ID }}
                 tenant-id: ${{ secrets.AZURE_TENANT_ID }}
                 subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-            - id: snapshot
-            uses: theupdateframework/tuf-on-ci/actions/snapshot@main
         ...
-        deploy:
-
+            - id: online-sign
+              uses: theupdateframework/tuf-on-ci/actions/online-sign@main
     ```
 1. _(only needed for initial configuration)_ Prepare your local environment: Use [az
        login](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
