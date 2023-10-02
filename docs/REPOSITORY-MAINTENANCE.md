@@ -6,8 +6,8 @@ ongoing maintenance.
 ## New Repository Setup
 
 1. Fork the [template](https://github.com/theupdateframework/tuf-on-ci-template).
-1. To enable repository publishing to GiHub Pages:
-   * set _Settings->Pages->Source_ to `Github Actions`
+1. To enable repository publishing to GitHub Pages:
+   * set _Settings->Pages->Source_ to `GitHub Actions`
    * Change _Settings->Environments->github-pages_ deployment branch from `main` to
      `publish`
 1. Clone the repository locally and [configure your local signing tool](SIGNER-SETUP.md)

@@ -18,7 +18,7 @@ currently experimental (and not supported by all TUF client libraries)
 
 ### Google Cloud KMS
 
-1. Make sure Google Cloud Workload Identity Federation allows your Github repositorys OIDC identity to sign
+1. Make sure Google Cloud Workload Identity Federation allows your GitHub repositorys OIDC identity to sign
    with a KMS key.
 1. Define your authentication details as repository variables in _Settings->Secrets and variables->Actions->Variables_:
    ```
