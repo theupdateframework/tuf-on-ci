@@ -60,25 +60,8 @@ def get_signing_key_input() -> Key:
     )
 
     if choice == 1:
-        identity = click.prompt(bold("Please enter your email address"))
-        click.echo(" 1. GitHub")
-        click.echo(" 2. Google")
-        click.echo(" 3. Microsoft")
-        issuer_id = click.prompt(
-            bold("Please choose the identity issuer"),
-            type=click.IntRange(1, 3),
-            default=1,
-        )
-        if issuer_id == 1:
-            issuer = "https://github.com/login/oauth"
-        elif issuer_id == 2:
-            issuer = "https://accounts.google.com"
-        else:
-            issuer = "https://login.microsoftonline.com"
-        try:
-            _, key = SigstoreSigner.import_(identity, issuer, ambient=False)
-        except Exception as e:
-            raise click.ClickException(f"Failed to create Sigstore key: {e}")
+        click.echo(bold("Please authenticate with your Sigstore signing identity"))
+        _, key = SigstoreSigner.import_via_auth()
     else:
         click.prompt(
             bold("Please insert your Yubikey and press enter"),
