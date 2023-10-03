@@ -1,0 +1,22 @@
+{
+ "signatures": [
+  {
+   "keyid": "fa47289",
+   "sig": "XXX"
+  }
+ ],
+ "signed": {
+  "_type": "snapshot",
+  "expires": "2022-02-03T01:02:03Z",
+  "meta": {
+   "delegated.json": {
+    "version": 1
+   },
+   "targets.json": {
+    "version": 2
+   }
+  },
+  "spec_version": "1.0.31",
+  "version": 2
+ }
+}

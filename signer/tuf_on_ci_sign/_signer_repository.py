@@ -496,7 +496,7 @@ class SignerRepository(Repository):
                 role = DelegatedRole(rolename, [], 1, True, [f"{rolename}/*"])
                 if not delegator.delegations:
                     delegator.delegations = Delegations({}, {})
-                assert delegator.delegations.roles
+                assert delegator.delegations.roles is not None
                 delegator.delegations.roles[rolename] = role
                 changed = True
 

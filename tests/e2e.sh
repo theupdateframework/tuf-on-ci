@@ -142,6 +142,37 @@ signer_init()
     done | tuf-on-ci-delegate $EVENT >> $SIGNER_DIR/out 2>&1
 }
 
+signer_add_delegation()
+{
+    # run tuf-on-ci-delegate to change root signer from user1 to user2:
+    USER1=$1
+    EVENT=$2
+
+    SIGNER_DIR="$WORK_DIR/$TEST_NAME/$USER1"
+    SIGNER_GIT="$SIGNER_DIR/git"
+    export SOFTHSM2_CONF="$SIGNER_DIR/softhsm2.conf"
+
+    # user1 needs to eventually sign, but after this, there's on open invitation
+    # for user2, so signing does not happen here
+    INPUT=(
+        "delegated"         # select role to modify
+        "1"                 # Configure role delegated? [1: configure signers]
+        ""                  # Enter list of signers [Enter to accept default of @user1]
+        ""                  # Configure sole delegated? [enter to continue]
+        "2"                 # Choose signing key [2: yubikey]
+        ""                  # Insert HW key and press enter
+        "0000"              # sign targets
+        "0000"              # sign delegated
+        ""                  # press enter to push
+    )
+
+    cd $SIGNER_GIT
+
+    for line in "${INPUT[@]}"; do
+        echo $line
+    done | tuf-on-ci-delegate $EVENT >> $SIGNER_DIR/out 2>&1
+}
+
 signer_change_root_signer()
 {
     # run tuf-on-ci-delegate to change root signer from user1 to user2:
@@ -457,6 +488,38 @@ test_basic()
     echo "OK"
 }
 
+test_delegated_role()
+{
+    echo -n "Delegated role... "
+    setup_test "delegated"
+
+    # Run the processes under test
+    # user1: Start signing event, sign root and targets
+    signer_init user1 sign/initial
+    # merge successful signing event, create snapshot
+    repo_merge sign/initial
+    repo_online_sign
+
+
+    signer_add_delegation user1 sign/delegation
+
+    # merge successful signing event, create snapshot
+    repo_merge sign/delegation
+    repo_online_sign
+
+    repo_publish
+
+    # Verify test result
+    # ECDSA signatures are not deterministic: wipe all sigs so diffing is easy
+    for t in ${PUBLISH_DIR}/metadata/*.json; do
+        strip_signatures $t
+    done
+    # the resulting metadata should match expected metadata exactly
+    diff -r $SCRIPT_DIR/expected/delegated/ $PUBLISH_DIR
+
+    echo "OK"
+}
+
 test_online_bumps()
 {
     echo -n "Online version bump... "
@@ -649,6 +712,7 @@ ONLINE_KEY="1d9a024348e413892aeeb8cc8449309c152f48177200ee61a02ae56f450c6480"
 
 # Run tests
 test_basic
+test_delegated_role
 test_online_bumps
 test_multi_user_signing
 test_target_changes
