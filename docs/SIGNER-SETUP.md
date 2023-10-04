@@ -21,6 +21,7 @@ TUF-on-CI also needs access to a PKCS#11 module.
    macOS users can install with
    ```shell
    $ brew install yubico-piv-tool
+   $ brew install swig
    ```
 
 #### Sigstore signing requirements
