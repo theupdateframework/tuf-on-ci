@@ -207,7 +207,8 @@ def status(verbose: int, push: bool) -> None:
         except subprocess.CalledProcessError as e:
             # Figure out if this is an error caused by remote being ahead
             # of local branch
-            found = e.stdout.find("Updates were rejected because the remote contains work that you do")
+            msg = "Updates were rejected because the remote contains work that you do"
+            found = e.stdout.find(msg)
             if found:
                 print("Updates on remote, will not push")
             else:
