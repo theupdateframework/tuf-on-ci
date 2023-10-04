@@ -25,13 +25,9 @@ def _git(cmd: list[str]) -> subprocess.CompletedProcess:
         "-c",
         "user.email=41898282+github-actions[bot]@users.noreply.github.com",
     ] + cmd
-    try:
-        proc = subprocess.run(cmd, check=True, capture_output=True, text=True)
-        logger.debug("%s:\n%s", cmd, proc.stdout)
-        return proc
-    except subprocess.CalledProcessError as e:
-        print("Git output on error:", e.stdout, e.stderr)
-        raise e
+    proc = subprocess.run(cmd, check=True, capture_output=True, text=True)
+    logger.debug("%s:\n%s", cmd, proc.stdout)
+    return proc
 
 
 def _find_changed_roles(known_good_dir: str, signing_event_dir: str) -> set[str]:
@@ -206,6 +202,16 @@ def status(verbose: int, push: bool) -> None:
                 success = False
 
     if push:
-        _git(["push", "origin", event_name])
+        try:
+            _git(["push", "origin", event_name])
+        except subprocess.CalledProcessError as e:
+            # Figure out if this is an error caused by remote being ahead
+            # of local branch
+            found = e.stdout.find("Updates were rejected because the remote contains work that you do")
+            if found:
+                print("Updates on remote, will not push")
+            else:
+                print("Git output on error:", e.stdout, e.stderr)
+                raise e
 
     sys.exit(0 if success else 1)

@@ -51,3 +51,12 @@ runs:
       if: inputs.gh_pages == 'true'
       with:
         path: build/
+
+    - id: status-summary
+      shell: bash
+      run: |
+        if [ "${{inputs.gh_pages }}" == "true" ]; then
+            echo "Repository deployed to GitHub Pages" >> $GITHUB_STEP_SUMMARY
+        else
+            echo "Repoistory is uploaded to artifacts" >> $GITHUB_STEP_SUMMARY
+        fi

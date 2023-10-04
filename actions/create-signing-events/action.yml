@@ -21,6 +21,11 @@ runs:
         events=$(tuf-on-ci-create-signing-events --push)
         echo events="$events"
         echo events="$events" >> $GITHUB_OUTPUT
+        if [ -z "${events}" ]; then
+            echo "Nothing to prepare" >> $GITHUB_STEP_SUMMARY
+        else
+            echo "Dispatching events for ${events}" >> $GITHUB_STEP_SUMMARY
+        fi
       shell: bash
 
     - name: Dispatch signing event workflow
