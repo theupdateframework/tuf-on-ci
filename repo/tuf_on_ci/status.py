@@ -55,6 +55,7 @@ def _find_changed_roles(known_good_dir: str, signing_event_dir: str) -> set[str]
 def _find_changed_target_roles(
     known_good_targets_dir: str, targets_dir: str
 ) -> set[str]:
+    """Compare two artifact directories, return rolenames that have artifacts changes"""
     files = (
         glob("*", root_dir=targets_dir)
         + glob("*/*", root_dir=targets_dir)
@@ -65,7 +66,13 @@ def _find_changed_target_roles(
     for filepath in files:
         f1 = os.path.join(targets_dir, filepath)
         f2 = os.path.join(known_good_targets_dir, filepath)
+
+        # subdirs are allowed to exist, appear and disappear
         if os.path.isdir(f1) and os.path.isdir(f2):
+            continue
+        if os.path.isdir(f1) and not os.path.exists(f2):
+            continue
+        if not os.path.exists(f1) and os.path.isdir(f2):
             continue
 
         try:
@@ -74,8 +81,8 @@ def _find_changed_target_roles(
         except FileNotFoundError:
             pass
 
-        # found a changed target, add rolename to list. "targets" is a special case
-        rolename, _, _ = filepath.rpartition(filepath)
+        # found a changed artifact, add rolename to set. "targets" is a special case
+        rolename, _, _ = filepath.rpartition("/")
         if not rolename:
             rolename = "targets"
         changed_roles.add(rolename)
