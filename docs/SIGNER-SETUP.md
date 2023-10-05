@@ -39,6 +39,11 @@ Installation from git:
 pip install git+https://git@github.com/theupdateframework/tuf-on-ci#subdirectory=signer
 ```
 
+Note: macOS users may have to install swig in case the above wheel build fails
+```shell
+$ brew install swig
+```
+
 ### Local configuration
 
 1. `git clone` the repository you are a signer for
