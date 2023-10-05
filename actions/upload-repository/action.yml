@@ -13,7 +13,7 @@ inputs:
   artifacts_path:
     description: 'relative published artifact path (only useful with gh_pages)'
     required: false
-    default: "artifacts"
+    default: "targets"
 
 runs:
   using: "composite"
