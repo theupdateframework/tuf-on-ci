@@ -210,7 +210,8 @@ def status(verbose: int, push: bool) -> None:
             msg = "Updates were rejected because the remote contains work that you do"
             found = e.stdout.find(msg)
             if found:
-                print("There are changes in the signing event. Skipping metadata update")
+                m = "There are changes in the signing event. Skipping metadata update"
+                print(m)
             else:
                 print("Git output on error:", e.stdout, e.stderr)
                 raise e
