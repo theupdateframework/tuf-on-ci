@@ -151,13 +151,13 @@ def import_repo(verbose: int, push: bool, event_name: str, import_file: str | No
             role_data = import_data[rolename]
             if rolename == "root":
                 with repo.edit_root() as root:
-                    ok = _update_expiry(root, role_data) and ok
                     ok = _update_signing(root, role_data) and ok
+                    ok = _update_expiry(root, role_data) and ok
 
                     for online_rolename in ["timestamp", "snapshot"]:
                         role = root.get_delegated_role(online_rolename)
-                        ok = _update_expiry(role, role_data) and ok
                         ok = _update_signing(role, role_data) and ok
+                        ok = _update_expiry(role, role_data) and ok
 
                     ok = _update_keys(root.keys, role_data) and ok
                     if not ok:
