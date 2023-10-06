@@ -144,7 +144,7 @@ signer_init()
 
 signer_add_delegation()
 {
-    # run tuf-on-ci-delegate to change root signer from user1 to user2:
+    # run tuf-on-ci-delegate to add a new delegated role
     USER1=$1
     EVENT=$2
 
@@ -152,8 +152,6 @@ signer_add_delegation()
     SIGNER_GIT="$SIGNER_DIR/git"
     export SOFTHSM2_CONF="$SIGNER_DIR/softhsm2.conf"
 
-    # user1 needs to eventually sign, but after this, there's on open invitation
-    # for user2, so signing does not happen here
     INPUT=(
         "delegated"         # select role to modify
         "1"                 # Configure role delegated? [1: configure signers]
@@ -354,6 +352,27 @@ signer_modify_targets()
     git rm --quiet targets/file2.txt
     git add targets/file1.txt
     git commit  --quiet -m "Modify target files"
+    git push --quiet origin $EVENT
+}
+
+signer_add_delegated_target()
+{
+    USER=$1
+    EVENT=$2
+
+    SIGNER_DIR="$WORK_DIR/$TEST_NAME/$USER"
+    SIGNER_GIT="$SIGNER_DIR/git"
+    export SOFTHSM2_CONF="$SIGNER_DIR/softhsm2.conf"
+
+    cd $SIGNER_GIT
+
+    # Make target file changes, push to remote signing event branch
+    git fetch --quiet origin
+    git switch --quiet -C $EVENT origin/main
+    mkdir -p targets/delegated
+    echo "file1" > targets/delegated/file1.txt
+    git add targets/delegated/file1.txt
+    git commit  --quiet -m "Add a delegated target file"
     git push --quiet origin $EVENT
 }
 
@@ -642,6 +661,42 @@ test_target_changes()
     echo "OK"
 }
 
+test_target_changes_in_delegations()
+{
+    echo -n "Target files in delegated roles... "
+    setup_test "target_files_in_delegated_roles"
+
+    # user1: create repo, add a delegated role
+    signer_init user1 sign/initial
+    signer_add_delegation user1 sign/initial
+
+    # merge successful signing event, create snapshot
+    repo_merge sign/initial
+    repo_online_sign
+
+    # second signing event: Any user adds target to delegated role
+    # Signing-event requires a signature from user1
+    signer_add_delegated_target user2 sign/new-delegated-target
+    repo_status_fail sign/new-delegated-target
+    signer_sign user1 sign/new-delegated-target
+
+    # merge successful signing event, create snapshot
+    repo_merge sign/new-delegated-target
+    repo_online_sign
+
+    repo_publish
+
+    # Verify test result
+    # ECDSA signatures are not deterministic: wipe all sigs so diffing is easy
+    for t in ${PUBLISH_DIR}/metadata/*.json; do
+        strip_signatures $t
+    done
+    # the resulting metadata should match expected metadata exactly
+    diff -r $SCRIPT_DIR/expected/target-files-in-delegated-roles/ $PUBLISH_DIR
+
+    echo "OK"
+}
+
 test_root_key_rotation()
 {
     echo -n "Root key rotation... "
@@ -716,4 +771,5 @@ test_delegated_role
 test_online_bumps
 test_multi_user_signing
 test_target_changes
+test_target_changes_in_delegations
 test_root_key_rotation

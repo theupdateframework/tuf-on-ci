@@ -1,0 +1,24 @@
+{
+ "signatures": [
+  {
+   "keyid": "95da323daa78f7b2557ae91e23be619ff932f9aec035abd4e40301405b363999",
+   "sig": "XXX"
+  }
+ ],
+ "signed": {
+  "_type": "targets",
+  "expires": "2022-02-03T01:02:03Z",
+  "spec_version": "1.0.31",
+  "targets": {
+   "delegated/file1.txt": {
+    "hashes": {
+     "sha256": "ecdc5536f73bdae8816f0ea40726ef5e9b810d914493075903bb90623d97b1d8"
+    },
+    "length": 6
+   }
+  },
+  "version": 2,
+  "x-tuf-on-ci-expiry-period": 365,
+  "x-tuf-on-ci-signing-period": 60
+ }
+}
