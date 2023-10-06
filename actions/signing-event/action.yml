@@ -18,12 +18,11 @@ runs:
       run: |
         if tuf-on-ci-status >> status-output;  then
           echo "status=success" >> $GITHUB_OUTPUT
-          cat status-output >> "$GITHUB_STEP_SUMMARY"
         else
           echo "status=failure" >> $GITHUB_OUTPUT
-          echo "Failed to get status of event" >> "$GITHUB_STEP_SUMMARY"
         fi
         cat status-output
+        cat status-output >> "$GITHUB_STEP_SUMMARY"
       shell: bash
 
     - id: file-issue
