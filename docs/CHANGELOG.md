@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.1.0
 
 NOTE: This is a major API break, users should **not** just upgrade the action versions but
 should replace their workflows with new workflows from tuf-on-ci-template.
@@ -9,6 +9,7 @@ Release contains:
 * Major refactoring of actions: New actions are more logical and enable separating
   publishing fron online signing. The repository now contains a new branch "publish"
   that always points to the newest publishable repository version
+* Improved Sigstore signer registration flow
 * Bug fixes
 
 Upgrade instructions:
@@ -19,6 +20,8 @@ Upgrade instructions:
 * If you use the experimental sigstore online signing: After updating run
   `tuf-on-ci-delegate sign/update-online-key timestamp` re-select sigstore as the signing
   system: This creates a new signing event that is required for online signing to work.
+
+Thanks to contributors Radoslav Dimitrov, Meredith Lancaster and lv291.
 
 ## v0.0.1
 
