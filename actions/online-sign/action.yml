@@ -41,7 +41,7 @@ runs:
         if [[ $GITHUB_SHA == $(git rev-parse HEAD) ]]; then
           echo "ONLINE_SIGNED=false"
           echo "ONLINE_SIGNED=false" >> "$GITHUB_ENV"
-          echo "### Nothing to sign" >> $GITHUB_STEP_SUMMARY"
+          echo "### Nothing to sign" >> "$GITHUB_STEP_SUMMARY"
         else
           echo "ONLINE_SIGNED=true"
           echo "ONLINE_SIGNED=true" >> "$GITHUB_ENV"
