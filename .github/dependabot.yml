@@ -20,13 +20,13 @@ updates:
     time: "10:25"
 
 - package-ecosystem: "github-actions"
-  directory: "actions/offline-version-bump/"
+  directory: "actions/create-signing-events/"
   schedule:
     interval: "daily"
     time: "10:25"
 
 - package-ecosystem: "github-actions"
-  directory: "actions/online-version-bump/"
+  directory: "actions/online-sign/"
   schedule:
     interval: "daily"
     time: "10:25"
@@ -38,7 +38,7 @@ updates:
     time: "10:25"
 
 - package-ecosystem: "github-actions"
-  directory: "actions/snapshot/"
+  directory: "actions/upload-repository/"
   schedule:
     interval: "daily"
     time: "10:25"
