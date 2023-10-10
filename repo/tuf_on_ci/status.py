@@ -101,15 +101,14 @@ def _role_status(repo: CIRepository, role: str, event_name) -> bool:
         missing = missing | prev_status.missing
 
     if role_is_valid and not status.invites:
-        emoji = "heavy_check_mark"
+        emoji = "white_check_mark"
     else:
         emoji = "x"
     click.echo(f"#### :{emoji}: {role}")
 
     if status.invites:
-        click.echo(
-            f"{role} delegations have open invites ({', '.join(status.invites)})."
-        )
+        invites = ", ".join(status.invites)
+        click.echo(f"Role `{role}` delegations have open invites ({invites}).")
         click.echo(
             "Invitees can accept the invitations by running "
             f"`tuf-on-ci-sign {event_name}`"
@@ -117,23 +116,23 @@ def _role_status(repo: CIRepository, role: str, event_name) -> bool:
 
     if not status.invites:
         if status.target_changes:
-            click.echo(f"{role} contains following target file changes:")
+            click.echo(f"Role `{role}` contains following artifact changes:")
             for target_state in status.target_changes:
                 click.echo(f" * {target_state}")
             click.echo("")
 
         if role_is_valid:
             click.echo(
-                f"{role} is verified and signed by {sig_counts} signers "
+                f"Role `{role}` is verified and signed by {sig_counts} signers "
                 f"({', '.join(signed)})."
             )
         elif signed:
             click.echo(
-                f"{role} is not yet verified. It is signed by {sig_counts} signers "
-                f"({', '.join(signed)})."
+                f"Role `{role}` is not yet verified. It is signed by {sig_counts} "
+                f"signers ({', '.join(signed)})."
             )
         else:
-            click.echo(f"{role} is unsigned and not yet verified")
+            click.echo(f"Role `{role}` is unsigned and not yet verified")
 
         if missing:
             click.echo(f"Still missing signatures from {', '.join(missing)}")
@@ -156,9 +155,10 @@ def status(verbose: int, push: bool) -> None:
     logging.basicConfig(level=logging.WARNING - verbose * 10)
 
     event_name = _git(["branch", "--show-current"]).stdout.strip()
+    head = _git(["rev-parse", "HEAD"]).stdout.strip()
 
     click.echo("### Current signing event state")
-    click.echo(f"Event [{event_name}](../compare/{event_name})")
+    click.echo(f"Event [{event_name}](../compare/{event_name}) (commit {head[:7]})")
 
     if not os.path.exists("metadata/root.json"):
         click.echo(
@@ -168,7 +168,6 @@ def status(verbose: int, push: bool) -> None:
         sys.exit(1)
 
     # Find the known-good commit
-    head = _git(["rev-parse", "HEAD"]).stdout.strip()
     merge_base = _git(["merge-base", "origin/main", "HEAD"]).stdout.strip()
     if head == merge_base:
         click.echo("This signing event contains no changes yet")
