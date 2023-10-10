@@ -41,6 +41,7 @@ runs:
         if [[ $GITHUB_SHA == $(git rev-parse HEAD) ]]; then
           echo "ONLINE_SIGNED=false"
           echo "ONLINE_SIGNED=false" >> "$GITHUB_ENV"
+          echo "### Nothing to sign" >> "$GITHUB_STEP_SUMMARY"
         else
           echo "ONLINE_SIGNED=true"
           echo "ONLINE_SIGNED=true" >> "$GITHUB_ENV"
@@ -52,6 +53,7 @@ runs:
       run: |
         git show --oneline --no-patch HEAD
         git push origin HEAD:publish
+        echo "### Online signing finished, will now publish" >> $GITHUB_STEP_SUMMARY
       shell: bash
 
     - id: dispatch-publish-workflow
