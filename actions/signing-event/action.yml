@@ -64,9 +64,9 @@ runs:
             pr_url.searchParams.set("body", "Signing event " + process.env.GITHUB_REF_NAME + " is successful and ready to merge.\n\nCloses #" + issue + ".")
             message += "### Signing event is successful\n\n"
             message += "Threshold of signatures has been reached. A [pull request](" + pr_url + ") can be opened."
-            summary = "### Signing event is successful"
+            summary = "Signing event is successful"
           } else {
-            summary = "### Signing event in progress"
+            summary = "Signing event in progress"
           }
 
           github.rest.issues.createComment({
