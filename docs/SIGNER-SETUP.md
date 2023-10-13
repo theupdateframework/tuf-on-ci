@@ -32,11 +32,8 @@ identity providers (GitHub, Google or Microsoft).
 
 ### Signing tool installation
 
-As of 0.0.1 releases are not yet available on PyPI.
-
-Installation from git:
 ```shell
-pip install git+https://git@github.com/theupdateframework/tuf-on-ci#subdirectory=signer
+pip install tuf-on-ci-sign
 ```
 
 Note: macOS users may have to install swig in case the above wheel build fails
