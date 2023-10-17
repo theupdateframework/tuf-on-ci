@@ -33,7 +33,7 @@ from tuf.api.metadata import (
     Signed,
     Targets,
 )
-from tuf.api.serialization.json import CanonicalJSONSerializer, JSONSerializer
+from tuf.api.serialization.json import JSONSerializer
 from tuf.repository import AbortEdit, Repository
 
 from tuf_on_ci_sign._user import User
@@ -150,8 +150,7 @@ class SignerRepository(Repository):
             keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
             if keyowner == self.user.name:
                 try:
-                    payload = CanonicalJSONSerializer().serialize(md.signed)
-                    key.verify_signature(md.signatures[key.keyid], payload)
+                    key.verify_signature(md.signatures[key.keyid], md.signed_bytes)
                 except (KeyError, UnverifiedSignatureError):
                     return True
 
@@ -162,8 +161,7 @@ class SignerRepository(Repository):
                 keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
                 if keyowner == self.user.name:
                     try:
-                        payload = CanonicalJSONSerializer().serialize(md.signed)
-                        key.verify_signature(md.signatures[key.keyid], payload)
+                        key.verify_signature(md.signatures[key.keyid], md.signed_bytes)
                     except (KeyError, UnverifiedSignatureError):
                         return True
 

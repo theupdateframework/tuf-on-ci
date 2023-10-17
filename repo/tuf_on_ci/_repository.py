@@ -27,7 +27,7 @@ from tuf.api.metadata import (
     Targets,
     Timestamp,
 )
-from tuf.api.serialization.json import CanonicalJSONSerializer, JSONSerializer
+from tuf.api.serialization.json import JSONSerializer
 from tuf.repository import AbortEdit, Repository
 
 # sigstore is not a supported key by default
@@ -216,9 +216,8 @@ class CIRepository(Repository):
                 md.signatures[key.keyid] = Signature(key.keyid, "")
 
         if rolename in ["timestamp", "snapshot"]:
-            root_md: Metadata[Root] = self.open("root")
             # repository should never write unsigned online roles
-            root_md.verify_delegate(rolename, md)
+            self.root().verify_delegate(rolename, md.signed_bytes, md.signatures)
 
         filename = self._get_filename(rolename)
         data = md.to_bytes(JSONSerializer())
@@ -265,7 +264,7 @@ class CIRepository(Repository):
         return None
 
     def _validate_role(
-        self, delegator: Metadata, rolename: str
+        self, delegator: Root | Targets, rolename: str
     ) -> tuple[bool, str | None]:
         """Validate role compatibility with this repository
 
@@ -297,7 +296,7 @@ class CIRepository(Repository):
         # * check that target files in metadata match the files in targets/
 
         try:
-            delegator.verify_delegate(rolename, md)
+            delegator.verify_delegate(rolename, md.signed_bytes, md.signatures)
         except UnsignedMetadataError:
             return False, None
 
@@ -399,19 +398,24 @@ class CIRepository(Repository):
 
         # Find delegating metadata. For root handle the special case of known good
         # delegating metadata.
+        delegator: Root | Targets
         if known_good:
-            delegator = None
-            if rolename == "root":
-                delegator = self.open_prev("root")
-            if not delegator:
-                # Not root role or there is no known-good root metadata yet
+            if rolename != "root":
+                # Not root role: known good signing status not needed
                 return None
+
+            prev_root_md: Metadata[Root] | None = self.open_prev("root")
+            if not prev_root_md:
+                # No known-good root exists yet
+                return None
+
+            delegator = prev_root_md.signed
         elif rolename == "root":
-            delegator = self.open("root")
+            delegator = self.root()
         elif rolename == "targets":
-            delegator = self.open("root")
+            delegator = self.root()
         else:
-            delegator = self.open("targets")
+            delegator = self.targets()
 
         # Build list of invites to all delegated roles of rolename
         delegation_names = []
@@ -423,13 +427,13 @@ class CIRepository(Repository):
         for delegation_name in delegation_names:
             invites.update(self.state.invited_signers_for_role(delegation_name))
 
-        role = delegator.signed.get_delegated_role(rolename)
+        role = delegator.get_delegated_role(rolename)
 
         # Build lists of signed signers and not signed signers
+        payload = md.signed_bytes
         for key in self._get_keys(rolename, known_good):
             keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
             try:
-                payload = CanonicalJSONSerializer().serialize(md.signed)
                 key.verify_signature(md.signatures[key.keyid], payload)
                 sigs.add(keyowner)
             except (KeyError, UnverifiedSignatureError):
@@ -533,17 +537,18 @@ class CIRepository(Repository):
         false in this case: this is useful when repository decides if it needs a new
         online role version.
         """
-        role_md = self.open(rolename)
+        md = self.open(rolename)
         if rolename in ["root", "timestamp", "snapshot", "targets"]:
-            delegator = self.open("root")
+            delegator: Root | Targets = self.root()
         else:
-            delegator = self.open("targets")
+            delegator = self.targets()
+
         try:
-            delegator.verify_delegate(rolename, role_md)
+            delegator.verify_delegate(rolename, md.signed_bytes, md.signatures)
         except UnsignedMetadataError:
             return False
 
         signing_days, _ = self.signing_expiry_period(rolename)
         delta = timedelta(days=signing_days)
 
-        return datetime.utcnow() + delta < role_md.signed.expires
+        return datetime.utcnow() + delta < md.signed.expires
