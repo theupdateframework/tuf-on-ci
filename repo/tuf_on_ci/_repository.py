@@ -21,6 +21,7 @@ from tuf.api.metadata import (
     Metadata,
     MetaFile,
     Root,
+    Signed,
     Snapshot,
     TargetFile,
     Targets,
@@ -240,31 +241,22 @@ class CIRepository(Repository):
         """
         return MetaFile(self.snapshot().version)
 
-    def open_prev(self, role: str) -> Metadata | None:
-        """Return known good metadata for role (if it exists)"""
-        prev_fname = f"{self._prev_dir}/{role}.json"
-        if os.path.exists(prev_fname):
-            with open(prev_fname, "rb") as f:
-                return Metadata.from_bytes(f.read())
-
-        return None
-
     def _validate_role(self, rolename: str) -> tuple[bool, str | None]:
         """Validate role compatibility with this repository
 
         Returns bool for validity and optional error message"""
-        md = self.open(rolename)
-        prev_md = self.open_prev(rolename)
+        signed: Signed = self.open(rolename).signed
+        known_good = self._known_good(rolename)
 
         # TODO: Current checks are more examples than actual checks
 
         # Make sure version grows if there are actual payload changes
-        if prev_md and prev_md.signed != md.signed:
-            if md.signed.version <= prev_md.signed.version:
-                return False, f"Version {md.signed.version} is not valid for {rolename}"
+        if known_good and known_good != signed:
+            if signed.version <= known_good.version:
+                return False, f"Version {signed.version} is not valid for {rolename}"
 
-        days = md.signed.unrecognized_fields["x-tuf-on-ci-expiry-period"]
-        if md.signed.expires > datetime.utcnow() + timedelta(days=days):
+        days = signed.unrecognized_fields["x-tuf-on-ci-expiry-period"]
+        if signed.expires > datetime.utcnow() + timedelta(days=days):
             return False, f"Expiry date is further than expected {days} days ahead"
 
         # TODO for root:
@@ -308,31 +300,17 @@ class CIRepository(Repository):
 
         return targetfiles
 
-    def _known_good_root(self) -> Root:
-        """Return the Root object from the known-good repository state"""
+    def _known_good(self, rolename: str) -> Root | Targets | None:
+        """Return object from the known-good repository state"""
+        assert rolename not in [Timestamp.type, Snapshot.type]
         assert self._prev_dir is not None
-        prev_path = os.path.join(self._prev_dir, "root.json")
-        if os.path.exists(prev_path):
-            with open(prev_path, "rb") as f:
-                md = Metadata.from_bytes(f.read())
-            assert isinstance(md.signed, Root)
-            return md.signed
-        else:
-            # this role did not exist: return an empty one for comparison purposes
-            return Root()
 
-    def _known_good_targets(self, rolename: str) -> Targets:
-        """Return Targets from the known good version (signing event start point)"""
-        assert self._prev_dir
         prev_path = os.path.join(self._prev_dir, f"{rolename}.json")
-        if os.path.exists(prev_path):
-            with open(prev_path, "rb") as f:
-                md = Metadata.from_bytes(f.read())
-            assert isinstance(md.signed, Targets)
-            return md.signed
-        else:
-            # this role did not exist: return an empty one for comparison purposes
-            return Targets()
+        if not os.path.exists(prev_path):
+            return None
+
+        with open(prev_path, "rb") as f:
+            return Metadata.from_bytes(f.read()).signed
 
     def _get_target_changes(self, rolename: str) -> list[TargetState]:
         """Compare targetfiles in known good version and signing event version:
@@ -343,7 +321,13 @@ class CIRepository(Repository):
 
         changes = []
 
-        known_good_targetfiles = self._known_good_targets(rolename).targets
+        targets = self._known_good(rolename)
+        if targets is None:
+            known_good_targetfiles = {}
+        else:
+            assert isinstance(targets, Targets)
+            known_good_targetfiles = targets.targets
+
         for targetfile in self.targets(rolename).targets.values():
             if targetfile.path not in known_good_targetfiles:
                 # new in signing event
@@ -378,9 +362,8 @@ class CIRepository(Repository):
 
         # If role is root and a previous version exists, verify with that too
         if rolename == Root.type:
-            prev_root_md = self.open_prev(Root.type)
-            if prev_root_md:
-                prev_delegator = prev_root_md.signed
+            prev_delegator = self._known_good(Root.type)
+            if prev_delegator:
                 prev_result = prev_delegator.get_verification_result(rolename, md.signed_bytes, md.signatures)
                 result = result.union(prev_result)
 
