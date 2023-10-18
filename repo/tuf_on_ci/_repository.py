@@ -111,34 +111,22 @@ class CIRepository(Repository):
     def _get_filename(self, role: str) -> str:
         return f"{self._dir}/{role}.json"
 
-    def _get_keys(self, role: str, known_good: bool = False) -> list[Key]:
+    def _get_keys(self, role: str) -> list[Key]:
         """Return public keys for delegated role
 
-        If known_good is True, use the keys defined in known good delegator.
-        Otherwise use keys defined in the signing event delegator.
+        Note that this will not return all keys required to sign root
+        (only the keys defined in current role).
         """
         if role in ["root", "timestamp", "snapshot", "targets"]:
-            if known_good:
-                delegator: Root | Targets = self._known_good_root()
-            else:
-                delegator = self.root()
+            delegator = self.root()
         else:
-            if known_good:
-                delegator = self._known_good_targets("targets")
-            else:
-                delegator = self.targets()
+            delegator = self.targets()
 
         r = delegator.get_delegated_role(role)
         keys = []
         for keyid in r.keyids:
             try:
-                key = delegator.get_key(keyid)
-                if known_good and "x-tuf-on-ci-keyowner" not in key.unrecognized_fields:
-                    # this is allowed for repo import case: we cannot identify known
-                    # good keys and have to trust that delegations have not changed
-                    continue
-
-                keys.append(key)
+                keys.append(delegator.get_key(keyid))
             except ValueError:
                 pass
         return keys
