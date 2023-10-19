@@ -103,8 +103,10 @@ def _role_status(repo: CIRepository, role: str, event_name) -> bool:
             f"`tuf-on-ci-sign {event_name}`"
         )
     else:
-        signed = status.verification_result.signed
-        unsigned = status.verification_result.unsigned
+        keys = status.verification_result.signed
+        signed = [k.unrecognized_fields["x-tuf-on-ci-keyowner"] for k in keys]
+        keys = status.verification_result.unsigned
+        unsigned = [k.unrecognized_fields["x-tuf-on-ci-keyowner"] for k in keys]
         if status.target_changes:
             click.echo(f"Role `{role}` contains following artifact changes:")
             for target_state in status.target_changes:
@@ -121,9 +123,7 @@ def _role_status(repo: CIRepository, role: str, event_name) -> bool:
                 f"Role `{role}` Role has not been signed threshold of signers yet. "
             )
             if signed:
-                click.echo(
-                    f"Currently it is signed by ({', '.join(signed)})."
-                )
+                click.echo(f"Currently it is signed by ({', '.join(signed)}).")
             else:
                 click.echo("Currently it is signed by no-one.")
 

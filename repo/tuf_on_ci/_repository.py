@@ -57,12 +57,64 @@ class TargetState:
 
 
 @dataclass
+class VerificationResultWithKeys:
+    """Signature verification result for delegated role metadata.
+
+    Attributes:
+        verified: True, if threshold of signatures is met.
+        signed: Signed delegated Keys.
+        unsigned: Unsigned delegated Keys.
+
+    """
+
+    verified: bool
+    signed: list[Key]
+    unsigned: list[Key]
+
+    @classmethod
+    def from_verification_result(
+        cls, original: VerificationResult, delegator: Root | Targets
+    ):
+        signed = [delegator.get_key(keyid) for keyid in original.signed]
+        unsigned = [delegator.get_key(keyid) for keyid in original.unsigned]
+        return VerificationResultWithKeys(original.verified, signed, unsigned)
+
+    def __bool__(self) -> bool:
+        return self.verified
+
+    def union(
+        self, other: "VerificationResultWithKeys"
+    ) -> "VerificationResultWithKeys":
+        """Combine two verification results.
+
+        Can be used to verify if root metadata is signed by the threshold of
+        keys of previous root and the threshold of keys of itself.
+        """
+        signed = self.signed.copy()
+        signed.extend([s for s in other.signed if s not in signed])
+        unsigned = self.unsigned.copy()
+        unsigned.extend([s for s in other.unsigned if s not in unsigned])
+
+        return VerificationResultWithKeys(
+            self.verified and other.verified, signed, unsigned
+        )
+
+
+@dataclass
 class SigningStatus:
     invites: set[str]  # invites to _delegations_ of the role
-    verification_result: VerificationResult
+    verification_result: VerificationResultWithKeys
     target_changes: list[TargetState]
     valid: bool
     message: str | None
+
+
+def _get_verification_result(
+    delegator: Root | Targets, rolename: str, md: Metadata
+) -> VerificationResultWithKeys:
+    """Helper to get verification results with Keys instead of keyids"""
+    result = delegator.get_verification_result(rolename, md.signed_bytes, md.signatures)
+    return VerificationResultWithKeys.from_verification_result(result, delegator)
 
 
 class SigningEventState:
@@ -111,26 +163,6 @@ class CIRepository(Repository):
 
     def _get_filename(self, role: str) -> str:
         return f"{self._dir}/{role}.json"
-
-    def _get_keys(self, role: str) -> list[Key]:
-        """Return public keys for delegated role
-
-        Note that this will not return all keys required to sign root
-        (only the keys defined in current role).
-        """
-        if role in ["root", "timestamp", "snapshot", "targets"]:
-            delegator = self.root()
-        else:
-            delegator = self.targets()
-
-        r = delegator.get_delegated_role(role)
-        keys = []
-        for keyid in r.keyids:
-            try:
-                keys.append(delegator.get_key(keyid))
-            except ValueError:
-                pass
-        return keys
 
     def open(self, role: str) -> Metadata:
         """Return existing metadata, or create new metadata
@@ -189,7 +221,8 @@ class CIRepository(Repository):
         md.signed.expires = datetime.utcnow() + timedelta(days=expiry_days)
 
         md.signatures.clear()
-        for key in self._get_keys(rolename):
+        unsigned = self._get_verification_result(rolename, md).unsigned
+        for key in unsigned:
             if rolename in ["timestamp", "snapshot"]:
                 uri = key.unrecognized_fields["x-tuf-on-ci-online-uri"]
                 # WORKAROUND while sigstoresigner is not finished
@@ -345,26 +378,29 @@ class CIRepository(Repository):
 
         return changes
 
-
-    def _get_verification_result(self, rolename: str) -> VerificationResult:
+    def _get_verification_result(
+        self, rolename: str, md: Metadata
+    ) -> VerificationResultWithKeys:
         """Return verification result for rolename.
 
-        Take into account that root must be verified by itself and the previous root. 
+        Take into account that root must be verified by itself and the previous root.
         """
-        md = self.open(rolename)
-
-        if rolename in [Root.type, Targets.type]:
-            delegator:Root | Targets = self.root()
+        if rolename == Root.type:
+            # md may be modified if we're in close() persisting a new root:
+            # we use that root as delegator instead of self.root()
+            delegator: Root | Targets = md.signed
+        elif rolename in [Timestamp.type, Snapshot.type, Targets.type]:
+            delegator = self.root()
         else:
             delegator = self.targets()
 
-        result = delegator.get_verification_result(rolename, md.signed_bytes, md.signatures)
+        result = _get_verification_result(delegator, rolename, md)
 
         # If role is root and a previous version exists, verify with that too
         if rolename == Root.type:
             prev_delegator = self._known_good(Root.type)
             if prev_delegator:
-                prev_result = prev_delegator.get_verification_result(rolename, md.signed_bytes, md.signatures)
+                prev_result = _get_verification_result(prev_delegator, rolename, md)
                 result = result.union(prev_result)
 
         return result
@@ -379,8 +415,8 @@ class CIRepository(Repository):
             delegation_names = [Root.type, Targets.type]
         elif rolename == Targets.type:
             targets = self.targets()
-            if targets.delegations:
-                delegation_names = targets.delegations.roles.keys()
+            if targets.delegations and targets.delegations.roles:
+                delegation_names = list(targets.delegations.roles.keys())
 
         for delegation_name in delegation_names:
             invites.update(self.state.invited_signers_for_role(delegation_name))
@@ -401,7 +437,8 @@ class CIRepository(Repository):
         invites = self._get_invites(rolename)
 
         # Find out verification status (inluding which keys have signed)
-        verification_result = self._get_verification_result(rolename)
+        md = self.open(rolename)
+        verification_result = self._get_verification_result(rolename, md)
 
         # Document changes to targets metadata in this signing event
         target_changes = self._get_target_changes(rolename)
@@ -412,9 +449,7 @@ class CIRepository(Repository):
             # Repository validation (metadata may be valid but still not acceptable)
             valid, msg = self._validate_role(rolename)
 
-        return SigningStatus(
-            invites, verification_result, target_changes, valid, msg
-        )
+        return SigningStatus(invites, verification_result, target_changes, valid, msg)
 
     def build(self, metadata_path: str, artifact_path: str | None):
         """Build a publishable directory of metadata and (optionally) artifacts"""
