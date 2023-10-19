@@ -120,7 +120,7 @@ def _role_status(repo: CIRepository, role: str, event_name) -> bool:
             )
         else:
             click.echo(
-                f"Role `{role}` Role has not been signed threshold of signers yet. "
+                f"Role `{role}` Role has not been signed by threshold of signers yet. "
             )
             if signed:
                 click.echo(f"Currently it is signed by ({', '.join(signed)}).")
@@ -128,7 +128,7 @@ def _role_status(repo: CIRepository, role: str, event_name) -> bool:
                 click.echo("Currently it is signed by no-one.")
 
         if unsigned:
-            click.echo(f"Still missing signatures from {', '.join(unsigned)}")
+            click.echo(f"Still missing signatures from {', '.join(unsigned)}.")
             click.echo(
                 "Signers can sign these changes by running "
                 f"`tuf-on-ci-sign {event_name}`"
@@ -136,7 +136,6 @@ def _role_status(repo: CIRepository, role: str, event_name) -> bool:
 
     if status.message:
         click.echo(f"**Error**: {status.message}")
-
     return status.valid
 
 
