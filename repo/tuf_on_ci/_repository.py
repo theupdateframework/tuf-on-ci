@@ -76,7 +76,9 @@ class VerificationResultWithKeys:
         cls, original: VerificationResult, delegator: Root | Targets
     ):
         signed = [delegator.get_key(keyid) for keyid in original.signed]
+        signed.sort(key=lambda key: key.keyid)
         unsigned = [delegator.get_key(keyid) for keyid in original.unsigned]
+        unsigned.sort(key=lambda key: key.keyid)
         return VerificationResultWithKeys(original.verified, signed, unsigned)
 
     def __bool__(self) -> bool:
