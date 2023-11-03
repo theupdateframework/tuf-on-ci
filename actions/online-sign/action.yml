@@ -1,15 +1,23 @@
-name: 'Online sign'
-description: 'Creates a snapshot and timestamp if needed, moves publish branch if needed'
+name: "Online sign"
+description: "Creates a snapshot and timestamp if needed, moves publish branch if needed"
 
 inputs:
   gcp_workload_identity_provider:
-    description: 'Google Cloud workload identity provider'
+    description: "Google Cloud workload identity provider"
     required: false
-    default: ''
+    default: ""
   gcp_service_account:
-    description: 'Google Cloud service account name'
+    description: "Google Cloud service account name"
     required: false
-    default: ''
+    default: ""
+  aws_region:
+    description: "AWS region"
+    required: false
+    default: ""
+  aws_role_to_assume:
+    description: "AWS role to assume"
+    required: false
+    default: ""
 
 runs:
   using: "composite"
@@ -25,6 +33,13 @@ runs:
         token_format: access_token
         workload_identity_provider: ${{ inputs.gcp_workload_identity_provider }}
         service_account: ${{ inputs.gcp_service_account }}
+
+    - name: Authenticate to AWS
+      if: inputs.aws_role_to_assume != ''
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ inputs.aws_region }}
+        role-to-assume: ${{ inputs.aws_role_to_assume }}
 
     - uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236 # v4.7.1
       with:
