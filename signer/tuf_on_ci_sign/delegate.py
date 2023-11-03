@@ -12,6 +12,7 @@ from urllib import parse
 import click
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
+    AWSSigner,
     AzureSigner,
     GCPSigner,
     Key,
@@ -196,6 +197,7 @@ def _collect_online_key(user_config: User) -> Key:
         click.echo(" 1. Sigstore")
         click.echo(" 2. Google Cloud KMS")
         click.echo(" 3. Azure Key Vault")
+        click.echo(" 4. AWS KMS")
         choice = click.prompt(
             bold("Please select online key type"),
             type=click.IntRange(1, 4),
@@ -222,6 +224,15 @@ def _collect_online_key(user_config: User) -> Key:
             except Exception as e:
                 raise click.ClickException(f"Failed to read Azure Keyvault key: {e}")
         if choice == 4:
+            key_id = _collect_string("Enter AWS KMS key id")
+            scheme = _collect_string("Enter key scheme")
+            try:
+                uri, key = AWSSigner.import_(key_id, scheme)
+                key.unrecognized_fields["x-tuf-on-ci-online-uri"] = uri
+                return key
+            except Exception as e:
+                raise click.ClickException(f"Failed to read AWS KMS key: {e}")
+        if choice == 5:
             # This could be generic support, but for now it's a hidden test key.
             # key value 1d9a024348e413892aeeb8cc8449309c152f48177200ee61a02ae56f450c6480
             uri = "envvar:LOCAL_TESTING_KEY"

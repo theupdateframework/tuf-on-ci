@@ -12,7 +12,7 @@ version = "0.2.0"
 description = "Signing tools for TUF-on-CI"
 readme = "README.md"
 dependencies = [
-  "securesystemslib[gcpkms,hsm,sigstore] ~= 0.30",
+  "securesystemslib[awskms,azurekms,gcpkms,hsm,sigstore] ~= 0.30",
   "tuf ~= 3.0",
   "click ~= 8.1",
 ]
