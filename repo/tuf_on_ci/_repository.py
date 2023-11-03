@@ -10,12 +10,12 @@ from glob import glob
 from securesystemslib.exceptions import UnverifiedSignatureError
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
+    SIGNER_FOR_URI_SCHEME,
     Signature,
     Signer,
     SigstoreKey,
     SigstoreSigner,
 )
-from sigstore.oidc import detect_credential
 from tuf.api.exceptions import UnsignedMetadataError
 from tuf.api.metadata import (
     Key,
@@ -32,6 +32,7 @@ from tuf.repository import AbortEdit, Repository
 
 # sigstore is not a supported key by default
 KEY_FOR_TYPE_AND_SCHEME[("sigstore-oidc", "Fulcio")] = SigstoreKey
+SIGNER_FOR_URI_SCHEME[SigstoreSigner.SCHEME] = SigstoreSigner
 
 # TODO Add a metadata cache so we don't constantly open files
 # TODO; Signing status probably should include an error message when valid=False
@@ -205,11 +206,7 @@ class CIRepository(Repository):
         for key in self._get_keys(rolename):
             if rolename in ["timestamp", "snapshot"]:
                 uri = key.unrecognized_fields["x-tuf-on-ci-online-uri"]
-                # WORKAROUND while sigstoresigner is not finished
-                if uri == "sigstore:":
-                    signer = SigstoreSigner(detect_credential(), key)
-                else:
-                    signer = Signer.from_priv_key_uri(uri, key)
+                signer = Signer.from_priv_key_uri(uri, key)
                 md.sign(signer, True)
             else:
                 # offline signer, add empty sig
