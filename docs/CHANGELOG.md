@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.2.0
+
+* GitHub actions now output step summaries: these are visible in workflow
+  run pages on Github (#96)
+* Improved output in signing event status comments (#101)
+* Fixed online signing with ambient Sigstore identity, which broke in 0.1.0
+  (#118)
+
+Upgrade instructions from v0.1.0:
+ * Dependabot version bump can be accepted as is
+
 ## v0.1.0
 
 NOTE: This is a major API break, users should **not** just upgrade the action versions but
