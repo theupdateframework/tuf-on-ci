@@ -225,7 +225,7 @@ def _collect_online_key(user_config: User) -> Key:
                 raise click.ClickException(f"Failed to read Azure Keyvault key: {e}")
         if choice == 4:
             key_id = _collect_string("Enter AWS KMS key id")
-            scheme = _collect_string("Enter key scheme")
+            scheme = _collect_key_scheme()
             try:
                 uri, key = AWSSigner.import_(key_id, scheme)
                 key.unrecognized_fields["x-tuf-on-ci-online-uri"] = uri
@@ -254,6 +254,30 @@ def _collect_string(prompt: str) -> str:
             continue
         else:
             return data
+
+def _collect_key_scheme() -> str:
+    scheme_choices = {
+        1: {"ssllib": "ecdsa-sha2-nistp256", "aws": "ECDSA_SHA_256"},
+        2: {"ssllib": "ecdsa-sha2-nistp384", "aws": "ECDSA_SHA_384"},
+        3: {"ssllib": "ecdsa-sha2-nistp512", "aws": "ECDSA_SHA_512"},
+        4: {"ssllib": "rsassa-pss-sha256", "aws": "RSASSA_PSS_SHA_256"},
+        5: {"ssllib": "rsassa-pss-sha384", "aws": "RSASSA_PSS_SHA_384"},
+        6: {"ssllib": "rsassa-pss-sha512", "aws": "RSASSA_PSS_SHA_512"},
+        7: {"ssllib": "rsa-pkcs1v15-sha256", "aws": "RSASSA_PKCS1_V1_5_SHA_256"},
+        8: {"ssllib": "rsa-pkcs1v15-sha384", "aws": "RSASSA_PKCS1_V1_5_SHA_384"},
+        9: {"ssllib": "rsa-pkcs1v15-sha512", "aws": "RSASSA_PKCS1_V1_5_SHA_512"},
+    }
+
+    for key, value in scheme_choices.items():
+        click.echo(f"{key}. {value['aws']}")
+    while True:
+        choice = click.prompt(
+            bold("Please select AWS key scheme"),
+            type=click.IntRange(1, 9),
+            default=1,
+            show_default=True,
+        )
+        return scheme_choices[choice]["ssllib"]
 
 
 def _init_repository(repo: SignerRepository) -> bool:
