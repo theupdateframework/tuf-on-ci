@@ -13,7 +13,7 @@ description = "Signing tools for TUF-on-CI"
 readme = "README.md"
 dependencies = [
   "securesystemslib[gcpkms,hsm,sigstore] ~= 0.30",
-  "tuf ~= 3.0",
+  "tuf ~= 3.1",
   "click ~= 8.1",
 ]
 requires-python = ">=3.10"

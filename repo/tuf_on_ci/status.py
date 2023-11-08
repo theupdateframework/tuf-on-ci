@@ -87,20 +87,9 @@ def _find_changed_target_roles(
 
 
 def _role_status(repo: CIRepository, role: str, event_name) -> bool:
-    status, prev_status = repo.status(role)
-    role_is_valid = status.valid
-    sig_counts = f"{len(status.signed)}/{status.threshold}"
-    signed = status.signed
-    missing = status.missing
+    status = repo.status(role)
 
-    # Handle the additional status for the possible previous, known good root version:
-    if prev_status:
-        role_is_valid = role_is_valid and prev_status.valid
-        sig_counts = f"{len(prev_status.signed)}/{prev_status.threshold} ({sig_counts})"
-        signed = signed | prev_status.signed
-        missing = missing | prev_status.missing
-
-    if role_is_valid and not status.invites:
+    if status.valid:
         emoji = "white_check_mark"
     else:
         emoji = "x"
@@ -113,29 +102,33 @@ def _role_status(repo: CIRepository, role: str, event_name) -> bool:
             "Invitees can accept the invitations by running "
             f"`tuf-on-ci-sign {event_name}`"
         )
-
-    if not status.invites:
+    else:
+        keys = status.verification_result.signed
+        signed = [k.unrecognized_fields["x-tuf-on-ci-keyowner"] for k in keys]
+        keys = status.verification_result.unsigned
+        unsigned = [k.unrecognized_fields["x-tuf-on-ci-keyowner"] for k in keys]
         if status.target_changes:
             click.echo(f"Role `{role}` contains following artifact changes:")
             for target_state in status.target_changes:
                 click.echo(f" * {target_state}")
             click.echo("")
 
-        if role_is_valid:
+        if status.valid:
             click.echo(
-                f"Role `{role}` is verified and signed by {sig_counts} signers "
+                f"Role `{role}` is verified and signed by threshold of signers "
                 f"({', '.join(signed)})."
             )
-        elif signed:
-            click.echo(
-                f"Role `{role}` is not yet verified. It is signed by {sig_counts} "
-                f"signers ({', '.join(signed)})."
-            )
         else:
-            click.echo(f"Role `{role}` is unsigned and not yet verified")
+            click.echo(
+                f"Role `{role}` Role has not been signed by threshold of signers yet. "
+            )
+            if signed:
+                click.echo(f"Currently it is signed by ({', '.join(signed)}).")
+            else:
+                click.echo("Currently it is signed by no-one.")
 
-        if missing:
-            click.echo(f"Still missing signatures from {', '.join(missing)}")
+        if unsigned:
+            click.echo(f"Still missing signatures from {', '.join(unsigned)}.")
             click.echo(
                 "Signers can sign these changes by running "
                 f"`tuf-on-ci-sign {event_name}`"
@@ -143,8 +136,7 @@ def _role_status(repo: CIRepository, role: str, event_name) -> bool:
 
     if status.message:
         click.echo(f"**Error**: {status.message}")
-
-    return role_is_valid and not status.invites
+    return status.valid
 
 
 @click.command()  # type: ignore[arg-type]

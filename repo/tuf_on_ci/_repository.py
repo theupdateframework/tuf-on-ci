@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 from enum import Enum, unique
 from glob import glob
 
-from securesystemslib.exceptions import UnverifiedSignatureError
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
     SIGNER_FOR_URI_SCHEME,
@@ -22,12 +21,14 @@ from tuf.api.metadata import (
     Metadata,
     MetaFile,
     Root,
+    Signed,
     Snapshot,
     TargetFile,
     Targets,
     Timestamp,
+    VerificationResult,
 )
-from tuf.api.serialization.json import CanonicalJSONSerializer, JSONSerializer
+from tuf.api.serialization.json import JSONSerializer
 from tuf.repository import AbortEdit, Repository
 
 # sigstore is not a supported key by default
@@ -57,14 +58,66 @@ class TargetState:
 
 
 @dataclass
+class VerificationResultWithKeys:
+    """Signature verification result for delegated role metadata.
+
+    Attributes:
+        verified: True, if threshold of signatures is met.
+        signed: Signed delegated Keys.
+        unsigned: Unsigned delegated Keys.
+
+    """
+
+    verified: bool
+    signed: list[Key]
+    unsigned: list[Key]
+
+    @classmethod
+    def from_verification_result(
+        cls, original: VerificationResult, delegator: Root | Targets
+    ):
+        signed = [delegator.get_key(keyid) for keyid in original.signed]
+        signed.sort(key=lambda key: key.keyid)
+        unsigned = [delegator.get_key(keyid) for keyid in original.unsigned]
+        unsigned.sort(key=lambda key: key.keyid)
+        return VerificationResultWithKeys(original.verified, signed, unsigned)
+
+    def __bool__(self) -> bool:
+        return self.verified
+
+    def union(
+        self, other: "VerificationResultWithKeys"
+    ) -> "VerificationResultWithKeys":
+        """Combine two verification results.
+
+        Can be used to verify if root metadata is signed by the threshold of
+        keys of previous root and the threshold of keys of itself.
+        """
+        signed = self.signed.copy()
+        signed.extend([s for s in other.signed if s not in signed])
+        unsigned = self.unsigned.copy()
+        unsigned.extend([s for s in other.unsigned if s not in unsigned])
+
+        return VerificationResultWithKeys(
+            self.verified and other.verified, signed, unsigned
+        )
+
+
+@dataclass
 class SigningStatus:
     invites: set[str]  # invites to _delegations_ of the role
-    signed: set[str]
-    missing: set[str]
-    threshold: int
+    verification_result: VerificationResultWithKeys
     target_changes: list[TargetState]
     valid: bool
     message: str | None
+
+
+def _get_verification_result(
+    delegator: Root | Targets, rolename: str, md: Metadata
+) -> VerificationResultWithKeys:
+    """Helper to get verification results with Keys instead of keyids"""
+    result = delegator.get_verification_result(rolename, md.signed_bytes, md.signatures)
+    return VerificationResultWithKeys.from_verification_result(result, delegator)
 
 
 class SigningEventState:
@@ -113,38 +166,6 @@ class CIRepository(Repository):
 
     def _get_filename(self, role: str) -> str:
         return f"{self._dir}/{role}.json"
-
-    def _get_keys(self, role: str, known_good: bool = False) -> list[Key]:
-        """Return public keys for delegated role
-
-        If known_good is True, use the keys defined in known good delegator.
-        Otherwise use keys defined in the signing event delegator.
-        """
-        if role in ["root", "timestamp", "snapshot", "targets"]:
-            if known_good:
-                delegator: Root | Targets = self._known_good_root()
-            else:
-                delegator = self.root()
-        else:
-            if known_good:
-                delegator = self._known_good_targets("targets")
-            else:
-                delegator = self.targets()
-
-        r = delegator.get_delegated_role(role)
-        keys = []
-        for keyid in r.keyids:
-            try:
-                key = delegator.get_key(keyid)
-                if known_good and "x-tuf-on-ci-keyowner" not in key.unrecognized_fields:
-                    # this is allowed for repo import case: we cannot identify known
-                    # good keys and have to trust that delegations have not changed
-                    continue
-
-                keys.append(key)
-            except ValueError:
-                pass
-        return keys
 
     def open(self, role: str) -> Metadata:
         """Return existing metadata, or create new metadata
@@ -203,7 +224,8 @@ class CIRepository(Repository):
         md.signed.expires = datetime.utcnow() + timedelta(days=expiry_days)
 
         md.signatures.clear()
-        for key in self._get_keys(rolename):
+        unsigned = self._get_verification_result(rolename, md).unsigned
+        for key in unsigned:
             if rolename in ["timestamp", "snapshot"]:
                 uri = key.unrecognized_fields["x-tuf-on-ci-online-uri"]
                 signer = Signer.from_priv_key_uri(uri, key)
@@ -213,9 +235,8 @@ class CIRepository(Repository):
                 md.signatures[key.keyid] = Signature(key.keyid, "")
 
         if rolename in ["timestamp", "snapshot"]:
-            root_md: Metadata[Root] = self.open("root")
             # repository should never write unsigned online roles
-            root_md.verify_delegate(rolename, md)
+            self.root().verify_delegate(rolename, md.signed_bytes, md.signatures)
 
         filename = self._get_filename(rolename)
         data = md.to_bytes(JSONSerializer())
@@ -252,33 +273,22 @@ class CIRepository(Repository):
         """
         return MetaFile(self.snapshot().version)
 
-    def open_prev(self, role: str) -> Metadata | None:
-        """Return known good metadata for role (if it exists)"""
-        prev_fname = f"{self._prev_dir}/{role}.json"
-        if os.path.exists(prev_fname):
-            with open(prev_fname, "rb") as f:
-                return Metadata.from_bytes(f.read())
-
-        return None
-
-    def _validate_role(
-        self, delegator: Metadata, rolename: str
-    ) -> tuple[bool, str | None]:
+    def _validate_role(self, rolename: str) -> tuple[bool, str | None]:
         """Validate role compatibility with this repository
 
         Returns bool for validity and optional error message"""
-        md = self.open(rolename)
-        prev_md = self.open_prev(rolename)
+        signed: Signed = self.open(rolename).signed
+        known_good = self._known_good(rolename)
 
         # TODO: Current checks are more examples than actual checks
 
         # Make sure version grows if there are actual payload changes
-        if prev_md and prev_md.signed != md.signed:
-            if md.signed.version <= prev_md.signed.version:
-                return False, f"Version {md.signed.version} is not valid for {rolename}"
+        if known_good and known_good != signed:
+            if signed.version <= known_good.version:
+                return False, f"Version {signed.version} is not valid for {rolename}"
 
-        days = md.signed.unrecognized_fields["x-tuf-on-ci-expiry-period"]
-        if md.signed.expires > datetime.utcnow() + timedelta(days=days):
+        days = signed.unrecognized_fields["x-tuf-on-ci-expiry-period"]
+        if signed.expires > datetime.utcnow() + timedelta(days=days):
             return False, f"Expiry date is further than expected {days} days ahead"
 
         # TODO for root:
@@ -292,11 +302,7 @@ class CIRepository(Repository):
         # TODO for delegated targets:
         # * check there are no delegations
         # * check that target files in metadata match the files in targets/
-
-        try:
-            delegator.verify_delegate(rolename, md)
-        except UnsignedMetadataError:
-            return False, None
+        # * check that target files in metadata are in the delegated path
 
         return True, None
 
@@ -326,31 +332,17 @@ class CIRepository(Repository):
 
         return targetfiles
 
-    def _known_good_root(self) -> Root:
-        """Return the Root object from the known-good repository state"""
+    def _known_good(self, rolename: str) -> Root | Targets | None:
+        """Return object from the known-good repository state"""
+        assert rolename not in [Timestamp.type, Snapshot.type]
         assert self._prev_dir is not None
-        prev_path = os.path.join(self._prev_dir, "root.json")
-        if os.path.exists(prev_path):
-            with open(prev_path, "rb") as f:
-                md = Metadata.from_bytes(f.read())
-            assert isinstance(md.signed, Root)
-            return md.signed
-        else:
-            # this role did not exist: return an empty one for comparison purposes
-            return Root()
 
-    def _known_good_targets(self, rolename: str) -> Targets:
-        """Return Targets from the known good version (signing event start point)"""
-        assert self._prev_dir
         prev_path = os.path.join(self._prev_dir, f"{rolename}.json")
-        if os.path.exists(prev_path):
-            with open(prev_path, "rb") as f:
-                md = Metadata.from_bytes(f.read())
-            assert isinstance(md.signed, Targets)
-            return md.signed
-        else:
-            # this role did not exist: return an empty one for comparison purposes
-            return Targets()
+        if not os.path.exists(prev_path):
+            return None
+
+        with open(prev_path, "rb") as f:
+            return Metadata.from_bytes(f.read()).signed
 
     def _get_target_changes(self, rolename: str) -> list[TargetState]:
         """Compare targetfiles in known good version and signing event version:
@@ -361,7 +353,13 @@ class CIRepository(Repository):
 
         changes = []
 
-        known_good_targetfiles = self._known_good_targets(rolename).targets
+        targets = self._known_good(rolename)
+        if targets is None:
+            known_good_targetfiles = {}
+        else:
+            assert isinstance(targets, Targets)
+            known_good_targetfiles = targets.targets
+
         for targetfile in self.targets(rolename).targets.values():
             if targetfile.path not in known_good_targetfiles:
                 # new in signing event
@@ -379,9 +377,52 @@ class CIRepository(Repository):
 
         return changes
 
-    def _get_signing_status(
-        self, rolename: str, known_good: bool
-    ) -> SigningStatus | None:
+    def _get_verification_result(
+        self, rolename: str, md: Metadata
+    ) -> VerificationResultWithKeys:
+        """Return verification result for rolename.
+
+        Take into account that root must be verified by itself and the previous root.
+        """
+        if rolename == Root.type:
+            # md may be modified if we're in close() persisting a new root:
+            # we use that root as delegator instead of self.root()
+            delegator: Root | Targets = md.signed
+        elif rolename in [Timestamp.type, Snapshot.type, Targets.type]:
+            delegator = self.root()
+        else:
+            delegator = self.targets()
+
+        result = _get_verification_result(delegator, rolename, md)
+
+        # If role is root and a previous version exists, verify with that too
+        if rolename == Root.type:
+            prev_delegator = self._known_good(Root.type)
+            if prev_delegator:
+                prev_result = _get_verification_result(prev_delegator, rolename, md)
+                result = result.union(prev_result)
+
+        return result
+
+    def _get_invites(self, rolename: str) -> set[str]:
+        """Return invites for roles delegations."""
+        invites = set()
+
+        # Build list of invites to all delegated roles of rolename
+        delegation_names = []
+        if rolename == Root.type:
+            delegation_names = [Root.type, Targets.type]
+        elif rolename == Targets.type:
+            targets = self.targets()
+            if targets.delegations and targets.delegations.roles:
+                delegation_names = list(targets.delegations.roles.keys())
+
+        for delegation_name in delegation_names:
+            invites.update(self.state.invited_signers_for_role(delegation_name))
+
+        return invites
+
+    def status(self, rolename: str) -> SigningStatus:
         """Build signing status for role.
 
         This method relies on event state (.signing-event-state) to be accurate.
@@ -390,75 +431,24 @@ class CIRepository(Repository):
         there is no known good version yet.
         """
         invites = set()
-        sigs = set()
-        missing_sigs = set()
-        md = self.open(rolename)
-
-        # Find delegating metadata. For root handle the special case of known good
-        # delegating metadata.
-        if known_good:
-            delegator = None
-            if rolename == "root":
-                delegator = self.open_prev("root")
-            if not delegator:
-                # Not root role or there is no known-good root metadata yet
-                return None
-        elif rolename == "root":
-            delegator = self.open("root")
-        elif rolename == "targets":
-            delegator = self.open("root")
-        else:
-            delegator = self.open("targets")
 
         # Build list of invites to all delegated roles of rolename
-        delegation_names = []
-        if rolename == "root":
-            delegation_names = ["root", "targets"]
-        elif rolename == "targets":
-            if md.signed.delegations:
-                delegation_names = md.signed.delegations.roles.keys()
-        for delegation_name in delegation_names:
-            invites.update(self.state.invited_signers_for_role(delegation_name))
+        invites = self._get_invites(rolename)
 
-        role = delegator.signed.get_delegated_role(rolename)
-
-        # Build lists of signed signers and not signed signers
-        for key in self._get_keys(rolename, known_good):
-            keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
-            try:
-                payload = CanonicalJSONSerializer().serialize(md.signed)
-                key.verify_signature(md.signatures[key.keyid], payload)
-                sigs.add(keyowner)
-            except (KeyError, UnverifiedSignatureError):
-                missing_sigs.add(keyowner)
+        # Find out verification status (inluding which keys have signed)
+        md = self.open(rolename)
+        verification_result = self._get_verification_result(rolename, md)
 
         # Document changes to targets metadata in this signing event
         target_changes = self._get_target_changes(rolename)
 
-        # Just to be sure: double check that delegation threshold is reached
-        if invites:
+        if invites or not verification_result.verified:
             valid, msg = False, None
         else:
-            valid, msg = self._validate_role(delegator, rolename)
+            # Repository validation (metadata may be valid but still not acceptable)
+            valid, msg = self._validate_role(rolename)
 
-        return SigningStatus(
-            invites, sigs, missing_sigs, role.threshold, target_changes, valid, msg
-        )
-
-    def status(self, rolename: str) -> tuple[SigningStatus, SigningStatus | None]:
-        """Returns signing status for role.
-
-        In case of root, another SigningStatus may be returned for the previous
-        'known good' root.
-        Uses .signing-event-state file."""
-        if rolename in ["timestamp", "snapshot"]:
-            raise ValueError("Not supported for online metadata")
-
-        known_good_status = self._get_signing_status(rolename, known_good=True)
-        signing_event_status = self._get_signing_status(rolename, known_good=False)
-        assert signing_event_status is not None
-
-        return signing_event_status, known_good_status
+        return SigningStatus(invites, verification_result, target_changes, valid, msg)
 
     def build(self, metadata_path: str, artifact_path: str | None):
         """Build a publishable directory of metadata and (optionally) artifacts"""
@@ -530,17 +520,18 @@ class CIRepository(Repository):
         false in this case: this is useful when repository decides if it needs a new
         online role version.
         """
-        role_md = self.open(rolename)
+        md = self.open(rolename)
         if rolename in ["root", "timestamp", "snapshot", "targets"]:
-            delegator = self.open("root")
+            delegator: Root | Targets = self.root()
         else:
-            delegator = self.open("targets")
+            delegator = self.targets()
+
         try:
-            delegator.verify_delegate(rolename, role_md)
+            delegator.verify_delegate(rolename, md.signed_bytes, md.signatures)
         except UnsignedMetadataError:
             return False
 
         signing_days, _ = self.signing_expiry_period(rolename)
         delta = timedelta(days=signing_days)
 
-        return datetime.utcnow() + delta < role_md.signed.expires
+        return datetime.utcnow() + delta < md.signed.expires
