@@ -12,11 +12,11 @@ ongoing maintenance.
      `publish`
 1. Clone the repository locally and [configure your local signing tool](SIGNER-SETUP.md)
 1. Choose your online signing method and [configure it](ONLINE-SIGNING-SETUP.md):
-   * Google Cloud KMS and Azure Key Vault are fully supported 
+   * Google Cloud KMS, Azure Key Vault, and AWS KMS are fully supported
    * Sigstore requires no configuration (but is experimental)
 1. Run `tuf-on-ci-delegate sign/init` to configure the repository and to start the
    first signing event
-   * The tool prompts for various repository details and finally prompts to 
+   * The tool prompts for various repository details and finally prompts to
      sign and push the initial metadata to a signing event branch
 1. When this initial signing event branch is merged, the repository generates the
    first snapshot and timestamp, and publishes the first repository version
@@ -31,7 +31,7 @@ Modifying a role is needed when:
 
 Roles are modified with `tuf-on-ci-delegate <event> <role>`.
 * The event name can be chosen freely (and will be used as a branch name). If the signing
-  event does not exist yet, it will be created as a result. 
+  event does not exist yet, it will be created as a result.
 * The tool will prompt for new signers and other details, and then prompt to push changes
   to the repository.
 * The push triggers creation of a signing event GitHub issue. The repository will report the

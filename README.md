@@ -15,7 +15,7 @@ Supported features include:
 * Guided signing events for distributed signing
 * TUF delegations with signature thresholds
 * Signing with hardware keys and Sigstore
-* Automated online signing (Google Cloud, Azure, Sigstore)
+* Automated online signing (Google Cloud, Azure, AWS, Sigstore)
 * No custom code required
 
 The optimal use case is TUF repositories with a low to moderate frequency of change, both for artifacts and keys.
