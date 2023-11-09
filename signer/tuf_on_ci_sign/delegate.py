@@ -270,14 +270,13 @@ def _collect_key_scheme() -> str:
 
     for key, value in scheme_choices.items():
         click.echo(f"{key}. {value['aws']}")
-    while True:
-        choice = click.prompt(
-            bold("Please select AWS key scheme"),
-            type=click.IntRange(1, 9),
-            default=1,
-            show_default=True,
-        )
-        return scheme_choices[choice]["ssllib"]
+    choice = click.prompt(
+        bold("Please select AWS key scheme"),
+        type=click.IntRange(1, 9),
+        default=1,
+        show_default=True,
+    )
+    return scheme_choices[choice]["ssllib"]
 
 
 def _init_repository(repo: SignerRepository) -> bool:
