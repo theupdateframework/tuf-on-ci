@@ -64,14 +64,21 @@ strip_signatures()
     rm "$1e2e"
 }
 
+git_clone()
+{
+    REPO=$1
+    REMOTE=$2
+    USER_NAME=$3
+    USER_EMAIL=$4
+    git -C $REPO clone --quiet $REMOTE . 2>/dev/null
+    git -C $REPO config user.email "$USER_EMAIL"
+    git -C $REPO config user.name "$USER_NAME"
+    git -C $REPO config commit.gpgsign false
+}
+
 git_repo()
 {
-    git \
-        -C $REPO_GIT \
-        -c user.name=tuf-on-ci \
-        -c user.email=41898282+github-actions[bot]@users.noreply.github.com \
-        -c commit.gpgsign=false \
-        $@
+    git -C $REPO_GIT "$@"
 }
 
 repo_setup()
@@ -80,7 +87,7 @@ repo_setup()
     git -C $UPSTREAM_GIT init --quiet --bare --initial-branch=main
 
     # Clone upstream to repo, create a dummy commit so merges are possible
-    git_repo clone --quiet $UPSTREAM_GIT . 2>/dev/null
+    git_clone $REPO_GIT $UPSTREAM_GIT "tuf-on-ci" "41898282+github-actions[bot]@users.noreply.github.com"
     touch $REPO_GIT/.dummy $REPO_DIR/out
     git_repo add .dummy
     git_repo commit -m "init" --quiet
@@ -100,9 +107,7 @@ signer_setup()
     cp -r $SCRIPT_DIR/softhsm/tokens-$USER $SIGNER_DIR/tokens
 
     # clone the test repository
-    git -C $SIGNER_GIT clone --quiet $UPSTREAM_GIT .
-    git -C $SIGNER_GIT config user.email "$USER@example.com"
-    git -C $SIGNER_GIT config user.name "$USER"
+    git_clone $SIGNER_GIT $UPSTREAM_GIT "$USER@example.com" "$USER"
 
     # Set user configuration
     echo -e "[settings]\n" \
