@@ -200,7 +200,7 @@ def _collect_online_key(user_config: User) -> Key:
         click.echo(" 4. AWS KMS")
         choice = click.prompt(
             bold("Please select online key type"),
-            type=click.IntRange(1, 4),
+            type=click.IntRange(0, 4),
             default=1,
             show_default=True,
         )
@@ -232,7 +232,7 @@ def _collect_online_key(user_config: User) -> Key:
                 return key
             except Exception as e:
                 raise click.ClickException(f"Failed to read AWS KMS key: {e}")
-        if choice == 5:
+        if choice == 0:
             # This could be generic support, but for now it's a hidden test key.
             # key value 1d9a024348e413892aeeb8cc8449309c152f48177200ee61a02ae56f450c6480
             uri = "envvar:LOCAL_TESTING_KEY"
