@@ -255,6 +255,7 @@ def _collect_string(prompt: str) -> str:
         else:
             return data
 
+
 def _collect_key_scheme() -> str:
     scheme_choices = {
         1: {"ssllib": "ecdsa-sha2-nistp256", "aws": "ECDSA_SHA_256"},
