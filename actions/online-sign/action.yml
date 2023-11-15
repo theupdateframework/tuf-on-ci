@@ -53,6 +53,7 @@ runs:
       run: |
         git show --oneline --no-patch HEAD
         git push origin HEAD:publish
+        echo "rev=`git rev-parse HEAD`" >> $GITHUB_OUTPUT
         echo "### Online signing finished, will now publish" >> $GITHUB_STEP_SUMMARY
       shell: bash
 
@@ -67,4 +68,7 @@ runs:
             repo: context.repo.repo,
             workflow_id: 'publish.yml',
             ref: 'publish',
+            inputs: {
+              ref: ${{ steps.move-publish-branch.outputs.rev }},
+            },
           })
