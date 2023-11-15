@@ -69,6 +69,6 @@ runs:
             workflow_id: 'publish.yml',
             ref: 'publish',
             inputs: {
-              ref: '${{ steps.move-publish-branch.outputs.rev }}',
+              ref: 'a'+'${{ steps.move-publish-branch.outputs.rev }}',
             },
           })
