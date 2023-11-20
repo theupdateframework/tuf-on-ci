@@ -1,10 +1,17 @@
 name: 'Signing event'
 description: 'TUF-on-CI Signing event management'
+
+inputs:
+  token:
+    description: 'GitHub token'
+    required: true
+
 runs:
   using: "composite"
   steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       with:
+        token: ${{ inputs.token }}
         fetch-depth: 0
 
     - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
@@ -30,6 +37,7 @@ runs:
       env:
         STATUS: ${{ steps.status.outputs.status }}
       with:
+        github-token: ${{ inputs.token }}
         script: |
           const fs = require('fs')
           message = fs.readFileSync('./status-output').toString()
