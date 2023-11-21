@@ -35,7 +35,7 @@ runs:
       shell: bash
 
     - name: Dispatch signing event workflow
-      if: steps.create-signing-events.outputs.events != ''
+      if: inputs.token == github.token && steps.create-signing-events.outputs.events != ''
       env:
         EVENTS: ${{ steps.create-signing-events.outputs.events }}
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
