@@ -12,7 +12,7 @@ version = "0.2.0"
 description = "TUF-on-CI repository tools, intended to be executed on a CI system"
 readme = "README.md"
 dependencies = [
-  "securesystemslib[azurekms, gcpkms, sigstore, pynacl] ~= 0.30",
+  "securesystemslib[awskms, azurekms, gcpkms, sigstore, pynacl] ~= 0.30",
   "tuf ~= 3.0",
   "click ~= 8.1",
 ]

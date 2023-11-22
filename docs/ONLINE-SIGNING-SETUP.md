@@ -8,6 +8,7 @@ Currently supported signing methods include
 * Sigstore (experimental)
 * Google Cloud KMS
 * Azure Key Vault
+* AWS KMS
 
 ## Configuration
 
@@ -62,3 +63,16 @@ currently experimental (and not supported by all TUF client libraries)
        login](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
        and authenticate against the environment where the key vault
        exists. You will need to the role _"Key Vault Crypto User"_).
+
+### AWS KMS
+
+1. Make sure AWS IAM permissions allow your GitHub repositorys OIDC identity to sign with a KMS key.
+1. Define your authentication details as repository variables in _Settings->Secrets and variables->Actions->Variables_:
+   ```
+   AWS_ROLE_TO_ASSUME: arn:aws:iam::175142243308:role/tuf-testing-online-key
+   AWS_REGION: us-east-1
+   ```
+1. _(only needed for initial configuration)_ Prepare your local environment for accessing the cloud KMS:
+   Use the [AWS CLI](https://aws.amazon.com/cli/) and authenticate in the
+   environment where you plan to run `tuf-on-ci-delegate` tool (you will need permission to use
+   the KMS key).

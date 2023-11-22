@@ -12,6 +12,7 @@ from urllib import parse
 import click
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
+    AWSSigner,
     AzureSigner,
     GCPSigner,
     Key,
@@ -196,9 +197,10 @@ def _collect_online_key(user_config: User) -> Key:
         click.echo(" 1. Sigstore")
         click.echo(" 2. Google Cloud KMS")
         click.echo(" 3. Azure Key Vault")
+        click.echo(" 4. AWS KMS")
         choice = click.prompt(
             bold("Please select online key type"),
-            type=click.IntRange(1, 4),
+            type=click.IntRange(0, 4),
             default=1,
             show_default=True,
         )
@@ -222,6 +224,15 @@ def _collect_online_key(user_config: User) -> Key:
             except Exception as e:
                 raise click.ClickException(f"Failed to read Azure Keyvault key: {e}")
         if choice == 4:
+            key_id = _collect_string("Enter AWS KMS key id")
+            scheme = _collect_key_scheme()
+            try:
+                uri, key = AWSSigner.import_(key_id, scheme)
+                key.unrecognized_fields["x-tuf-on-ci-online-uri"] = uri
+                return key
+            except Exception as e:
+                raise click.ClickException(f"Failed to read AWS KMS key: {e}")
+        if choice == 0:
             # This could be generic support, but for now it's a hidden test key.
             # key value 1d9a024348e413892aeeb8cc8449309c152f48177200ee61a02ae56f450c6480
             uri = "envvar:LOCAL_TESTING_KEY"
@@ -243,6 +254,30 @@ def _collect_string(prompt: str) -> str:
             continue
         else:
             return data
+
+
+def _collect_key_scheme() -> str:
+    scheme_choices = {
+        1: {"ssllib": "ecdsa-sha2-nistp256", "aws": "ECDSA_SHA_256"},
+        2: {"ssllib": "ecdsa-sha2-nistp384", "aws": "ECDSA_SHA_384"},
+        3: {"ssllib": "ecdsa-sha2-nistp512", "aws": "ECDSA_SHA_512"},
+        4: {"ssllib": "rsassa-pss-sha256", "aws": "RSASSA_PSS_SHA_256"},
+        5: {"ssllib": "rsassa-pss-sha384", "aws": "RSASSA_PSS_SHA_384"},
+        6: {"ssllib": "rsassa-pss-sha512", "aws": "RSASSA_PSS_SHA_512"},
+        7: {"ssllib": "rsa-pkcs1v15-sha256", "aws": "RSASSA_PKCS1_V1_5_SHA_256"},
+        8: {"ssllib": "rsa-pkcs1v15-sha384", "aws": "RSASSA_PKCS1_V1_5_SHA_384"},
+        9: {"ssllib": "rsa-pkcs1v15-sha512", "aws": "RSASSA_PKCS1_V1_5_SHA_512"},
+    }
+
+    for key, value in scheme_choices.items():
+        click.echo(f"{key}. {value['aws']}")
+    choice = click.prompt(
+        bold("Please select AWS key scheme"),
+        type=click.IntRange(1, 9),
+        default=1,
+        show_default=True,
+    )
+    return scheme_choices[choice]["ssllib"]
 
 
 def _init_repository(repo: SignerRepository) -> bool:
