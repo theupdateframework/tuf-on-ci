@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.3.0
+
+NOTE: This is a major API break, users should **not** just upgrade the action versions but
+should replace their `publish.yml` workflow with the new workflow from tuf-on-ci-template.
+
+Release contains:
+* New KMS support: AWS KMS (#120)
+* Bugix: When publish after online signing, in very rare conditions
+  the wrong version could be published due to a race condition (#127)
+
+Upgrade instructions from v0.2.0:
+* When the Dependabot PR is created, update the PR to include the
+  updated `publish.yml` from `tuf-on-ci-template` repository. Then the
+  PR can be approved and merged without breaking any workflows.
+
+Thanks to Jonny Stoten, a new contributor
+
 ## v0.2.0
 
 * GitHub actions now output step summaries: these are visible in workflow
