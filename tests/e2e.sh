@@ -467,7 +467,7 @@ repo_publish()
     tuf-on-ci-build-repository --metadata $PUBLISH_DIR/metadata --artifacts $PUBLISH_DIR/targets  >> $REPO_DIR/out
 
     # the expected results cannot contain empty dirs because of git: remove empty dir here too
-    rmdir --ignore-fail-on-non-empty "$PUBLISH_DIR/targets"
+    find "$PUBLISH_DIR/targets" -type d -empty -delete
 }
 
 setup_test() {
