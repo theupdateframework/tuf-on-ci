@@ -198,16 +198,18 @@ def status(verbose: int, push: bool) -> None:
                 roles.insert(0, toplevel)
 
         # Update metadata if necessary. Output the roles current status
+        updated = False
         for role in roles:
             if repo.update_targets(role):
                 # metadata and artifacts are not in sync
                 msg = f"Update targets metadata for role {role}"
                 _git(["commit", "-m", msg, "--", f"metadata/{role}.json"])
+                updated = True
 
             if not _role_status(repo, role, event_name):
                 success = False
 
-    if push:
+    if push and updated:
         try:
             _git(["push", "origin", event_name])
         except subprocess.CalledProcessError as e:
