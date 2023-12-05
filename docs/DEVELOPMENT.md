@@ -39,10 +39,10 @@ manually after inspection and it will work as if the push was done by the tool i
 
 ### Debugging repository tools
 
-The same tool (`tuf-on-ci-status`) that runs during the signing event automation
-can be run locally to inspect the current status of the signing event branch. Note
-that the repository tools only operate on current commit (unlike the signing tools 
-that always checkout the remote branch) 
+The same tools (`tuf-on-ci-status`, `tuf-on-ci-update-targets`) that run during the
+signing event automation can be run locally to inspect the current status of the signing
+event branch. Note that the repository tools only operate on current commit (unlike the
+signing tools that always checkout the remote branch).
 
 As an example, this would be the markdown output when an open invitation exists
 for a new user to become a root key holder:
