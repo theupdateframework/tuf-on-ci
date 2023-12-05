@@ -281,9 +281,34 @@ class CIRepository(Repository):
         if md.signed.expires > datetime.utcnow() + timedelta(days=days):
             return False, f"Expiry date is further than expected {days} days ahead"
 
+        if isinstance(md.signed, Root):
+            # tuf-on-ci is always consistent_snapshot
+            if not md.signed.consistent_snapshot:
+                return False, "Consistent snapshot is not enabled"
+
+            # Specification: root version must be x+1, not just larger
+            if prev_md and prev_md.signed != md.signed:
+                if md.signed.version != prev_md.signed.version + 1:
+                    return False, f"Version {md.signed.version} is not valid for root"
+
+            # tuf-on-ci online signer must be the same for both roles
+            ts_role = md.signed.get_delegated_role(Timestamp.type)
+            sn_role = md.signed.get_delegated_role(Snapshot.type)
+            if (
+                ts_role.keyids != sn_role.keyids
+                or ts_role.threshold != sn_role.threshold
+            ):
+                return False, "Timestamp and Snapshot signers differ"
+
+            # Check expiry and signing period sanity
+            for role in [ts_role, sn_role]:
+                expiry_days = role.unrecognized_fields["x-tuf-on-ci-expiry-period"]
+                signing_days = role.unrecognized_fields["x-tuf-on-ci-signing-period"]
+                if signing_days < 1 or expiry_days <= signing_days:
+                    return False, "Online signing or expiry period failed sanity check"
+
         # TODO for root:
-        # * check version is prev_version + 1
-        # * check delegations are correct, consistent_snapshot is on
+        # * check delegations are correct
 
         # TODO for top-level targets:
         # * check delegations are expected
