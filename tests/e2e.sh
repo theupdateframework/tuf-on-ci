@@ -407,6 +407,21 @@ non_signer_change_online_delegation()
     done | tuf-on-ci-delegate $EVENT timestamp >> $SIGNER_DIR/out 2>&1
 }
 
+repo_update_targets()
+{
+    EVENT=$1
+
+    # update repo from upstream and merge the event branch
+    git_repo fetch --quiet origin
+    git_repo switch --quiet $EVENT
+    git_repo pull --quiet
+
+    # run tuf-on-ci-update-targets, check expected exit code
+    # this pushes the modified metadata to signing event branch
+    cd $REPO_GIT
+    tuf-on-ci-update-targets >> $REPO_DIR/out
+}
+
 repo_merge()
 {
     EVENT=$1
@@ -416,8 +431,11 @@ repo_merge()
     git_repo fetch --quiet origin
     git_repo merge --quiet origin/$EVENT
 
-    # run tuf-on-ci-status to check that all is ok
+    # run tuf-on-ci-update-targets, tuf-on-ci-status to check that all is ok
     cd $REPO_GIT
+    if tuf-on-ci-update-targets >> $REPO_DIR/out; then
+        return 1
+    fi
     tuf-on-ci-status >> $REPO_DIR/out
 
     git_repo push --quiet
@@ -638,11 +656,13 @@ test_target_changes()
     # This section modifies targets in a new signing event
     # User 1 adds target files, repository modifies metadata, user 1 signs
     signer_add_targets user1 sign/new-targets
+    repo_update_targets sign/new-targets
     repo_status_fail sign/new-targets
     signer_sign user1 sign/new-targets
 
     # user2: delete one target, modify another. repo modifies metadata, user2 signs
     signer_modify_targets user2 sign/new-targets
+    repo_update_targets sign/new-targets
     repo_status_fail sign/new-targets
     signer_sign user2 sign/new-targets
 
@@ -682,6 +702,7 @@ test_target_changes_in_delegations()
     # second signing event: Any user adds target to delegated role
     # Signing-event requires a signature from user1
     signer_add_delegated_target user2 sign/new-delegated-target
+    repo_update_targets sign/new-delegated-target
     repo_status_fail sign/new-delegated-target
     signer_sign user1 sign/new-delegated-target
 
