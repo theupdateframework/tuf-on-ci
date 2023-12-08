@@ -107,7 +107,7 @@ Supported ways to configure and modify tuf-on-ci workflows:
 ### Custom GitHub token
 
 tuf-on-ci uses GITHUB_TOKEN by default but supports using a custom fine-grained Github
-token. The token needs following permissions:
+token. The token needs following repository permissions:
 * `Contents: write` to create online signing commits, and to create targets metadata
   change commits in signing event
 * `Issues: write` to create comments in signing events
@@ -116,3 +116,7 @@ token. The token needs following permissions:
 Using a custom token allows keeping the default GITHUB_TOKEN with stricter permissions.
 To use a custom token, define a _repository secret_ `TUF_ON_CI_TOKEN` with a fine grained
 token as the secrets value. No workflow changes are needed.
+
+Note that all automated comments in signing event issues will be seemingly made by the
+account that created the custom token: Creating the token on a "bot" account is sensible
+for this reason.

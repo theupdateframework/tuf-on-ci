@@ -187,22 +187,22 @@ def update_targets(verbose: int, push: bool) -> None:
         roles = _find_changed_target_roles(good_targets, "targets")
 
         # Update targets metadata if necessary
-        targets_updated = False
+        updated_targets = []
         for role in roles:
             if repo.update_targets(role):
                 # metadata and artifacts were not in sync: commit new metadata
                 msg = f"Update targets metadata for role {role}"
                 _git(["commit", "-m", msg, "--", f"metadata/{role}.json"])
-                if not targets_updated:
-                    click.echo("### Metadata update based on artifact change")
-                    click.echo(
-                        f"Event [{event_name}](../compare/{event_name}) "
-                        f"(commit {head[:7]})"
-                    )
-                click.echo(f"Role `{role}` artifacts have been modified")
-                targets_updated = True
+                updated_targets.append(f"`{role}`")
 
-    if push and targets_updated:
+    if updated_targets:
+        click.echo("### Artifacts have been modified")
+        click.echo(f"Event [{event_name}](../compare/{event_name}) (commit {head[:7]})")
+
+        role_str = ", ".join(updated_targets)
+        click.echo(f"Updating metadata for role(s) {role_str}.")
+
+    if push and updated_targets:
         try:
             _git(["push", "origin", event_name])
         except subprocess.CalledProcessError as e:
@@ -217,7 +217,7 @@ def update_targets(verbose: int, push: bool) -> None:
                 print("Git output on error:", e.stdout, e.stderr)
                 raise e
 
-    sys.exit(0 if targets_updated else 1)
+    sys.exit(0 if updated_targets else 1)
 
 
 @click.command()  # type: ignore[arg-type]
