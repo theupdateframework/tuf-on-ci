@@ -101,22 +101,23 @@ Supported ways to configure and modify tuf-on-ci workflows:
   see [ONLINE-SIGNING-SETUP.md] for details
 * A custom GitHub token can be optionally configured with _Repository Secret_
   `TUF_ON_CI_TOKEN`, see details below
-* The `publish` workflow is can be customized to publish to a destination that is not
+* The `publish` workflow can be customized to publish to a destination that is not
   the default GitHub Pages
 
 ### Custom GitHub token
 
 tuf-on-ci uses GITHUB_TOKEN by default but supports using a custom fine-grained Github
-token. The token needs following repository permissions:
+token. This allows the GitHub organization to limit the default GITHUB_TOKEN permissions
+(in practice this means other workflows in the repository can operate with this lower
+permission default token while tuf-on-ci workflows still have higher permissions).
+
+The custom token needs the following repository permissions:
 * `Contents: write` to create online signing commits, and to create targets metadata
   change commits in signing event
 * `Issues: write` to create comments in signing events
 * `Actions: write` to dispatch other workflows when needed
 
-Using a custom token allows keeping the default GITHUB_TOKEN with stricter permissions.
 To use a custom token, define a _repository secret_ `TUF_ON_CI_TOKEN` with a fine grained
-token as the secrets value. No workflow changes are needed.
-
-Note that all automated comments in signing event issues will be seemingly made by the
-account that created the custom token: Creating the token on a "bot" account is sensible
-for this reason.
+token as the secrets value. No workflow changes are needed. Note that all automated comments
+in signing event issues will be seemingly made by the account that created the custom
+token: Creating the token on a "bot" account is sensible for this reason.
