@@ -35,6 +35,7 @@ runs:
       shell: bash
 
     - name: Dispatch signing event workflow
+      # dispatch if using default token: otherwise create-signing-events step has already triggered push events
       if: inputs.token == github.token && steps.create-signing-events.outputs.events != ''
       env:
         EVENTS: ${{ steps.create-signing-events.outputs.events }}

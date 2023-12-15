@@ -114,6 +114,7 @@ runs:
           await core.summary.addHeading(summary).write()
 
     - name: Dispatch another signing event workflow
+      # dispatch if using default token: otherwise update_targets step has already triggered a push event
       if: inputs.token == github.token && steps.update_targets.outputs.targets_updated == 'true'
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
       with:
