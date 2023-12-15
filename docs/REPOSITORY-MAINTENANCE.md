@@ -98,7 +98,7 @@ upgrade mechanism is to copy the modified workflows from tuf-on-ci-template.
 
 Supported ways to configure and modify tuf-on-ci workflows:
 * online signing is configured using signing method specific _Repository Variables_,
-  see [ONLINE-SIGNING-SETUP.md] for details
+  see [ONLINE-SIGNING-SETUP.md](ONLINE-SIGNING-SETUP.md) for details
 * A custom GitHub token can be optionally configured with _Repository Secret_
   `TUF_ON_CI_TOKEN`, see details below
 * The `publish` workflow can be customized to publish to a destination that is not
