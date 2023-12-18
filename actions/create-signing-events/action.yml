@@ -1,11 +1,17 @@
 name: 'Create signing events'
 description: 'Create signing events for offline signed metadata that is about to expire'
 
+inputs:
+  token:
+    description: 'GitHub token'
+    required: true
+
 runs:
   using: "composite"
   steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       with:
+        token: ${{ inputs.token }}
         fetch-depth: 0
 
     - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
@@ -29,11 +35,13 @@ runs:
       shell: bash
 
     - name: Dispatch signing event workflow
-      if: steps.create-signing-events.outputs.events != ''
+      # dispatch if using default token: otherwise create-signing-events step has already triggered push events
+      if: inputs.token == github.token && steps.create-signing-events.outputs.events != ''
       env:
         EVENTS: ${{ steps.create-signing-events.outputs.events }}
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
       with:
+        github-token: ${{ inputs.token }}
         script: |
           console.log('Dispatching events: ', process.env.EVENTS)
           process.env.EVENTS.trim().split(' ').forEach(event => {

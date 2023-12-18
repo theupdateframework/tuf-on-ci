@@ -2,6 +2,9 @@ name: "Online sign"
 description: "Creates a snapshot and timestamp if needed, moves publish branch if needed"
 
 inputs:
+  token:
+    description: 'GitHub token'
+    required: true
   gcp_workload_identity_provider:
     description: "Google Cloud workload identity provider"
     required: false
@@ -24,6 +27,7 @@ runs:
   steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       with:
+        token: ${{ inputs.token }}
         fetch-depth: 0
 
     - name: Authenticate to Google Cloud
@@ -76,6 +80,7 @@ runs:
       if: github.event_name != 'schedule' || env.ONLINE_SIGNED == 'true'
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
       with:
+        github-token: ${{ inputs.token }}
         script: |
           console.log('Dispatching publish workflow')
           github.rest.actions.createWorkflowDispatch({

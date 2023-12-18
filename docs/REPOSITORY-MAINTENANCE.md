@@ -87,3 +87,37 @@ use.
 After this the delegating role signers (in this case root signers) accept
 the new key by signing the delegating metadata version.
 </details>
+
+## Configuration and modifying workflows
+
+tuf-on-ci workflows (with the exception of `publish`) are written in a way to minimize
+need to modify the workflows: It may be useful to consider the workflows part of the
+tuf-on-ci application. The intention with this is to make workflow upgrades easier:
+tuf-on-ci release notes will mention when workflows change and typically the suggested
+upgrade mechanism is to copy the modified workflows from tuf-on-ci-template.
+
+Supported ways to configure and modify tuf-on-ci workflows:
+* online signing is configured using signing method specific _Repository Variables_,
+  see [ONLINE-SIGNING-SETUP.md](ONLINE-SIGNING-SETUP.md) for details
+* A custom GitHub token can be optionally configured with _Repository Secret_
+  `TUF_ON_CI_TOKEN`, see details below
+* The `publish` workflow can be customized to publish to a destination that is not
+  the default GitHub Pages
+
+### Custom GitHub token
+
+tuf-on-ci uses GITHUB_TOKEN by default but supports using a custom fine-grained Github
+token. This allows the GitHub organization to limit the default GITHUB_TOKEN permissions
+(in practice this means other workflows in the repository can operate with this lower
+permission default token while tuf-on-ci workflows still have higher permissions).
+
+The custom token needs the following repository permissions:
+* `Contents: write` to create online signing commits, and to create targets metadata
+  change commits in signing event
+* `Issues: write` to create comments in signing events
+* `Actions: write` to dispatch other workflows when needed
+
+To use a custom token, define a _repository secret_ `TUF_ON_CI_TOKEN` with a fine grained
+token as the secrets value. No workflow changes are needed. Note that all automated comments
+in signing event issues will be seemingly made by the account that created the custom
+token: Creating the token on a "bot" account is sensible for this reason.

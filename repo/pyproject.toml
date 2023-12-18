@@ -23,6 +23,7 @@ tuf-on-ci-build-repository = "tuf_on_ci:build_repository"
 tuf-on-ci-create-signing-events = "tuf_on_ci:create_signing_events"
 tuf-on-ci-online-sign = "tuf_on_ci:online_sign"
 tuf-on-ci-status = "tuf_on_ci:status"
+tuf-on-ci-update-targets = "tuf_on_ci:update_targets"
 
 [[tool.mypy.overrides]]
 module = [

@@ -150,7 +150,79 @@ def _role_status(repo: CIRepository, role: str, event_name) -> bool:
 @click.command()  # type: ignore[arg-type]
 @click.option("-v", "--verbose", count=True, default=0)
 @click.option("--push/--no-push", default=True)
-def status(verbose: int, push: bool) -> None:
+def update_targets(verbose: int, push: bool) -> None:
+    """Tool to update targets metadata based on artifact changes
+
+    Compares artifacts to known good state. For all changed artifacts, makes
+    corresponding changes to targets metadata and commits those changes to git.
+    The targets metadata will be unsigned at this point.
+
+    Return value is 0 if any targets metadata was updated.
+    """
+    logging.basicConfig(level=logging.WARNING - verbose * 10)
+
+    event_name = _git(["branch", "--show-current"]).stdout.strip()
+    head = _git(["rev-parse", "HEAD"]).stdout.strip()
+
+    if not os.path.exists("metadata/root.json"):
+        sys.exit(1)
+
+    # Find the known-good commit
+    merge_base = _git(["merge-base", "origin/main", "HEAD"]).stdout.strip()
+    if head == merge_base:
+        click.echo("This signing event contains no changes yet")
+        sys.exit(1)
+
+    with TemporaryDirectory() as known_good_dir:
+        _git(["clone", "--quiet", ".", known_good_dir])
+        _git(["-C", known_good_dir, "checkout", "--quiet", merge_base])
+
+        good_metadata = os.path.join(known_good_dir, "metadata")
+        good_targets = os.path.join(known_good_dir, "targets")
+
+        # Find artifacts that have changed in this signing event
+        # Update targets metadata for those artifacts if needed.
+        repo = CIRepository("metadata", good_metadata)
+
+        roles = _find_changed_target_roles(good_targets, "targets")
+
+        # Update targets metadata if necessary
+        updated_targets = []
+        for role in roles:
+            if repo.update_targets(role):
+                # metadata and artifacts were not in sync: commit new metadata
+                msg = f"Update targets metadata for role {role}"
+                _git(["commit", "-m", msg, "--", f"metadata/{role}.json"])
+                updated_targets.append(f"`{role}`")
+
+    if updated_targets:
+        click.echo("### Artifacts have been modified")
+        click.echo(f"Event [{event_name}](../compare/{event_name}) (commit {head[:7]})")
+
+        role_str = ", ".join(updated_targets)
+        click.echo(f"Updating metadata for role(s) {role_str}.")
+
+    if push and updated_targets:
+        try:
+            _git(["push", "origin", event_name])
+        except subprocess.CalledProcessError as e:
+            # Figure out if this is an error caused by remote being ahead
+            # of local branch
+            msg = "Updates were rejected because the remote contains work that you do"
+            found = e.stdout.find(msg)
+            if found:
+                m = "There are changes in the signing event. Skipping metadata update"
+                print(m)
+            else:
+                print("Git output on error:", e.stdout, e.stderr)
+                raise e
+
+    sys.exit(0 if updated_targets else 1)
+
+
+@click.command()  # type: ignore[arg-type]
+@click.option("-v", "--verbose", count=True, default=0)
+def status(verbose: int) -> None:
     """Status markdown output tool"""
     logging.basicConfig(level=logging.WARNING - verbose * 10)
 
@@ -178,8 +250,6 @@ def status(verbose: int, push: bool) -> None:
         _git(["-C", known_good_dir, "checkout", "--quiet", merge_base])
 
         good_metadata = os.path.join(known_good_dir, "metadata")
-        good_targets = os.path.join(known_good_dir, "targets")
-        success = True
 
         # Compare current repository and the known good version.
         # Print status for each role, count invalid roles
@@ -188,7 +258,6 @@ def status(verbose: int, push: bool) -> None:
         # first create a list of roles with metadata or artifact changes or invites
         roles = list(
             _find_changed_roles(good_metadata, "metadata")
-            | _find_changed_target_roles(good_targets, "targets")
             | repo.state.roles_with_delegation_invites()
         )
         # reorder, toplevels first
@@ -197,31 +266,9 @@ def status(verbose: int, push: bool) -> None:
                 roles.remove(toplevel)
                 roles.insert(0, toplevel)
 
-        # Update metadata if necessary. Output the roles current status
-        updated = False
+        success = True
         for role in roles:
-            if repo.update_targets(role):
-                # metadata and artifacts are not in sync
-                msg = f"Update targets metadata for role {role}"
-                _git(["commit", "-m", msg, "--", f"metadata/{role}.json"])
-                updated = True
-
             if not _role_status(repo, role, event_name):
                 success = False
-
-    if push and updated:
-        try:
-            _git(["push", "origin", event_name])
-        except subprocess.CalledProcessError as e:
-            # Figure out if this is an error caused by remote being ahead
-            # of local branch
-            msg = "Updates were rejected because the remote contains work that you do"
-            found = e.stdout.find(msg)
-            if found:
-                m = "There are changes in the signing event. Skipping metadata update"
-                print(m)
-            else:
-                print("Git output on error:", e.stdout, e.stderr)
-                raise e
 
     sys.exit(0 if success else 1)

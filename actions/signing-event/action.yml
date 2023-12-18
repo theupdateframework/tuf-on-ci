@@ -1,10 +1,32 @@
 name: 'Signing event'
 description: 'TUF-on-CI Signing event management'
+
+# This action is called from signing-event workflow, which is dispatched in multiple ways
+# depending on the type of token provided in inputs.
+#
+# 1. create-signing-events action creates a new signing event branch
+#     * When using a custom token this triggers push event handler
+#     * When using the default GitHub token the action calls createWorkflowDispatch()
+# 2. A signer pushes artifact changes to a signing event branch
+#     * This triggers push event handler
+# 3. This action (signing-event) makes a metadata change in update_targets step as a result of an artifact change
+#     * When using a custom token this triggers push event handler
+#     * When using the default GitHub token the action calls createWorkflowDispatch()
+#
+# Cases 1 & 3 lead to status step running. Case 2 leads to skipping status step, but
+# triggering case 3 immediately afterwards.
+
+inputs:
+  token:
+    description: 'GitHub token'
+    required: true
+
 runs:
   using: "composite"
   steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       with:
+        token: ${{ inputs.token }}
         fetch-depth: 0
 
     - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
@@ -14,7 +36,19 @@ runs:
     - run: pip install $GITHUB_ACTION_PATH/../../repo/
       shell: bash
 
+    - id: update_targets
+      run: |
+        if tuf-on-ci-update-targets >> status-output;  then
+          echo "targets_updated=true" >> $GITHUB_OUTPUT
+        else
+          echo "targets_updated=false" >> $GITHUB_OUTPUT
+        fi
+        cat status-output
+        cat status-output >> "$GITHUB_STEP_SUMMARY"
+      shell: bash
+
     - id: status
+      if: steps.update_targets.outputs.targets_updated != 'true'
       run: |
         if tuf-on-ci-status >> status-output;  then
           echo "status=success" >> $GITHUB_OUTPUT
@@ -30,6 +64,7 @@ runs:
       env:
         STATUS: ${{ steps.status.outputs.status }}
       with:
+        github-token: ${{ inputs.token }}
         script: |
           const fs = require('fs')
           message = fs.readFileSync('./status-output').toString()
@@ -77,3 +112,18 @@ runs:
           })
 
           await core.summary.addHeading(summary).write()
+
+    - name: Dispatch another signing event workflow
+      # dispatch if using default token: otherwise update_targets step has already triggered a push event
+      if: inputs.token == github.token && steps.update_targets.outputs.targets_updated == 'true'
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+      with:
+        github-token: ${{ inputs.token }}
+        script: |
+          console.log('Dispatching another signing event workflow after a targets metadata update')
+          github.rest.actions.createWorkflowDispatch({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            workflow_id: 'signing-event.yml',
+            ref: process.env.GITHUB_REF_NAME,
+          })
