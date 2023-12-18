@@ -3,16 +3,18 @@
 ## Unreleased
 
 NOTE: This is a major Actions API break, users should **not** just upgrade the action
-versions but should instead replace `create-signing-events.yml`, `online-sign.yml` and
-`signing-event.yml` with workflows from tuf-on-ci-template.
+versions but should instead update their workflows based on the ones from
+tuf-on-ci-template.
 
 Changes
 * Support for custom GitHub tokens: see [REPOSITORY-MAINTENANCE.md].
+* Uses upload-artifact v4: this means publish workflow must use
+  download-artifact v4
 
 Upgrade instructions from v0.3.0:
-* We recommend replacing `create-signing-events.yml`, `online-sign.yml` and
-  `signing-event.yml` with workflows from tuf-on-ci-template to ensure workflows
-  stay compatible with the actions
+* We recommend using the workflows from tuf-on-ci-template (or to merge changes from
+  there if you have loal changes) to ensure workflows stay compatible with the
+  tuf-on-ci actions
 
 ## v0.3.0
 
