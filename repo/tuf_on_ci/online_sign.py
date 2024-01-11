@@ -58,7 +58,7 @@ def online_sign(verbose: int, push: bool) -> None:
 
         click.echo(msg)
         _git(["add", "metadata/timestamp.json", "metadata/snapshot.json"])
-        _git(["commit", "-m", msg])
+        _git(["commit", "-m", msg, "--signoff"])
         if push:
             _git(["push", "origin", "HEAD"])
     else:

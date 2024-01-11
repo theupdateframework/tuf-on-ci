@@ -373,7 +373,7 @@ def delegate(verbose: int, push: bool, event_name: str, role: str | None):
             else:
                 msg = "Initial root and targets"
             git_expect(["add", "metadata/"])
-            git_expect(["commit", "-m", msg, "--", "metadata"])
+            git_expect(["commit", "-m", msg, "--signoff", "--", "metadata"])
 
             if repo.unsigned:
                 click.echo(f"Your signature is required for role(s) {repo.unsigned}.")
@@ -383,7 +383,9 @@ def delegate(verbose: int, push: bool, event_name: str, role: str | None):
                     repo.sign(rolename)
 
                 git_expect(["add", "metadata/"])
-                git_expect(["commit", "-m", f"Signed by {user_config.name}"])
+                git_expect(
+                    ["commit", "-m", f"Signed by {user_config.name}", "--signoff"]
+                )
 
             if push:
                 branch = f"{user_config.push_remote}/{event_name}"

@@ -178,7 +178,9 @@ def import_repo(verbose: int, push: bool, event_name: str, import_file: str | No
             print(json.dumps(import_data, indent=2))
         else:
             git_expect(["add", "metadata"])
-            git_expect(["commit", "-m", f"Repo import by {user_config.name}"])
+            git_expect(
+                ["commit", "-m", f"Repo import by {user_config.name}", "--signoff"]
+            )
 
             if repo.unsigned:
                 click.echo(f"Your signature is required for role(s) {repo.unsigned}.")
@@ -188,7 +190,9 @@ def import_repo(verbose: int, push: bool, event_name: str, import_file: str | No
                     repo.sign(rolename)
 
                 git_expect(["add", "metadata/"])
-                git_expect(["commit", "-m", f"Signed by {user_config.name}"])
+                git_expect(
+                    ["commit", "-m", f"Signed by {user_config.name}", "--signoff"]
+                )
 
             if push:
                 branch = f"{user_config.push_remote}/{event_name}"

@@ -192,7 +192,7 @@ def update_targets(verbose: int, push: bool) -> None:
             if repo.update_targets(role):
                 # metadata and artifacts were not in sync: commit new metadata
                 msg = f"Update targets metadata for role {role}"
-                _git(["commit", "-m", msg, "--", f"metadata/{role}.json"])
+                _git(["commit", "-m", msg, "--signoff", "--", f"metadata/{role}.json"])
                 updated_targets.append(f"`{role}`")
 
     if updated_targets:
