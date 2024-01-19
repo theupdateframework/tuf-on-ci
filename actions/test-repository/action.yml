@@ -1,0 +1,27 @@
+name: 'Test TUF-on-CI repository'
+description: 'Test a published TUF-on-CI repository with a client'
+
+inputs:
+  metadata_url:
+    description: 'base metadata URL the client should use'
+  artifact_url:
+    description: 'Base artifact URL the client should use'
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+    - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+      with:
+        python-version: "3.11"
+
+    - run: pip install $GITHUB_ACTION_PATH/../../repo/
+      shell: bash
+
+    - env:
+        METADATA_URL: ${{ inputs.metadata_url }}
+        ARTIFACT_URL: ${{ inputs.artifact_url }}
+      run: |
+        tuf-on-ci-test-client --metadata-url "$METADATA_URL" --artifact-url "$ARTIFACT_URL"
+      shell: bash
