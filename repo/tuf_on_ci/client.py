@@ -5,25 +5,36 @@
 
 import logging
 import os
-from tempfile import TemporaryDirectory, mkdtemp
 import shutil
-import click
+from tempfile import TemporaryDirectory
 
+import click
 from tuf.ngclient import Updater
 
-
-# TODO:
-# * Enable support for sigstore signatures
-# * Add feature to download a specific file
-# * optionally test with cached metadata?
 
 @click.command()
 @click.option("-v", "--verbose", count=True, default=0)
 @click.option("-m", "--metadata-url", type=str, required=True)
 @click.option("-a", "--artifact-url", type=str, required=True)
-@click.option("-t", "--root", default="metadata/root_history/1.root.json", help="root metadata to populate client cache")
-@click.option("-t", "--metadata-cache", type=str, help="directory with an existing client cache that should be used")
-def client(verbose: int, metadata_url: str, artifact_url: str, root: str, metadata_cache: str | None) -> None:
+@click.option(
+    "-t",
+    "--root",
+    default="metadata/root_history/1.root.json",
+    help="root metadata to populate client cache",
+)
+@click.option(
+    "-t",
+    "--metadata-cache",
+    type=str,
+    help="directory with an existing client cache that should be used",
+)
+def client(
+    verbose: int,
+    metadata_url: str,
+    artifact_url: str,
+    root: str,
+    metadata_cache: str | None,
+) -> None:
     """Test client for tuf-on-ci"""
 
     logging.basicConfig(level=logging.WARNING - verbose * 10)
