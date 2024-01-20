@@ -6,6 +6,8 @@
 import logging
 import os
 import shutil
+import sys
+from filecmp import cmp
 from tempfile import TemporaryDirectory
 
 import click
@@ -17,25 +19,22 @@ from tuf.ngclient import Updater
 @click.option("-m", "--metadata-url", type=str, required=True)
 @click.option("-a", "--artifact-url", type=str, required=True)
 @click.option(
-    "-t",
-    "--root",
-    default="metadata/root_history/1.root.json",
-    help="root metadata to populate client cache",
-)
-@click.option(
-    "-t",
+    "-c",
     "--metadata-cache",
     type=str,
-    help="directory with an existing client cache that should be used",
+    help="Optional client cache dir that client should use",
 )
 def client(
     verbose: int,
     metadata_url: str,
     artifact_url: str,
-    root: str,
     metadata_cache: str | None,
 ) -> None:
-    """Test client for tuf-on-ci"""
+    """Test client for tuf-on-ci
+
+    Client expects to be run in tuf-on-ci repository (current metadata
+    in the sources will be considered the expected expected metadata the
+    client should receive from remote)."""
 
     logging.basicConfig(level=logging.WARNING - verbose * 10)
 
@@ -52,9 +51,17 @@ def client(
                 if os.path.isfile(fpath):
                     shutil.copy(fpath, os.path.join(metadata_dir, fname))
         else:
-            # pre-populate the client cache with just a root file
+            # pre-populate the client cache with first root version from source
+            root = "metadata/root_history/1.root.json"
             shutil.copy(root, os.path.join(metadata_dir, "root.json"))
 
-        # For now, just confirm we can get up-to-date top level metadata from remote
+        # For now, just confirm we can get top level metadata from remote
         updater = Updater(metadata_dir, metadata_url, artifact_dir, artifact_url)
         updater.refresh()
+        print("Client metadata update: OK")
+
+        # Verify the received metadata versions are what was expected
+        for f in ["root.json", "timestamp.json"]:
+            if not cmp(f"metadata/{f}", os.path.join(metadata_dir, f), shallow=False):
+                sys.exit(f"Client metadata freshness: {f} failed")
+        print("Client metadata freshness: OK")
