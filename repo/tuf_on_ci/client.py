@@ -18,6 +18,7 @@ from tuf.ngclient import Updater
 @click.option("-v", "--verbose", count=True, default=0)
 @click.option("-m", "--metadata-url", type=str, required=True)
 @click.option("-a", "--artifact-url", type=str, required=True)
+@click.option("-e", "--expected-artifact", type=str)
 @click.option(
     "-c",
     "--metadata-cache",
@@ -28,6 +29,7 @@ def client(
     verbose: int,
     metadata_url: str,
     artifact_url: str,
+    expected_artifact: str | None,
     metadata_cache: str | None,
 ) -> None:
     """Test client for tuf-on-ci
@@ -65,3 +67,12 @@ def client(
             if not cmp(f"metadata/{f}", os.path.join(metadata_dir, f), shallow=False):
                 sys.exit(f"Client metadata freshness: {f} failed")
         print("Client metadata freshness: OK")
+
+        if expected_artifact:
+            # Test expected artifact existence
+            tinfo = updater.get_targetinfo(expected_artifact)
+            if not tinfo:
+                sys.exit("Expected artifact '{expected_artifact}' not found")
+
+            updater.download_target(tinfo)
+            print(f"Expected artifact '{expected_artifact}': OK")
