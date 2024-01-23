@@ -1,0 +1,56 @@
+name: 'Test TUF-on-CI repository'
+description: 'Test a published TUF-on-CI repository with a client'
+
+inputs:
+  metadata_url:
+    description: 'base metadata URL the client should use'
+    default: ''
+  artifact_url:
+    description: 'Base artifact URL the client should use'
+    default: ''
+  expected_artifact:
+    description: 'Optional artifact path that should be checked to exist in the repository'
+    default: ''
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+    - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+      with:
+        python-version: "3.11"
+
+    - run: pip install $GITHUB_ACTION_PATH/../../repo/
+      shell: bash
+
+    - env:
+        METADATA_URL: ${{ inputs.metadata_url }}
+        ARTIFACT_URL: ${{ inputs.artifact_url }}
+        EXPECTED_ARTIFACT: ${{ inputs.expected_artifact }}
+        OWNER_REPO: ${{ github.repository }}
+      run: |
+        OWNER=${OWNER_REPO%/*}
+        REPO=${OWNER_REPO#*/}
+
+        # guess reasonable default urls
+        if [ -z $METADATA_URL ]; then
+          METADATA_URL="https://${OWNER}.github.io/${REPO}/metadata/"
+        fi
+        if [ -z $ARTIFACT_URL ]; then
+          ARTIFACT_URL="https://${OWNER}.github.io/${REPO}/targets/"
+        fi
+
+        # set --expected-artifact if input is used
+        if [ -z $EXPECTED_ARTIFACT ]; then
+          ARTIFACT_ARG=""
+        else
+          ARTIFACT_ARG="--expected-artifact $EXPECTED_ARTIFACT"
+        fi
+
+        echo "Testing repository at metadata-url $METADATA_URL, artifact-url $ARTIFACT_URL"
+        tuf-on-ci-test-client \
+          --metadata-url "$METADATA_URL" \
+          --artifact-url "$ARTIFACT_URL" \
+          $ARTIFACT_ARG
+      shell: bash
