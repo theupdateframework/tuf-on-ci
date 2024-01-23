@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.4.0
 
 NOTE: This is a major Actions API break, users should **not** just upgrade the action
 versions but should instead update their workflows based on the ones from
@@ -10,6 +10,7 @@ Changes
 * Support for custom GitHub tokens: see [REPOSITORY-MAINTENANCE.md].
 * Uses upload-artifact v4: this means publish workflow must use
   download-artifact v4
+* All commits are now done with "Signed-Off-By"
 
 Upgrade instructions from v0.3.0:
 * We recommend using the workflows from tuf-on-ci-template (or to merge changes from
