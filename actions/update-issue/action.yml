@@ -51,13 +51,24 @@ runs:
           // Build comment body
           const run_url = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
           if (success) {
-            body = `### Workflow run succeeded for '${context.workflow}'.\n` +
+            body = `### Workflow run succeeded for ${context.workflow}.\n` +
                    `Succesful run: ${run_url}\n\n` +
                    `Closing issue based on this success.`
+          } else if (issue_number){
+            body = `### Workflow run failed for ${context.workflow}.\n` +
+                   `Failed run: ${run_url}\n\n`
           } else {
-            body = `### Workflow run failed for '${context.workflow}'.\n` +
+            retry_line = ""
+            if (label == "online-sign.yml" ||
+                label == "create-signing-events.yml" ||
+                label == "test-repository.yml") {
+              retry_line = "* This workflow will be retried automatically (by default in 6 hours)\n"
+            }
+            body = `### Workflow run failed for ${context.workflow}.\n` +
                    `Failed run: ${run_url}\n\n` +
-                   `This issue will be automatically closed if a later run succeeds`
+                   retry_line +
+                   "* Maintainers can re-run the failing job manually\n" +
+                   "* This issue will be automatically closed if a later run succeeds"
           }
 
           // open, comment on, and close issue as needed
