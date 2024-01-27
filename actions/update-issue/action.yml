@@ -3,7 +3,7 @@ description: 'Create, close or add a comment in a GitHub issue for a workflow fa
 # * This action will open an issue per workflow if that workflow fails.
 # * If an issue is open for that workflow already, the action will add a comment.
 # * If an issue is open and the workflow succeeds, the action will close the issue.
-# * The issue is identified using a label that is the workflow filename.
+# * The issue is identified using a label that is the workflow name.
 # * Required permissions:
 #     issues: write
 
@@ -30,12 +30,11 @@ runs:
 
           success = (process.env.SUCCESS == "true")
 
-          // Find issue labeled with the forkflow filename
-          const label = path.basename(context.payload.workflow)
+          // Find issue labeled with the forkflow name
           const issues = await github.rest.issues.listForRepo({
             owner: context.repo.owner,
             repo: context.repo.repo,
-            labels: [label],
+            labels: [context.workflow],
           })
           if (issues.data.length == 0) {
             issue_number = 0
@@ -52,21 +51,14 @@ runs:
           const run_url = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
           if (success) {
             body = `### Workflow run succeeded for ${context.workflow}.\n` +
-                   `Succesful run: ${run_url}\n\n` +
+                   `Successful run: ${run_url}\n\n` +
                    `Closing issue based on this success.`
           } else if (issue_number){
             body = `### Workflow run failed for ${context.workflow}.\n` +
                    `Failed run: ${run_url}\n\n`
           } else {
-            retry_line = ""
-            if (label == "online-sign.yml" ||
-                label == "create-signing-events.yml" ||
-                label == "test-repository.yml") {
-              retry_line = "* This workflow will be retried automatically (by default in 6 hours)\n"
-            }
             body = `### Workflow run failed for ${context.workflow}.\n` +
                    `Failed run: ${run_url}\n\n` +
-                   retry_line +
                    "* Maintainers can re-run the failing job manually\n" +
                    "* This issue will be automatically closed if a later run succeeds"
           }
@@ -78,7 +70,7 @@ runs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: `Failure in ${context.workflow}`,
-              labels: [label],
+              labels: [context.workflow],
               body: body,
             })
           }
