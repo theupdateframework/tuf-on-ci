@@ -23,7 +23,7 @@ jobs:
     - name: Install system dependencies for e2e test
       run: |
         sudo apt-get install libfaketime softhsm2
-        echo "PYKCS11LIB=/usr/lib/softhsm/libsofthsm2.so" >> $GITHUB_ENV
+        echo "PYKCS11LIB=/usr/lib/softhsm/libsofthsm2.so" >> "$GITHUB_ENV"
 
     - name: Install tox
       run: python -m pip install tox
