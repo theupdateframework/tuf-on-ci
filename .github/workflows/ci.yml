@@ -44,5 +44,7 @@ jobs:
       - uses: reviewdog/action-actionlint@v1 # Not pinned because not a critical dependency
         with:
           filter_mode: nofilter
-          level: info
-          actionlint_flags: -debug
+      - uses: reviewdog/action-actionlint@v1 # Not pinned because not a critical dependency
+        with:
+          actionlint_flags: actions/signing-event/action.yml
+          filter_mode: nofilter
