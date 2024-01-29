@@ -1,0 +1,94 @@
+name: 'Update TUF-on-CI issue'
+description: 'Create, close or add a comment in a GitHub issue for a workflow failure'
+# * This action will open an issue per workflow if that workflow fails.
+# * If an issue is open for that workflow already, the action will add a comment.
+# * If an issue is open and the workflow succeeds, the action will close the issue.
+# * The issue is identified using a label that is the workflow name.
+# * Required permissions:
+#     issues: write
+
+inputs:
+  token:
+    description: 'GitHub token'
+    required: true
+
+  success:
+    description: '"true" if workflow is succeeding'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Update issue
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+      env:
+        SUCCESS: ${{ inputs.success }}
+      with:
+        github-token: ${{ inputs.token }}
+        script: |
+          var path = require("path")
+
+          success = (process.env.SUCCESS == "true")
+
+          // Find issue labeled with the forkflow name
+          const issues = await github.rest.issues.listForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            labels: [context.workflow],
+          })
+          if (issues.data.length == 0) {
+            issue_number = 0
+          } else {
+            issue_number = issues.data[0].number
+          }
+
+          if (success && !issue_number) {
+              console.log("update-issue: Nothing to do (success, no issue open)")
+              return
+          }
+
+          // Build comment body
+          const run_url = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+          if (success) {
+            body = `### Workflow run succeeded for ${context.workflow}.\n` +
+                   `Successful run: ${run_url}\n\n` +
+                   `Closing issue based on this success.`
+          } else if (issue_number){
+            body = `### Workflow run failed for ${context.workflow}.\n` +
+                   `Failed run: ${run_url}\n\n`
+          } else {
+            body = `### Workflow run failed for ${context.workflow}.\n` +
+                   `Failed run: ${run_url}\n\n` +
+                   "* Maintainers can re-run the failing job manually\n" +
+                   "* This issue will be automatically closed if a later run succeeds"
+          }
+
+          // open, comment on, and close issue as needed
+          if (!success && !issue_number) {
+            console.log("update-issue: Opening a new issue on failure")
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Failure in ${context.workflow}`,
+              labels: [context.workflow],
+              body: body,
+            })
+          }
+          if (issue_number) {
+            console.log(`update-issue: Adding a comment (issue: ${issue_number})`)
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue_number,
+              body: body,
+            })
+          }
+          if (success) {
+            console.log(`update-issue: Closing issue on success (issue: ${issue_number})`)
+            await github.rest.issues.update({
+              issue_number: issue_number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "closed",
+            })
+          }

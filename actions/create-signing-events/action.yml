@@ -18,7 +18,7 @@ runs:
       with:
         python-version: "3.11"
 
-    - run: pip install $GITHUB_ACTION_PATH/../../repo/
+    - run: pip --quiet install $GITHUB_ACTION_PATH/../../repo/
       shell: bash
 
     - name: Create signing event branches for expiring roles
