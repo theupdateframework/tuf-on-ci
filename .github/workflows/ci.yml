@@ -36,3 +36,13 @@ jobs:
 
     - name: End-to-end tests
       run: tox -e test-e2e
+
+  action-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: reviewdog/action-actionlint@v1 # Not pinned because not a critical dependency
+        with:
+          filter_mode: nofilter
+          level: info
+          actionlint_flags: -debug
