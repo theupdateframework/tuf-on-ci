@@ -397,18 +397,18 @@ class SignerRepository(Repository):
             root.add_key(online_config.key, "snapshot")
 
             # set online role periods
-            timestamp.unrecognized_fields[
-                "x-tuf-on-ci-expiry-period"
-            ] = online_config.timestamp_expiry
-            timestamp.unrecognized_fields[
-                "x-tuf-on-ci-signing-period"
-            ] = online_config.timestamp_signing
-            snapshot.unrecognized_fields[
-                "x-tuf-on-ci-expiry-period"
-            ] = online_config.snapshot_expiry
-            snapshot.unrecognized_fields[
-                "x-tuf-on-ci-signing-period"
-            ] = online_config.snapshot_signing
+            timestamp.unrecognized_fields["x-tuf-on-ci-expiry-period"] = (
+                online_config.timestamp_expiry
+            )
+            timestamp.unrecognized_fields["x-tuf-on-ci-signing-period"] = (
+                online_config.timestamp_signing
+            )
+            snapshot.unrecognized_fields["x-tuf-on-ci-expiry-period"] = (
+                online_config.snapshot_expiry
+            )
+            snapshot.unrecognized_fields["x-tuf-on-ci-signing-period"] = (
+                online_config.snapshot_signing
+            )
 
     def get_role_config(self, rolename: str) -> OfflineConfig | None:
         """Read configuration for delegation and role from metadata"""
@@ -546,12 +546,12 @@ class SignerRepository(Repository):
             if expiry == config.expiry_period and signing == config.signing_period:
                 raise AbortEdit(f"No changes to {rolename}")
 
-            signed.unrecognized_fields[
-                "x-tuf-on-ci-expiry-period"
-            ] = config.expiry_period
-            signed.unrecognized_fields[
-                "x-tuf-on-ci-signing-period"
-            ] = config.signing_period
+            signed.unrecognized_fields["x-tuf-on-ci-expiry-period"] = (
+                config.expiry_period
+            )
+            signed.unrecognized_fields["x-tuf-on-ci-signing-period"] = (
+                config.signing_period
+            )
 
         state_file_path = os.path.join(self._dir, ".signing-event-state")
         if self._invites:
