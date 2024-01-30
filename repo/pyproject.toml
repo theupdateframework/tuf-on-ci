@@ -8,7 +8,7 @@ allow-direct-references = true
 
 [project]
 name = "tuf-on-ci"
-version = "0.4.0"
+version = "0.5.0"
 description = "TUF-on-CI repository tools, intended to be executed on a CI system"
 readme = "README.md"
 dependencies = [

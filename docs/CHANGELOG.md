@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.5.0
+
+**NOTE:** Do not accept a dependabot upgrade, please see upgrade
+instructions.
+
+This release contains improved failure handling and testing.
+
+**Changes**
+
+* New action test-repository: This new action enables smoke testing
+  every published repository with a TUF client.
+* New action update-issue: This action enables automated filing of
+  issues when a TUF-on-CI workflow fails
+
+**Upgrade instructions**
+
+As usual we recommend copying your workflows from
+https://github.com/theupdateframework/tuf-on-ci-template/ as there
+are a number of changes, including a new reusable workflow.
+
 ## v0.4.0
 
 NOTE: This is a major Actions API break, users should **not** just upgrade the action
