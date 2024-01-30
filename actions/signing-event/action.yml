@@ -72,12 +72,14 @@ runs:
 
           issue = 0
           const repo = context.repo.owner + "/" + context.repo.repo
-          const issues = await github.rest.search.issuesAndPullRequests({
-            q: "label:" + process.env.GITHUB_REF_NAME + "+state:open+type:issue+repo:" + repo,
+          const issues = await github.rest.issues.listForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            labels: [process.env.GITHUB_REF_NAME],
           })
-          if (issues.data.total_count > 1) {
+          if (issues.data.length > 1) {
             core.setFailed("Found more than one issue with same label")
-          } else if (issues.data.total_count == 0) {
+          } else if (issues.data.length == 0) {
             const response = await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -88,7 +90,7 @@ runs:
             issue = response.data.number
             console.log("Created issue #" + issue)
           } else {
-            issue = issues.data.items[0].number
+            issue = issues.data[0].number
             console.log("Found existing issue #" + issue)
           }
 
