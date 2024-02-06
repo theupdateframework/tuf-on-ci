@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 from enum import Enum, unique
 from glob import glob
 
-from securesystemslib.exceptions import UnverifiedSignatureError
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
     SIGNER_FOR_URI_SCHEME,
@@ -22,12 +21,14 @@ from tuf.api.metadata import (
     Metadata,
     MetaFile,
     Root,
+    RootVerificationResult,
     Snapshot,
     TargetFile,
     Targets,
     Timestamp,
+    VerificationResult,
 )
-from tuf.api.serialization.json import CanonicalJSONSerializer, JSONSerializer
+from tuf.api.serialization.json import JSONSerializer
 from tuf.repository import AbortEdit, Repository
 
 # sigstore is not a supported key by default
@@ -59,9 +60,7 @@ class TargetState:
 @dataclass
 class SigningStatus:
     invites: set[str]  # invites to _delegations_ of the role
-    signed: set[str]
-    missing: set[str]
-    threshold: int
+    verification_result: VerificationResult | RootVerificationResult
     target_changes: list[TargetState]
     valid: bool
     message: str | None
@@ -261,9 +260,7 @@ class CIRepository(Repository):
 
         return None
 
-    def _validate_role(
-        self, delegator: Metadata, rolename: str
-    ) -> tuple[bool, str | None]:
+    def _validate_update(self, rolename: str) -> tuple[bool, str | None]:
         """Validate role compatibility with this repository
 
         Returns bool for validity and optional error message"""
@@ -285,11 +282,6 @@ class CIRepository(Repository):
             # tuf-on-ci is always consistent_snapshot
             if not md.signed.consistent_snapshot:
                 return False, "Consistent snapshot is not enabled"
-
-            # Specification: root version must be x+1, not just larger
-            if prev_md and prev_md.signed != md.signed:
-                if md.signed.version != prev_md.signed.version + 1:
-                    return False, f"Version {md.signed.version} is not valid for root"
 
             # tuf-on-ci online signer must be the same for both roles
             ts_role = md.signed.get_delegated_role(Timestamp.type)
@@ -317,11 +309,6 @@ class CIRepository(Repository):
         # TODO for delegated targets:
         # * check there are no delegations
         # * check that target files in metadata match the files in targets/
-
-        try:
-            delegator.verify_delegate(rolename, md)
-        except UnsignedMetadataError:
-            return False, None
 
         return True, None
 
@@ -404,36 +391,30 @@ class CIRepository(Repository):
 
         return changes
 
-    def _get_signing_status(
-        self, rolename: str, known_good: bool
-    ) -> SigningStatus | None:
-        """Build signing status for role.
+    def status(self, rolename: str) -> SigningStatus:
+        """Returns signing status for role.
 
-        This method relies on event state (.signing-event-state) to be accurate.
-        Returns None only when known_good is True, and then in two cases: if delegating
-        role is not root (because then the known good state is irrelevant) and also if
-        there is no known good version yet.
-        """
+        Uses .signing-event-state file."""
+
+        if rolename in [Timestamp.type, Snapshot.type]:
+            raise ValueError("Not supported for online metadata")
+
         invites = set()
-        sigs = set()
-        missing_sigs = set()
         md = self.open(rolename)
+        bytes = md.signed_bytes
+        sigs = md.signatures
 
-        # Find delegating metadata. For root handle the special case of known good
-        # delegating metadata.
-        if known_good:
-            delegator = None
-            if rolename == "root":
-                delegator = self.open_prev("root")
-            if not delegator:
-                # Not root role or there is no known-good root metadata yet
-                return None
-        elif rolename == "root":
-            delegator = self.open("root")
+        # Get verification result. Handle previous root if it exists
+        if rolename == "root":
+            root = self.root()
+            prev_md: Metadata[Root] | None = self.open_prev("root")
+            prev_root = prev_md.signed if prev_md else None
+            vr: VerificationResult | RootVerificationResult
+            vr = root.get_root_verification_result(prev_root, bytes, sigs)
         elif rolename == "targets":
-            delegator = self.open("root")
+            vr = self.root().get_verification_result(rolename, bytes, sigs)
         else:
-            delegator = self.open("targets")
+            vr = self.targets().get_verification_result(rolename, bytes, sigs)
 
         # Build list of invites to all delegated roles of rolename
         delegation_names = []
@@ -445,45 +426,18 @@ class CIRepository(Repository):
         for delegation_name in delegation_names:
             invites.update(self.state.invited_signers_for_role(delegation_name))
 
-        role = delegator.signed.get_delegated_role(rolename)
-
-        # Build lists of signed signers and not signed signers
-        for key in self._get_keys(rolename, known_good):
-            keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
-            try:
-                payload = CanonicalJSONSerializer().serialize(md.signed)
-                key.verify_signature(md.signatures[key.keyid], payload)
-                sigs.add(keyowner)
-            except (KeyError, UnverifiedSignatureError):
-                missing_sigs.add(keyowner)
-
         # Document changes to targets metadata in this signing event
         target_changes = self._get_target_changes(rolename)
 
-        # Just to be sure: double check that delegation threshold is reached
+        # Calculate signing event state
         if invites:
             valid, msg = False, None
+        elif not vr:
+            valid, msg = False, None
         else:
-            valid, msg = self._validate_role(delegator, rolename)
+            valid, msg = self._validate_update(rolename)
 
-        return SigningStatus(
-            invites, sigs, missing_sigs, role.threshold, target_changes, valid, msg
-        )
-
-    def status(self, rolename: str) -> tuple[SigningStatus, SigningStatus | None]:
-        """Returns signing status for role.
-
-        In case of root, another SigningStatus may be returned for the previous
-        'known good' root.
-        Uses .signing-event-state file."""
-        if rolename in ["timestamp", "snapshot"]:
-            raise ValueError("Not supported for online metadata")
-
-        known_good_status = self._get_signing_status(rolename, known_good=True)
-        signing_event_status = self._get_signing_status(rolename, known_good=False)
-        assert signing_event_status is not None
-
-        return signing_event_status, known_good_status
+        return SigningStatus(invites, vr, target_changes, valid, msg)
 
     def build(self, metadata_path: str, artifact_path: str | None):
         """Build a publishable directory of metadata and (optionally) artifacts"""

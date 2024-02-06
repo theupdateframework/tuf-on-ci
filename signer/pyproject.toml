@@ -2,6 +2,10 @@
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.metadata]
+# for git dependencies
+allow-direct-references = true
+
 [project]
 name = "tuf-on-ci-sign"
 version = "0.5.0"
@@ -9,7 +13,7 @@ description = "Signing tools for TUF-on-CI"
 readme = "README.md"
 dependencies = [
   "securesystemslib[awskms,azurekms,gcpkms,hsm,sigstore] ~= 0.30",
-  "tuf ~= 3.0",
+  "tuf @ git+https://github.com/theupdateframework/python-tuf",
   "click ~= 8.1",
 ]
 requires-python = ">=3.10"

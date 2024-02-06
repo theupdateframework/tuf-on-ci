@@ -11,6 +11,7 @@ from glob import glob
 from tempfile import TemporaryDirectory
 
 import click
+from tuf.api.metadata import Key, VerificationResult
 
 from tuf_on_ci._repository import CIRepository
 
@@ -87,20 +88,25 @@ def _find_changed_target_roles(
 
 
 def _role_status(repo: CIRepository, role: str, event_name) -> bool:
-    status, prev_status = repo.status(role)
-    role_is_valid = status.valid
-    sig_counts = f"{len(status.signed)}/{status.threshold}"
-    signed = status.signed
-    missing = status.missing
+    def signer(key: Key) -> str:
+        return key.unrecognized_fields["x-tuf-on-ci-keyowner"]
 
-    # Handle the additional status for the possible previous, known good root version:
-    if prev_status:
-        role_is_valid = role_is_valid and prev_status.valid
-        sig_counts = f"{len(prev_status.signed)}/{prev_status.threshold} ({sig_counts})"
-        signed = signed | prev_status.signed
-        missing = missing | prev_status.missing
+    status = repo.status(role)
+    vr = status.verification_result
 
-    if role_is_valid and not status.invites:
+    # Build the signature count description string:
+    if isinstance(vr, VerificationResult):
+        sig_counts = f"{len(vr.signed)}/{vr.threshold}"
+    else:
+        sig_counts = (
+            f"{len(vr.first.signed)}/{vr.first.threshold} "
+            + f"({len(vr.second.signed)}/{vr.second.threshold})"
+        )
+    # build strings of signed and unsigned signer names
+    signed = ", ".join([signer(key) for key in vr.signed.values()])
+    unsigned = ", ".join([signer(key) for key in vr.unsigned.values()])
+
+    if status.valid:
         emoji = "white_check_mark"
     else:
         emoji = "x"
@@ -113,29 +119,28 @@ def _role_status(repo: CIRepository, role: str, event_name) -> bool:
             "Invitees can accept the invitations by running "
             f"`tuf-on-ci-sign {event_name}`"
         )
-
-    if not status.invites:
+    else:
         if status.target_changes:
             click.echo(f"Role `{role}` contains following artifact changes:")
             for target_state in status.target_changes:
                 click.echo(f" * {target_state}")
             click.echo("")
 
-        if role_is_valid:
+        if status.valid:
             click.echo(
                 f"Role `{role}` is verified and signed by {sig_counts} signers "
-                f"({', '.join(signed)})."
+                f"({signed})."
             )
-        elif signed:
+        elif vr.signed:
             click.echo(
                 f"Role `{role}` is not yet verified. It is signed by {sig_counts} "
-                f"signers ({', '.join(signed)})."
+                f"signers ({signed})."
             )
         else:
             click.echo(f"Role `{role}` is unsigned and not yet verified")
 
-        if missing:
-            click.echo(f"Still missing signatures from {', '.join(missing)}")
+        if vr.unsigned:
+            click.echo(f"Still missing signatures from {unsigned}")
             click.echo(
                 "Signers can sign these changes by running "
                 f"`tuf-on-ci-sign {event_name}`"
@@ -144,7 +149,7 @@ def _role_status(repo: CIRepository, role: str, event_name) -> bool:
     if status.message:
         click.echo(f"**Error**: {status.message}")
 
-    return role_is_valid and not status.invites
+    return status.valid
 
 
 @click.command()  # type: ignore[arg-type]
