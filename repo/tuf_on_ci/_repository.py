@@ -212,9 +212,8 @@ class CIRepository(Repository):
                 md.signatures[key.keyid] = Signature(key.keyid, "")
 
         if rolename in ["timestamp", "snapshot"]:
-            root_md: Metadata[Root] = self.open("root")
             # repository should never write unsigned online roles
-            root_md.verify_delegate(rolename, md)
+            self.root().verify_delegate(rolename, md.signed_bytes, md.signatures)
 
         filename = self._get_filename(rolename)
         data = md.to_bytes(JSONSerializer())
@@ -509,17 +508,17 @@ class CIRepository(Repository):
         false in this case: this is useful when repository decides if it needs a new
         online role version.
         """
-        role_md = self.open(rolename)
+        md = self.open(rolename)
         if rolename in ["root", "timestamp", "snapshot", "targets"]:
-            delegator = self.open("root")
+            delegator: Root | Targets = self.root()
         else:
-            delegator = self.open("targets")
+            delegator = self.targets()
         try:
-            delegator.verify_delegate(rolename, role_md)
+            delegator.verify_delegate(rolename, md.signed_bytes, md.signatures)
         except UnsignedMetadataError:
             return False
 
         signing_days, _ = self.signing_expiry_period(rolename)
         delta = timedelta(days=signing_days)
 
-        return datetime.utcnow() + delta < role_md.signed.expires
+        return datetime.utcnow() + delta < md.signed.expires
