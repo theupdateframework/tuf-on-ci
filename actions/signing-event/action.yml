@@ -99,13 +99,11 @@ runs:
             message += "### Signing event is successful\n\n"
             message += "Threshold of signatures has been reached: this signing event can be reviewed and merged."
             summary = "Signing event is successful"
-            draft = false
+            should_be_draft = false
           } else {
             summary = "Signing event in progress"
-            draft = true
+            should_be_draft = true
           }
-
-          // TODO set draft state here: The rest api does not support that
 
           github.rest.issues.createComment({
             owner: context.repo.owner,
@@ -113,6 +111,32 @@ runs:
             issue_number: pr,
             body: message,
           })
+
+          // Following pile of GraphQL is here because draft state cannot
+          // be modified through rest API at all!
+
+          // First get the PR "Id" and current draft state...
+          response = await github.graphql(`query {
+            repository(owner: "${context.repo.owner}", name: "${context.repo.repo}") {
+              pullRequest(number: ${pr}) { id, isDraft }
+            }
+          }`)
+          pr_id = response.repository.pullRequest.id
+          is_draft = response.repository.pullRequest.isDraft
+          // Then modify PR if needed
+          if (should_be_draft && !is_draft) {
+            await github.graphql(`mutation SetPullRequestDraft {
+              convertPullRequestToDraft(input: {pullRequestId: "${pr_id}"}) {
+                pullRequest { isDraft }
+              }
+            }`)
+          } else if (!should_be_draft && is_draft) {
+            await github.graphql(`mutation SetPullRequestReady {
+              markPullRequestReadyForReview(input: {pullRequestId: "${pr_id}"}) {
+                pullRequest { isDraft }
+              }
+            }`)
+          }
 
           await core.summary.addHeading(summary).write()
 
