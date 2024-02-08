@@ -34,8 +34,8 @@ Roles are modified with `tuf-on-ci-delegate <event> <role>`.
   event does not exist yet, it will be created as a result.
 * The tool will prompt for new signers and other details, and then prompt to push changes
   to the repository.
-* The push triggers creation of a signing event GitHub issue. The repository will report the
-  status of the signing event and will notify signers with advice.
+* The push triggers creation of a signing event pull request. The repository will report the
+  status of the signing event in the pull request and will notify signers there.
 
 ### Examples
 
@@ -76,9 +76,10 @@ which in the above example is `sign/add-fakueuser-2`.
 
 The repository automation runs the [signing
 automation](https://github.com/theupdateframework/tuf-on-ci-template/blob/main/.github/workflows/signing-event.yml)
-that creates issues with the current signing state and tags each
-signer on what's expected to do. This always provides a clear state of
-the situation.
+that creates PRs with comments documenting current signing event state
+and tags each signer. These comments (along with the PR commits) should
+provide signers with a clear view of what is happening in the signing
+event.
 
 To accept the invitation and become a signer, the invitee runs
 `tuf-on-ci-sign <event-name>` and provides information on what key to
@@ -114,10 +115,11 @@ permission default token while tuf-on-ci workflows still have higher permissions
 The custom token needs the following repository permissions:
 * `Contents: write` to create online signing commits, and to create targets metadata
   change commits in signing event
-* `Issues: write` to create comments in signing events
+* `Issues: write` to create issues on workflow failures
+* `Pull requests: write` to create and modify signing event pull requests
 * `Actions: write` to dispatch other workflows when needed
 
 To use a custom token, define a _repository secret_ `TUF_ON_CI_TOKEN` with a fine grained
 token as the secrets value. No workflow changes are needed. Note that all automated comments
-in signing event issues will be seemingly made by the account that created the custom
+in signing event pull requests will be seemingly made by the account that created the custom
 token: Creating the token on a "bot" account is sensible for this reason.

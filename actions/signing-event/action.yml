@@ -59,7 +59,7 @@ runs:
         cat status-output >> "$GITHUB_STEP_SUMMARY"
       shell: bash
 
-    - id: file-issue
+    - id: update-pr
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
       env:
         STATUS: ${{ steps.status.outputs.status }}
@@ -70,46 +70,47 @@ runs:
           message = fs.readFileSync('./status-output').toString()
           summary = ''
 
-          issue = 0
+          pr = 0
           const repo = context.repo.owner + "/" + context.repo.repo
-          const issues = await github.rest.issues.listForRepo({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            labels: [process.env.GITHUB_REF_NAME],
+          const prs = await github.rest.search.issuesAndPullRequests({
+            q: "label:" + process.env.GITHUB_REF_NAME + "+state:open+type:pr+repo:" + repo,
           })
-          if (issues.data.length > 1) {
-            core.setFailed("Found more than one issue with same label")
-          } else if (issues.data.length == 0) {
-            const response = await github.rest.issues.create({
+          if (prs.data.total_count > 1) {
+            core.setFailed("Found more than one pull request with same label")
+          } else if (prs.data.total_count == 0) {
+            const response = await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: "Signing event: " + process.env.GITHUB_REF_NAME,
               body: "Processing signing event " + process.env.GITHUB_REF_NAME + ", please wait.",
               labels: [process.env.GITHUB_REF_NAME],
+              draft: true,
+              head: process.env.GITHUB_REF_NAME,
+              base: "main",
             })
-            issue = response.data.number
-            console.log("Created issue #" + issue)
+            pr = response.data.number
+            console.log("Created pull request #" + pr)
           } else {
-            issue = issues.data[0].number
-            console.log("Found existing issue #" + issue)
+            pr = prs.data.items[0].number
+            console.log("Found existing pull request #" + pr)
           }
 
           if (process.env.STATUS == 'success') {
-            pr_url = new URL("https://github.com/" + repo + "/compare/main..." + process.env.GITHUB_REF_NAME)
-            pr_url.searchParams.set("expand", "1")
-            pr_url.searchParams.set("title", "Signing event " + process.env.GITHUB_REF_NAME)
-            pr_url.searchParams.set("body", "Signing event " + process.env.GITHUB_REF_NAME + " is successful and ready to merge.\n\nCloses #" + issue + ".")
             message += "### Signing event is successful\n\n"
-            message += "Threshold of signatures has been reached. A [pull request](" + pr_url + ") can be opened."
+            message += "Threshold of signatures has been reached: this signing event can be reviewed and merged."
             summary = "Signing event is successful"
+            draft = false
           } else {
             summary = "Signing event in progress"
+            draft = true
           }
 
+          // TODO set draft state here: The rest api does not support that
+
           github.rest.issues.createComment({
-            issue_number: issue,
             owner: context.repo.owner,
             repo: context.repo.repo,
+            issue_number: pr,
             body: message,
           })
 

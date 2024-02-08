@@ -4,7 +4,7 @@ TUF-on-CI is implemented on top of a CI system, git and includes quite a bit of
 user interaction (through both the CI system and the signing tools). This makes
 testing tricky. These tests are an attempt at defining a set of functionality that
 can be tested without
-* Github issues being created
+* Github pull requests being created
 * git branches modified on github.com
 * sigstore or Google Cloud signing for online keys
 * a user signing with a Yubikey
