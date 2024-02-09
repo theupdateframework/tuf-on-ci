@@ -200,7 +200,8 @@ def update_targets(verbose: int, push: bool) -> None:
         click.echo(f"Event [{event_name}](../compare/{event_name}) (commit {head[:7]})")
 
         role_str = ", ".join(updated_targets)
-        click.echo(f"Updating metadata for role(s) {role_str}.")
+        click.echo(f"Committed metadata changes for role(s) {role_str}.")
+        click.echo("Updating signing event state, please wait.")
 
     if push and updated_targets:
         try:
