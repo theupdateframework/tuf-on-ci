@@ -68,22 +68,22 @@ runs:
         script: |
           const fs = require('fs')
           message = fs.readFileSync('./status-output').toString()
+          title = "Signing event: " + process.env.GITHUB_REF_NAME
           summary = ''
 
           pr = 0
           const repo = context.repo.owner + "/" + context.repo.repo
           const prs = await github.rest.search.issuesAndPullRequests({
-            q: "label:" + process.env.GITHUB_REF_NAME + "+state:open+type:pr+repo:" + repo,
+            q: `in:title+"${title}"+state:open+type:pr+repo:${repo}`
           })
           if (prs.data.total_count > 1) {
-            core.setFailed("Found more than one pull request with same label")
+            core.setFailed("Found more than one open pull request with same title")
           } else if (prs.data.total_count == 0) {
             const response = await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: "Signing event: " + process.env.GITHUB_REF_NAME,
+              title: title,
               body: "Processing signing event " + process.env.GITHUB_REF_NAME + ", please wait.",
-              labels: [process.env.GITHUB_REF_NAME],
               draft: true,
               head: process.env.GITHUB_REF_NAME,
               base: "main",
