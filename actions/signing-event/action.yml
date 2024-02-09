@@ -67,15 +67,12 @@ runs:
         github-token: ${{ inputs.token }}
         script: |
           const fs = require('fs')
-          message = fs.readFileSync('./status-output').toString()
-          title = "Signing event: " + process.env.GITHUB_REF_NAME
-          summary = ''
-
-          pr = 0
-          const repo = context.repo.owner + "/" + context.repo.repo
+          const title = `Signing event: ${process.env.GITHUB_REF_NAME}`
+          const repo = `${context.repo.owner}/${context.repo.repo}`
           const prs = await github.rest.search.issuesAndPullRequests({
             q: `in:title+"${title}"+state:open+type:pr+repo:${repo}`
           })
+
           if (prs.data.total_count > 1) {
             core.setFailed("Found more than one open pull request with same title")
           } else if (prs.data.total_count == 0) {
@@ -83,18 +80,19 @@ runs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: title,
-              body: "Processing signing event " + process.env.GITHUB_REF_NAME + ", please wait.",
+              body: `Processing signing event ${process.env.GITHUB_REF_NAME}, please wait.`,
               draft: true,
               head: process.env.GITHUB_REF_NAME,
               base: "main",
             })
             pr = response.data.number
-            console.log("Created pull request #" + pr)
+            console.log(`Created pull request #${pr}`)
           } else {
             pr = prs.data.items[0].number
-            console.log("Found existing pull request #" + pr)
+            console.log(`Found existing pull request #${pr}`)
           }
 
+          message = fs.readFileSync('./status-output').toString()
           if (process.env.STATUS == 'success') {
             message += "### Signing event is successful\n\n"
             message += "Threshold of signatures has been reached: this signing event can be reviewed and merged."
