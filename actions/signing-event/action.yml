@@ -93,16 +93,16 @@ runs:
           }
 
           message = fs.readFileSync('./status-output').toString()
+          summary = "Signing event in progress"
+          should_be_draft = true
           if (process.env.STATUS == 'success') {
             message += "### Signing event is successful\n\n"
             message += "Threshold of signatures has been reached: this signing event can be reviewed and merged."
             summary = "Signing event is successful"
             should_be_draft = false
-          } else {
-            summary = "Signing event in progress"
-            should_be_draft = true
           }
 
+          // Pull request numbers are also valid issue numbers
           github.rest.issues.createComment({
             owner: context.repo.owner,
             repo: context.repo.repo,
