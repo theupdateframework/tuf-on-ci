@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+**NOTE:** please see upgrade instructions below.
+
+**Changes**
+
+* Signing events now happen in GitHub pull requests
+
+**Upgrade instructions**
+
+* As usual we recommend copying your workflows from
+  https://github.com/theupdateframework/tuf-on-ci-template/.
+  * signing event action no longer needs `issues: write` permission
+    but instead requires `pull-requests: write`
+* Custom token users need to create a new token with an additional
+  permission `Pull requests: write`
+
+
 ## v0.5.0
 
 **NOTE:** Do not accept a dependabot upgrade, please see upgrade

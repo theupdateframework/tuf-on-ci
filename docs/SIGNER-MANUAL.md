@@ -15,8 +15,8 @@ metadata of a _role_ by signing that role's metadata with their personal signing
 (e.g. a Yubikey).
 
 _Signing event_: Collaboration of one or more signers to produce and sign a new version of 
-a role's metadata. A signing event happens in a GitHub issue and there is an associated git
-branch where the changes and signatures are stored. Signing event names start with "sign/".
+a role's metadata. A signing event happens in a GitHub pull request. Signing event names
+start with "sign/".
 
 _Role_: A role manages a set of artifacts and (optionally) a set of delegations to other
 roles. A role has a set of _signers_ (defined by the delegating role): their signatures
@@ -27,20 +27,20 @@ role (delegated by root). The targets role can further delegate to other roles.
 ## Usage
 
 Metadata is signed in a _signing event_. The signing event process is:
-* A signing event GitHub issue gets created by the repository. This happens as a
+* A signing event pull request gets created by the repository. This happens as a
   response to either a timed event (like an expiry date approaching) or as a response to
   artifact changes. Either way, the signing event contains new metadata versions that
   need to be signed before they are considered valid.
 * The signing event directs _signers_ to sign the changes using `tuf-on-ci-sign`. By
   signing they confirm that the proposed changes are correct. The local signing tool
-  updates the remote signing event branch with the signatures.
+  makes a commit with the signature pushes the commit to the remote signing event branch.
   * If a signer does not have push permissions for the GitHub repository, their signature
-    is added to the signing event via PR from their fork.
+    is added to the signing event via PR from their fork to the signing event branch.
 * Finally, a Pull Request to merge the signing event into main is created.
 
-Throughout the process, the repository updates the signing event issue with status
-reports. These reports in the  signing event issue function as a notification mechanism
-but *signers should only ever fully trust their local signing tool*.
+Throughout the process, the repository updates the signing event pull request with status
+reports. These reports in the signing event pull request function as a notification
+mechanism but *signers should only ever fully trust their local signing tool*.
 
 The signing tool works in the repository (git clone) directory -- note that
 fetching, pushing or switching branches is not necessary: the tool will always use an
@@ -49,7 +49,7 @@ automatically pushed to the signing event branch.
 
 ### Accepting an invitation 
 
-When a signing event GitHub issue invites to become a signer:
+When a signing event pull request invites to become a signer:
 ```shell
 $ tuf-on-ci-sign <event>
 ```
@@ -60,7 +60,7 @@ $ tuf-on-ci-sign <event>
 
 ### Signing a change
 
-When a signing event GitHub issue instructs to sign a change:
+When a signing event pull request instructs to sign a change:
 ```shell
 $ tuf-on-ci-sign <event>
 ```
@@ -74,8 +74,8 @@ $ tuf-on-ci-sign <event>
 
 Artifacts are stored in git (in the `targets/` directory) and are modified using normal
 git tools: the signing tool is not used. Artifact modification commits should get pushed to a
-branch on the repository: this creates a signing event for the artifact change allowing signers
-to sign that change.
+branch on the repository (with a branch name starting with "sign/"): this creates a signing
+event for the artifact change allowing signers to sign that change.
 
 The role where the artifact belongs to is chosen with pathname: 
 * files in the targets directory are artifacts managed by top level role "targets" 
