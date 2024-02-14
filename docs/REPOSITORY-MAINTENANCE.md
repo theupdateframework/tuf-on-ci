@@ -6,10 +6,12 @@ ongoing maintenance.
 ## New Repository Setup
 
 1. Fork the [template](https://github.com/theupdateframework/tuf-on-ci-template).
-1. To enable repository publishing to GitHub Pages:
+1. Configure the repository:
    * set _Settings->Pages->Source_ to `GitHub Actions`
    * Change _Settings->Environments->github-pages_ deployment branch from `main` to
      `publish`
+   * Check _Settings->Actions->General->Allow GitHub Actions to create and approve pull requests_
+     (not required if you are using a custom token, see below)
 1. Clone the repository locally and [configure your local signing tool](SIGNER-SETUP.md)
 1. Choose your online signing method and [configure it](ONLINE-SIGNING-SETUP.md):
    * Google Cloud KMS, Azure Key Vault, and AWS KMS are fully supported
@@ -108,7 +110,7 @@ Supported ways to configure and modify tuf-on-ci workflows:
 ### Custom GitHub token
 
 tuf-on-ci uses GITHUB_TOKEN by default but supports using a custom fine-grained Github
-token. This allows the GitHub organization to limit the default GITHUB_TOKEN permissions
+token. This allows the project to limit the default GITHUB_TOKEN permissions
 (in practice this means other workflows in the repository can operate with this lower
 permission default token while tuf-on-ci workflows still have higher permissions).
 
@@ -123,3 +125,9 @@ To use a custom token, define a _repository secret_ `TUF_ON_CI_TOKEN` with a fin
 token as the secrets value. No workflow changes are needed. Note that all automated comments
 in signing event pull requests will be seemingly made by the account that created the custom
 token: Creating the token on a "bot" account is sensible for this reason.
+
+Custom token users can also add the bot user to the _Allow specified actors to bypass required
+pull requests_ list in GitHub branch protection settings. The benefits of this are:
+* _Settings->Actions->General->Allow GitHub Actions to create and approve pull requests_
+  can be disabled
+* _Settings->Branches->main->Require a pull request before merging_ can be enabled
