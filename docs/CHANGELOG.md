@@ -16,7 +16,9 @@
     but instead requires `pull-requests: write`
 * Custom token users need to create a new token with an additional
   permission `Pull requests: write`
-
+* _Settings->Actions->General->Allow GitHub Actions to create and
+  approve pull requests_ needs to be enabled in repository settings
+  (not required if a custom token is used)
 
 ## v0.5.0
 
