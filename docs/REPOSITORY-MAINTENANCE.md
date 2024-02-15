@@ -115,19 +115,20 @@ token. This allows the project to limit the default GITHUB_TOKEN permissions
 permission default token while tuf-on-ci workflows still have higher permissions).
 
 The custom token needs the following repository permissions:
+* `Actions: write` to dispatch other workflows when needed
 * `Contents: write` to create online signing commits, and to create targets metadata
   change commits in signing event
 * `Issues: write` to create issues on workflow failures
 * `Pull requests: write` to create and modify signing event pull requests
-* `Actions: write` to dispatch other workflows when needed
 
 To use a custom token, define a _repository secret_ `TUF_ON_CI_TOKEN` with a fine grained
 token as the secrets value. No workflow changes are needed. Note that all automated comments
 in signing event pull requests will be seemingly made by the account that created the custom
 token: Creating the token on a "bot" account is sensible for this reason.
 
-Custom token users can also add the bot user to the _Allow specified actors to bypass required
-pull requests_ list in GitHub branch protection settings. The benefits of this are:
+When a custom token is used, some repository security settings can be tightened:
 * _Settings->Actions->General->Allow GitHub Actions to create and approve pull requests_
   can be disabled
-* _Settings->Branches->main->Require a pull request before merging_ can be enabled
+* Custom token owner (bot) can be added to _Allow specified actors to bypass required
+  pull requests_ list in GitHub branch protection settings, and _Settings->Branches->
+  main->Require a pull request before merging_ can then be enabled
