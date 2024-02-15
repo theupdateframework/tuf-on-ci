@@ -52,8 +52,9 @@ $ brew install swig
 
   ```
   [settings]
-  # Path to PKCS#11 module
-  pykcs11lib = /usr/lib/x86_64-linux-gnu/libykcs11.so
+  # Path to PKCS#11 module (optional)
+  # If not provided, tuf-on-ci-sign will probe some known install locations
+  # pykcs11lib = /usr/lib/x86_64-linux-gnu/libykcs11.so
 
   # GitHub username
   user-name = @my-github-username
@@ -62,6 +63,6 @@ $ brew install swig
   pull-remote = origin
 
   # push-remote: If you are allowed to push to the TUF repository, you can use the same value
-  # as pull-remote. Otherwise use the rmeote name of your fork 
+  # as pull-remote. Otherwise use the remote name of your fork
   push-remote = origin
   ```

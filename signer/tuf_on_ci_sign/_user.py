@@ -1,8 +1,24 @@
+import logging
+import os
+import platform
 import sys
 from configparser import ConfigParser
 
 import click
 from securesystemslib.signer import Key, Signer
+
+logger = logging.getLogger(__name__)
+
+# some known locations where we might find libykcs11.
+# These should all be _system_ locations (not user writable)
+LIBYKCS11_LOCATIONS = {
+    "Linux": [
+        "/usr/lib/x86_64-linux-gnu/libykcs11.so",
+        "/usr/lib64/libykcs11.so",
+        "/usr/local/lib/libykcs11.so",
+    ],
+    "Darwin": ["/opt/homebrew/lib/libykcs11.dylib", "/usr/local/lib/libykcs11.dylib"],
+}
 
 
 def bold(text: str) -> str:
@@ -23,7 +39,6 @@ class User:
             raise click.ClickException(f"Settings file {path} not found")
         try:
             self.name = self._config["settings"]["user-name"]
-            self.pykcs11lib = self._config["settings"]["pykcs11lib"]
             self.push_remote = self._config["settings"]["push-remote"]
             self.pull_remote = self._config["settings"]["pull-remote"]
         except KeyError as e:
@@ -34,6 +49,17 @@ class User:
             self._signing_key_uris = dict(self._config.items("signing-keys"))
         else:
             self._signing_key_uris = {}
+
+        # probe for pykcs11lib if it's not set
+        self.pykcs11lib = self._config["settings"].get("pykcs11lib")
+        if self.pykcs11lib is None:
+            for loc in LIBYKCS11_LOCATIONS.get(platform.system(), []):
+                if os.path.exists(loc):
+                    self.pykcs11lib = loc
+                    break
+            if self.pykcs11lib is None:
+                raise click.ClickException("Failed to find libykcs11")
+            logger.debug("Using probed YKCS11 location %s", self.pykcs11lib)
 
         # signer cache gets populated as they are used the first time
         self._signers: dict[str, Signer] = {}
