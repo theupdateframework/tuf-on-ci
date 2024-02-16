@@ -2,11 +2,15 @@
 
 ## Unreleased
 
+## v0.6.0
+
 **NOTE:** please see upgrade instructions below.
 
 **Changes**
 
 * Signing events now happen in GitHub pull requests
+* Signer now probes for PKCS11 module: configuring that is no longer
+  required, as long as as the module is in one of the expected locations.
 
 **Upgrade instructions**
 
