@@ -13,7 +13,7 @@ description = "TUF-on-CI repository tools, intended to be executed on a CI syste
 readme = "README.md"
 dependencies = [
   "securesystemslib[awskms, azurekms, gcpkms, sigstore, pynacl] ~= 0.30",
-  "tuf ~= 3.0",
+  "tuf @ git+https://github.com/theupdateframework/python-tuf",
   "click ~= 8.1",
 ]
 requires-python = ">=3.10"
