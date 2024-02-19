@@ -664,7 +664,7 @@ class SignerRepository(Repository):
                 del old_delegations[name]
 
         for name in old_delegations:
-            output.append(f" * Removed {title}")
+            output.append(f" * Removed {name}")
 
         return output
 
