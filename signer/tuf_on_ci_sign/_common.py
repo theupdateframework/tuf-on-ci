@@ -70,8 +70,8 @@ def get_signing_key_input() -> Key:
         )
         try:
             _, key = HSMSigner.import_()
-        except Exception as e:
-            raise click.ClickException(f"Failed to read HW key: {e}")
+        except Exception as e:  # noqa: BLE001
+            raise click.ClickException(f"Failed to read HW key: {e}") from e
 
     return key
 
