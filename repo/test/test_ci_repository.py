@@ -5,7 +5,7 @@ from tuf_on_ci._repository import CIRepository
 
 class TestCIRepository(unittest.TestCase):
     def test_non_existing_repo(self):
-        repo = CIRepository("/tmp/no_such_file")
+        repo = CIRepository("no_such_file")
         self.assertRaises(ValueError, repo.open, "root")
 
     def test_signing_expiry_days_root(self):
