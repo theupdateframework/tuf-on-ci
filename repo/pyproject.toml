@@ -33,7 +33,20 @@ module = [
 ]
 ignore_missing_imports = "True"
 
-[tool.ruff]
-# pycodestyle errors(E) and Pyflakes (F) are enabled by default.
-# Also enable isort (I) and pep8-naming (N) .
-select = ["E", "F", "I", "N"]
+[tool.ruff.lint]
+select = [
+  "B",   # flake8-bugbear
+  "BLE", # flake8-blind-except
+  "C4",  # flake8-comprehensions
+  "E",   # pycodestyle errors
+  "F",   # pyflakes
+  "I",   # isort
+  "N",   # pep8-naming
+  "S",   # flake8-bandit
+  "UP",  # pyupgrade
+  "W",   # pycodestyle warnings
+]
+ignore = [
+  "S101", # Use of `assert` detected
+  "S603", # `subprocess` call: check for execution of untrusted input
+]
