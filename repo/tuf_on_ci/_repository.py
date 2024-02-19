@@ -535,15 +535,20 @@ class CIRepository(Repository):
         if rolename in ["root", "timestamp", "snapshot"]:
             return False
 
-        new_target_dict = self._build_targets(
+        new_tfiles = self._build_targets(
             os.path.join(self._dir, "..", "targets"), rolename
         )
         with self.edit_targets(rolename) as targets:
+            # Keep any existing custom fields
+            for path, tfile in targets.targets.items():
+                if path in new_tfiles:
+                    new_tfiles[path].unrecognized_fields = tfile.unrecognized_fields
+
             # if targets dict has no changes, cancel the metadata edit
-            if targets.targets == new_target_dict:
+            if targets.targets == new_tfiles:
                 raise AbortEdit("No target changes needed")
 
-            targets.targets = new_target_dict
+            targets.targets = new_tfiles
             return True
 
         return False
