@@ -273,9 +273,12 @@ class CIRepository(Repository):
         # TODO: Current checks are more examples than actual checks
 
         # Make sure version grows if there are actual payload changes
-        if prev_md and prev_md.signed != md.signed:
-            if md.signed.version <= prev_md.signed.version:
-                return False, f"Version {md.signed.version} is not valid for {rolename}"
+        if (
+            prev_md
+            and prev_md.signed != md.signed
+            and md.signed.version <= prev_md.signed.version
+        ):
+            return False, f"Version {md.signed.version} is not valid for {rolename}"
 
         days = md.signed.unrecognized_fields["x-tuf-on-ci-expiry-period"]
         if md.signed.expires > datetime.utcnow() + timedelta(days=days):
@@ -287,9 +290,12 @@ class CIRepository(Repository):
                 return False, "Consistent snapshot is not enabled"
 
             # Specification: root version must be x+1, not just larger
-            if prev_md and prev_md.signed != md.signed:
-                if md.signed.version != prev_md.signed.version + 1:
-                    return False, f"Version {md.signed.version} is not valid for root"
+            if (
+                prev_md
+                and prev_md.signed != md.signed
+                and md.signed.version != prev_md.signed.version + 1
+            ):
+                return False, f"Version {md.signed.version} is not valid for root"
 
             # tuf-on-ci online signer must be the same for both roles
             ts_role = md.signed.get_delegated_role(Timestamp.type)
@@ -341,10 +347,7 @@ class CIRepository(Repository):
                 continue
 
             # targetpath is a URL path, not OS path
-            if rolename == "targets":
-                targetpath = fname
-            else:
-                targetpath = f"{rolename}/{fname}"
+            targetpath = fname if rolename == "targets" else f"{rolename}/{fname}"
             targetfiles[targetpath] = TargetFile.from_file(
                 targetpath, realpath, ["sha256"]
             )
@@ -360,9 +363,9 @@ class CIRepository(Repository):
                 md = Metadata.from_bytes(f.read())
             assert isinstance(md.signed, Root)
             return md.signed
-        else:
-            # this role did not exist: return an empty one for comparison purposes
-            return Root()
+
+        # this role did not exist: return an empty one for comparison purposes
+        return Root()
 
     def _known_good_targets(self, rolename: str) -> Targets:
         """Return Targets from the known good version (signing event start point)"""
@@ -373,9 +376,9 @@ class CIRepository(Repository):
                 md = Metadata.from_bytes(f.read())
             assert isinstance(md.signed, Targets)
             return md.signed
-        else:
-            # this role did not exist: return an empty one for comparison purposes
-            return Targets()
+
+        # this role did not exist: return an empty one for comparison purposes
+        return Targets()
 
     def _get_target_changes(self, rolename: str) -> list[TargetState]:
         """Compare targetfiles in known good version and signing event version:
@@ -428,9 +431,7 @@ class CIRepository(Repository):
             if not delegator:
                 # Not root role or there is no known-good root metadata yet
                 return None
-        elif rolename == "root":
-            delegator = self.open("root")
-        elif rolename == "targets":
+        elif rolename in ["root", "targets"]:
             delegator = self.open("root")
         else:
             delegator = self.open("targets")
@@ -439,9 +440,8 @@ class CIRepository(Repository):
         delegation_names = []
         if rolename == "root":
             delegation_names = ["root", "targets"]
-        elif rolename == "targets":
-            if md.signed.delegations:
-                delegation_names = md.signed.delegations.roles.keys()
+        elif rolename == "targets" and md.signed.delegations:
+            delegation_names = md.signed.delegations.roles.keys()
         for delegation_name in delegation_names:
             invites.update(self.state.invited_signers_for_role(delegation_name))
 

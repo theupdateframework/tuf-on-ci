@@ -35,14 +35,19 @@ ignore_missing_imports = "True"
 
 [tool.ruff.lint]
 select = [
+  "ARG", # flake8-unused-arguments
   "B",   # flake8-bugbear
   "BLE", # flake8-blind-except
   "C4",  # flake8-comprehensions
   "E",   # pycodestyle errors
   "F",   # pyflakes
   "I",   # isort
+  "LOG", # flake8-logging
   "N",   # pep8-naming
+  "RET", # flake8-return
+  "RUF", # ruff-specific rules
   "S",   # flake8-bandit
+  "SIM", # flake8-simplify
   "UP",  # pyupgrade
   "W",   # pycodestyle warnings
 ]

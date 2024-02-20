@@ -193,9 +193,9 @@ class SignerRepository(Repository):
                 md = Metadata.from_bytes(f.read())
             assert isinstance(md.signed, Root)
             return md.signed
-        else:
-            # this role did not exist: return an empty one for comparison purposes
-            return Root()
+
+        # this role did not exist: return an empty one for comparison purposes
+        return Root()
 
     def _known_good_targets(self, rolename: str) -> Targets:
         """Return a Targets object from the known-good repository state"""
@@ -205,9 +205,9 @@ class SignerRepository(Repository):
                 md = Metadata.from_bytes(f.read())
             assert isinstance(md.signed, Targets)
             return md.signed
-        else:
-            # this role did not exist: return an empty one for comparison purposes
-            return Targets()
+
+        # this role did not exist: return an empty one for comparison purposes
+        return Targets()
 
     def _get_keys(self, role: str, known_good: bool = False) -> list[Key]:
         """Return public keys for delegated role
@@ -345,9 +345,12 @@ class SignerRepository(Repository):
     def _get_delegated_rolenames(md: Metadata) -> list[str]:
         if isinstance(md.signed, Root):
             return list(md.signed.roles.keys())
-        elif isinstance(md.signed, Targets):
-            if md.signed.delegations and md.signed.delegations.roles:
-                return list(md.signed.delegations.roles.keys())
+        if (
+            isinstance(md.signed, Targets)
+            and md.signed.delegations
+            and md.signed.delegations.roles
+        ):
+            return list(md.signed.delegations.roles.keys())
         return []
 
     def get_online_config(self) -> OnlineConfig:

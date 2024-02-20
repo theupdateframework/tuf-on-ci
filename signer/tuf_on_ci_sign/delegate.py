@@ -241,14 +241,13 @@ def _collect_online_key(user_config: User) -> Key:
             # key value 1d9a024348e413892aeeb8cc8449309c152f48177200ee61a02ae56f450c6480
             uri = "envvar:LOCAL_TESTING_KEY"
             pub_key = "fa472895c9756c2b9bcd1440bf867d0fa5c4edee79e9792fa9822be3dd6fcbb3"
-            key = SSlibKey(
+            return SSlibKey(
                 "fa47289",
                 "ed25519",
                 "ed25519",
                 {"public": pub_key},
                 {"x-tuf-on-ci-online-uri": uri},
             )
-            return key
 
 
 def _collect_string(prompt: str) -> str:
@@ -256,8 +255,7 @@ def _collect_string(prompt: str) -> str:
         data = click.prompt(bold(prompt), default="")
         if data == "":
             continue
-        else:
-            return data
+        return data
 
 
 def _collect_key_scheme() -> str:

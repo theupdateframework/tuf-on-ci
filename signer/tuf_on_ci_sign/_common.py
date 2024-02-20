@@ -77,7 +77,7 @@ def get_signing_key_input() -> Key:
 
 
 def git(cmd: list[str]) -> str:
-    cmd = ["git"] + cmd
+    cmd = ["git", *cmd]
     proc = subprocess.run(cmd, capture_output=True, check=True, text=True)
     return proc.stdout.strip()
 
@@ -93,7 +93,7 @@ def git_expect(cmd: list[str]) -> str:
 
 
 def git_echo(cmd: list[str]):
-    cmd = ["git"] + cmd
+    cmd = ["git", *cmd]
     subprocess.run(cmd, check=True, text=True)
 
 
