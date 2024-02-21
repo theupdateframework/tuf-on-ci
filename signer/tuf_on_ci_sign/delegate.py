@@ -252,10 +252,8 @@ def _collect_online_key(user_config: User) -> Key:
 
 def _collect_string(prompt: str) -> str:
     while True:
-        data = click.prompt(bold(prompt), default="")
-        if data == "":
-            continue
-        return data
+        if data := click.prompt(bold(prompt), default=""):
+            return data
 
 
 def _collect_key_scheme() -> str:
