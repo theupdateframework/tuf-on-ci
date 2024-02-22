@@ -212,8 +212,10 @@ def _collect_online_key(user_config: User) -> Key:
                 uri, key = GCPSigner.import_(key_id)
                 key.unrecognized_fields["x-tuf-on-ci-online-uri"] = uri
                 return key
-            except Exception as e:
-                raise click.ClickException(f"Failed to read Google Cloud KMS key: {e}")
+            except Exception as e:  # noqa: BLE001
+                raise click.ClickException(
+                    f"Failed to read Google Cloud KMS key: {e}"
+                ) from e
         if choice == 3:
             vault_name = _collect_string("Enter Azure vault name")
             key_name = _collect_string("Enter key name")
@@ -221,8 +223,10 @@ def _collect_online_key(user_config: User) -> Key:
                 uri, key = AzureSigner.import_(vault_name, key_name)
                 key.unrecognized_fields["x-tuf-on-ci-online-uri"] = uri
                 return key
-            except Exception as e:
-                raise click.ClickException(f"Failed to read Azure Keyvault key: {e}")
+            except Exception as e:  # noqa: BLE001
+                raise click.ClickException(
+                    f"Failed to read Azure Keyvault key: {e}"
+                ) from e
         if choice == 4:
             key_id = _collect_string("Enter AWS KMS key id")
             scheme = _collect_key_scheme()
@@ -230,29 +234,25 @@ def _collect_online_key(user_config: User) -> Key:
                 uri, key = AWSSigner.import_(key_id, scheme)
                 key.unrecognized_fields["x-tuf-on-ci-online-uri"] = uri
                 return key
-            except Exception as e:
-                raise click.ClickException(f"Failed to read AWS KMS key: {e}")
+            except Exception as e:  # noqa: BLE001
+                raise click.ClickException(f"Failed to read AWS KMS key: {e}") from e
         if choice == 0:
             # This could be generic support, but for now it's a hidden test key.
             # key value 1d9a024348e413892aeeb8cc8449309c152f48177200ee61a02ae56f450c6480
             uri = "envvar:LOCAL_TESTING_KEY"
             pub_key = "fa472895c9756c2b9bcd1440bf867d0fa5c4edee79e9792fa9822be3dd6fcbb3"
-            key = SSlibKey(
+            return SSlibKey(
                 "fa47289",
                 "ed25519",
                 "ed25519",
                 {"public": pub_key},
                 {"x-tuf-on-ci-online-uri": uri},
             )
-            return key
 
 
 def _collect_string(prompt: str) -> str:
     while True:
-        data = click.prompt(bold(prompt), default="")
-        if data == "":
-            continue
-        else:
+        if data := click.prompt(bold(prompt), default=""):
             return data
 
 

@@ -20,7 +20,8 @@ def _git(cmd: list[str]) -> subprocess.CompletedProcess:
         "user.name=TUF-on-CI",
         "-c",
         "user.email=41898282+github-actions[bot]@users.noreply.github.com",
-    ] + cmd
+        *cmd,
+    ]
     proc = subprocess.run(cmd, check=True, capture_output=True, text=True)
     logger.debug("%s:\n%s", cmd, proc.stdout)
     return proc

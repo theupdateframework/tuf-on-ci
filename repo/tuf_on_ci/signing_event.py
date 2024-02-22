@@ -24,7 +24,8 @@ def _git(cmd: list[str]) -> subprocess.CompletedProcess:
         "user.name=TUF-on-CI",
         "-c",
         "user.email=41898282+github-actions[bot]@users.noreply.github.com",
-    ] + cmd
+        *cmd,
+    ]
     proc = subprocess.run(cmd, check=True, capture_output=True, text=True)
     logger.debug("%s:\n%s", cmd, proc.stdout)
     return proc
@@ -100,10 +101,7 @@ def _role_status(repo: CIRepository, role: str, event_name) -> bool:
         signed = signed | prev_status.signed
         missing = missing | prev_status.missing
 
-    if role_is_valid and not status.invites:
-        emoji = "white_check_mark"
-    else:
-        emoji = "x"
+    emoji = "white_check_mark" if role_is_valid and not status.invites else "x"
     click.echo(f"#### :{emoji}: {role}")
 
     if status.invites:

@@ -42,7 +42,9 @@ class User:
             self.push_remote = self._config["settings"]["push-remote"]
             self.pull_remote = self._config["settings"]["pull-remote"]
         except KeyError as e:
-            raise click.ClickException(f"Failed to find required setting {e} in {path}")
+            raise click.ClickException(
+                f"Failed to find required setting {e} in {path}"
+            ) from e
 
         # signing key config is not required
         if "signing-keys" in self._config:
