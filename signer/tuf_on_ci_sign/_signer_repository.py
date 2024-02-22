@@ -248,8 +248,14 @@ class SignerRepository(Repository):
             try:
                 md.sign(signer, True)
                 break
-            except UnsignedMetadataError:
-                print(f"Failed to sign {role} with {self.user.name} key. Try again?")
+            except UnsignedMetadataError as e:
+                print(f"Failed to sign {role} with {self.user.name} key.\n    {e}")
+                logger.debug("Sign traceback", exc_info=True)
+                click.prompt(
+                    "Press any key to try again (Ctrl-C to cancel)",
+                    default=True,
+                    show_default=False,
+                )
 
     def _write(self, role: str, md: Metadata) -> None:
         filename = self._get_filename(role)
