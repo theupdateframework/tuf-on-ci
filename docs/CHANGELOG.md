@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## v0.7.0
+
+**Changes**
+
+* Signer has improved signing error handling
+* Custom fields in TargetFile metadata are now preserved during target update
+  (this is a workaround mostly for sigstore root-signing legacy artifacts)
+
+**Upgrade instructions**
+
+A plain version bump from 0.6 works: Workflows require no changes.
+
 ## v0.6.0
 
 **NOTE:** please see upgrade instructions below.
