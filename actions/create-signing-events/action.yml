@@ -14,7 +14,7 @@ runs:
         token: ${{ inputs.token }}
         fetch-depth: 0
 
-    - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
+    - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
       with:
         python-version: "3.11"
 
@@ -39,7 +39,7 @@ runs:
       if: inputs.token == github.token && steps.create-signing-events.outputs.events != ''
       env:
         EVENTS: ${{ steps.create-signing-events.outputs.events }}
-      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
       with:
         github-token: ${{ inputs.token }}
         script: |
