@@ -2,17 +2,22 @@
 
 """Common helper functions"""
 
+import json
+import logging
 import os
 import subprocess
 from collections.abc import Generator
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
+from urllib.request import Request, urlopen
 
 import click
 from securesystemslib.signer import HSMSigner, Key, SigstoreSigner
 
 from tuf_on_ci_sign._signer_repository import SignerRepository
 from tuf_on_ci_sign._user import User
+
+logger = logging.getLogger(__name__)
 
 
 @contextmanager
@@ -103,3 +108,23 @@ def bold(text: str) -> str:
 
 def bold_blue(text: str) -> str:
     return click.style(text, bold=True, fg="bright_blue")
+
+
+def application_update_reminder() -> None:
+    from tuf_on_ci_sign import __version__
+
+    try:
+        request = Request("https://pypi.org/simple/tuf-on-ci-sign/")
+        request.add_header("Accept", "application/vnd.pypi.simple.v1+json")
+        with urlopen(request, timeout=5) as response:  # noqa: S310
+            data = json.load(response)
+        versions = [tuple(map(int, v.split("."))) for v in data["versions"]]
+        max_version = max(versions)
+        if max_version > tuple(map(int, __version__.split("."))):
+            msg = bold(
+                f"tuf-on-ci-sign {__version__} is outdated: New version "
+                f"({'.'.join(map(str, max_version))}) is available"
+            )
+            print(msg)
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"Failed to check current tuf-on-ci-sign version: {e}")

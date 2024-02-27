@@ -21,6 +21,7 @@ from securesystemslib.signer import (
 )
 
 from tuf_on_ci_sign._common import (
+    application_update_reminder,
     bold,
     get_signing_key_input,
     git_echo,
@@ -350,6 +351,8 @@ def _update_offline_role(repo: SignerRepository, role: str) -> bool:
 def delegate(verbose: int, push: bool, event_name: str, role: str | None):
     """Tool for modifying TUF-on-CI delegations."""
     logging.basicConfig(level=logging.WARNING - verbose * 10)
+
+    application_update_reminder()
 
     toplevel = git_expect(["rev-parse", "--show-toplevel"])
     settings_path = os.path.join(toplevel, ".tuf-on-ci-sign.ini")

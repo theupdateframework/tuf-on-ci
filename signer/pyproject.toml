@@ -4,7 +4,6 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tuf-on-ci-sign"
-version = "0.7.0"
 description = "Signing tools for TUF-on-CI"
 readme = "README.md"
 dependencies = [
@@ -13,11 +12,15 @@ dependencies = [
   "click ~= 8.1",
 ]
 requires-python = ">=3.10"
+dynamic = ["version"]
 
 [project.scripts]
 tuf-on-ci-delegate = "tuf_on_ci_sign:delegate"
 tuf-on-ci-import-repo = "tuf_on_ci_sign:import_repo"
 tuf-on-ci-sign = "tuf_on_ci_sign:sign"
+
+[tool.hatch.version]
+path = "tuf_on_ci_sign/__init__.py"
 
 [[tool.mypy.overrides]]
 module = [
