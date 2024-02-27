@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 @click.command()  # type: ignore[arg-type]
+@click.version_option()
 @click.option("-v", "--verbose", count=True, default=0)
 @click.option("--push/--no-push", default=True)
 @click.argument("event-name", metavar="signing-event")

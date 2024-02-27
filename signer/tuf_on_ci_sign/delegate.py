@@ -344,6 +344,7 @@ def _update_offline_role(repo: SignerRepository, role: str) -> bool:
 
 
 @click.command()  # type: ignore[arg-type]
+@click.version_option()
 @click.option("-v", "--verbose", count=True, default=0)
 @click.option("--push/--no-push", default=True)
 @click.argument("event-name", metavar="SIGNING-EVENT")
