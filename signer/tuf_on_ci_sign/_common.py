@@ -2,17 +2,25 @@
 
 """Common helper functions"""
 
+import json
+import logging
 import os
 import subprocess
 from collections.abc import Generator
 from contextlib import contextmanager
+from datetime import datetime, timedelta
 from tempfile import TemporaryDirectory
+from urllib.request import Request, urlopen
 
 import click
+from packaging.version import Version
+from platformdirs import user_cache_dir
 from securesystemslib.signer import HSMSigner, Key, SigstoreSigner
 
 from tuf_on_ci_sign._signer_repository import SignerRepository
 from tuf_on_ci_sign._user import User
+
+logger = logging.getLogger(__name__)
 
 
 @contextmanager
@@ -103,3 +111,46 @@ def bold(text: str) -> str:
 
 def bold_blue(text: str) -> str:
     return click.style(text, bold=True, fg="bright_blue")
+
+
+def application_update_reminder() -> None:
+    from tuf_on_ci_sign import __version__
+
+    update_file = os.path.join(user_cache_dir("tuf-on-ci-sign"), "pypi_release_version")
+    try:
+        update_time = os.path.getmtime(update_file)
+    except OSError:
+        update_time = 0
+
+    try:
+        if datetime.fromtimestamp(update_time) + timedelta(days=1) > datetime.now():
+            # It's been less than a day since last pypi query
+            with open(update_file) as f:
+                max_version = Version(f.read())
+        else:
+            # Find out newest release version from pypi
+            request = Request("https://pypi.org/simple/tuf-on-ci-sign/")
+            request.add_header("Accept", "application/vnd.pypi.simple.v1+json")
+            with urlopen(request, timeout=5) as response:  # noqa: S310
+                data = json.load(response)
+
+            max_version = Version("0")
+            for ver_str in data["versions"]:
+                ver = Version(ver_str)
+                if not ver.is_devrelease and not ver.is_prerelease:
+                    max_version = max(max_version, ver)
+
+            # store the current version number in cache
+            os.makedirs(os.path.dirname(update_file), exist_ok=True)
+            with open(update_file, "w") as f:
+                f.write(str(max_version))
+
+        if max_version > Version(__version__):
+            msg = bold(
+                f"tuf-on-ci-sign {__version__} is outdated: New version "
+                f"({max_version}) is available"
+            )
+            print(msg)
+
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"Failed to check current tuf-on-ci-sign version: {e}")

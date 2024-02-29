@@ -8,7 +8,6 @@ allow-direct-references = true
 
 [project]
 name = "tuf-on-ci"
-version = "0.7.0"
 description = "TUF-on-CI repository tools, intended to be executed on a CI system"
 readme = "README.md"
 dependencies = [
@@ -17,6 +16,7 @@ dependencies = [
   "click ~= 8.1",
 ]
 requires-python = ">=3.10"
+dynamic = ["version"]
 
 [project.scripts]
 tuf-on-ci-build-repository = "tuf_on_ci:build_repository"
@@ -25,6 +25,9 @@ tuf-on-ci-create-signing-events = "tuf_on_ci:create_signing_events"
 tuf-on-ci-online-sign = "tuf_on_ci:online_sign"
 tuf-on-ci-status = "tuf_on_ci:status"
 tuf-on-ci-update-targets = "tuf_on_ci:update_targets"
+
+[tool.hatch.version]
+path = "tuf_on_ci/__init__.py"
 
 [[tool.mypy.overrides]]
 module = [

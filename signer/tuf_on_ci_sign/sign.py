@@ -8,6 +8,7 @@ import os
 import click
 
 from tuf_on_ci_sign._common import (
+    application_update_reminder,
     bold,
     get_signing_key_input,
     git_echo,
@@ -21,12 +22,15 @@ logger = logging.getLogger(__name__)
 
 
 @click.command()  # type: ignore[arg-type]
+@click.version_option()
 @click.option("-v", "--verbose", count=True, default=0)
 @click.option("--push/--no-push", default=True)
 @click.argument("event-name", metavar="signing-event")
 def sign(verbose: int, push: bool, event_name: str):
     """Signing tool for TUF-on-CI signing events."""
     logging.basicConfig(level=logging.WARNING - verbose * 10)
+
+    application_update_reminder()
 
     toplevel = git_expect(["rev-parse", "--show-toplevel"])
     settings_path = os.path.join(toplevel, ".tuf-on-ci-sign.ini")
