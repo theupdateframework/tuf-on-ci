@@ -38,7 +38,7 @@ def sign(verbose: int, push: bool, event_name: str):
     with signing_event(event_name, user_config) as repo:
         if repo.state == SignerState.UNINITIALIZED:
             click.echo("No metadata repository found")
-            changed = False
+            change_status = None
         elif repo.state == SignerState.INVITED:
             click.echo(
                 f"You have been invited to become a signer for role(s) {repo.invites}."
@@ -56,23 +56,23 @@ def sign(verbose: int, push: bool, event_name: str):
                 for rolename in repo.unsigned:
                     click.echo(repo.status(rolename))
                     repo.sign(rolename)
-            changed = True
+            change_status = f"{user_config.name} accepted invitation"
         elif repo.state == SignerState.SIGNATURE_NEEDED:
             click.echo(f"Your signature is requested for role(s) {repo.unsigned}.")
             for rolename in repo.unsigned:
                 click.echo(repo.status(rolename))
                 repo.sign(rolename)
-            changed = True
+            change_status = f"Signature from {user_config.name}"
         elif repo.state == SignerState.NO_ACTION:
-            changed = False
+            change_status = None
         else:
             raise NotImplementedError
 
-        if changed:
+        if change_status:
             git_expect(["add", "metadata"])
-            git_expect(["commit", "-m", f"Signed by {user_config.name}", "--signoff"])
+            git_expect(["commit", "-m", change_status, "--signoff"])
             if push:
-                push_changes(user_config, event_name)
+                push_changes(user_config, event_name, change_status)
             else:
                 # TODO: maybe deal with existing branch?
                 click.echo(f"Creating local branch {event_name}")

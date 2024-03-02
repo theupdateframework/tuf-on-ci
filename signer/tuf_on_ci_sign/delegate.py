@@ -382,7 +382,7 @@ def delegate(verbose: int, push: bool, event_name: str, role: str | None):
                 )
 
             if push:
-                push_changes(user_config, event_name)
+                push_changes(user_config, event_name, msg)
             else:
                 # TODO: deal with existing branch?
                 click.echo(f"Creating local branch {event_name}")

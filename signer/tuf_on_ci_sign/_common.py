@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import subprocess
+import webbrowser
 from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import datetime, timedelta
@@ -157,19 +158,47 @@ def application_update_reminder() -> None:
         logger.warning(f"Failed to check current tuf-on-ci-sign version: {e}")
 
 
-def push_changes(user: User, event_name: str) -> None:
+def push_changes(user: User, event_name: str, title: str) -> None:
     """Push the event branch to users push remote"""
     branch = f"{user.push_remote}/{event_name}"
     msg = f"Press enter to push changes to {branch}"
     click.prompt(bold(msg), default=True, show_default=False)
-    git_echo(
-        [
-            "push",
-            "--progress",
-            user.push_remote,
-            f"HEAD:refs/heads/{event_name}",
-        ]
-    )
+    if user.push_remote == user.pull_remote:
+        # maintainer flow: just push to signing event branch
+        git_echo(
+            [
+                "push",
+                user.push_remote,
+                f"HEAD:refs/heads/{event_name}",
+            ]
+        )
+    else:
+        # non-maintainer flow: push to fork, make a PR.
+        # NOTE: we force push: this is safe since any existing fork branches
+        # have either been merged or are obsoleted by this push
+        git_echo(
+            [
+                "push",
+                "--force",
+                user.push_remote,
+                f"HEAD:refs/heads/{event_name}",
+            ]
+        )
+        # Create PR from fork (push remote) to upstream (pull remote)
+        upstream = get_repo_name(user.pull_remote)
+        fork = get_repo_name(user.push_remote).replace("/", ":")
+        query = parse.urlencode(
+            {
+                "quick_pull": 1,
+                "title": title,
+                "template": "signing_event.md",
+            }
+        )
+        pr_url = f"https://github.com/{upstream}/compare/{event_name}...{fork}:{event_name}?{query}"
+        if webbrowser.open(pr_url):
+            click.echo(bold("Please submit the pull request in your browser."))
+        else:
+            click.echo(bold(f"Please submit the pull request:\n    {pr_url}"))
 
 
 def get_repo_name(remote: str) -> str:
