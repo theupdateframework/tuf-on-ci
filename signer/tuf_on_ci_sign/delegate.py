@@ -7,7 +7,6 @@ import logging
 import os
 import re
 from copy import deepcopy
-from urllib import parse
 
 import click
 from securesystemslib.signer import (
@@ -23,9 +22,10 @@ from securesystemslib.signer import (
 from tuf_on_ci_sign._common import (
     application_update_reminder,
     bold,
+    get_repo_name,
     get_signing_key_input,
-    git_echo,
     git_expect,
+    push_changes,
     signing_event,
 )
 from tuf_on_ci_sign._signer_repository import (
@@ -118,20 +118,10 @@ def _get_offline_input(
     return config
 
 
-def _get_repo_name(remote: str):
-    url = parse.urlparse(git_expect(["config", "--get", f"remote.{remote}.url"]))
-    repo = url.path[: -len(".git")]
-    # ssh-urls are relative URLs according to urllib: host is actually part of
-    # path. We don't want the host part:
-    _, _, repo = repo.rpartition(":")
-    # http urls on the other hand are not relative: remove the leading /
-    return repo.lstrip("/")
-
-
 def _sigstore_import(pull_remote: str) -> Key:
     # WORKAROUND: build sigstore key and uri here since there is no import yet
     issuer = "https://token.actions.githubusercontent.com"
-    repo = _get_repo_name(pull_remote)
+    repo = get_repo_name(pull_remote)
 
     id = f"https://github.com/{repo}/.github/workflows/online-sign.yml@refs/heads/main"
     key = SigstoreKey(
@@ -392,17 +382,7 @@ def delegate(verbose: int, push: bool, event_name: str, role: str | None):
                 )
 
             if push:
-                branch = f"{user_config.push_remote}/{event_name}"
-                msg = f"Press enter to push changes to {branch}"
-                click.prompt(bold(msg), default=True, show_default=False)
-                git_echo(
-                    [
-                        "push",
-                        "--progress",
-                        user_config.push_remote,
-                        f"HEAD:refs/heads/{event_name}",
-                    ]
-                )
+                push_changes(user_config, event_name)
             else:
                 # TODO: deal with existing branch?
                 click.echo(f"Creating local branch {event_name}")

@@ -9,10 +9,9 @@ import click
 
 from tuf_on_ci_sign._common import (
     application_update_reminder,
-    bold,
     get_signing_key_input,
-    git_echo,
     git_expect,
+    push_changes,
     signing_event,
 )
 from tuf_on_ci_sign._signer_repository import SignerState
@@ -73,17 +72,7 @@ def sign(verbose: int, push: bool, event_name: str):
             git_expect(["add", "metadata"])
             git_expect(["commit", "-m", f"Signed by {user_config.name}", "--signoff"])
             if push:
-                branch = f"{user_config.push_remote}/{event_name}"
-                msg = f"Press enter to push signature(s) to {branch}"
-                click.prompt(bold(msg), default=True, show_default=False)
-                git_echo(
-                    [
-                        "push",
-                        "--progress",
-                        user_config.push_remote,
-                        f"HEAD:refs/heads/{event_name}",
-                    ]
-                )
+                push_changes(user_config, event_name)
             else:
                 # TODO: maybe deal with existing branch?
                 click.echo(f"Creating local branch {event_name}")

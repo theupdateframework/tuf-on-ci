@@ -10,6 +10,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from tempfile import TemporaryDirectory
+from urllib import parse
 from urllib.request import Request, urlopen
 
 import click
@@ -154,3 +155,38 @@ def application_update_reminder() -> None:
 
     except Exception as e:  # noqa: BLE001
         logger.warning(f"Failed to check current tuf-on-ci-sign version: {e}")
+
+
+def push_changes(user: User, event_name: str) -> None:
+    """Push the event branch to users push remote"""
+    branch = f"{user.push_remote}/{event_name}"
+    msg = f"Press enter to push changes to {branch}"
+    click.prompt(bold(msg), default=True, show_default=False)
+    git_echo(
+        [
+            "push",
+            "--progress",
+            user.push_remote,
+            f"HEAD:refs/heads/{event_name}",
+        ]
+    )
+
+
+def get_repo_name(remote: str) -> str:
+    """Return 'owner/repo' string for given GitHub remote"""
+    url = parse.urlparse(git_expect(["config", "--get", f"remote.{remote}.url"]))
+    owner_repo = url.path[: -len(".git")]
+    # ssh-urls are relative URLs according to urllib: host is actually part of
+    # path. We don't want the host part:
+    _, _, owner_repo = owner_repo.rpartition(":")
+    # http urls on the other hand are not relative: remove the leading /
+    owner_repo = owner_repo.lstrip("/")
+
+    # sanity check
+    owner, slash, repo = owner_repo.partition("/")
+    if not owner or slash != "/" or not repo:
+        raise RuntimeError(
+            "Failed to parse GitHub repository from git URL {url} for remote {remote}"
+        )
+
+    return owner_repo
