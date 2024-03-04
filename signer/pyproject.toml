@@ -21,6 +21,12 @@ tuf-on-ci-delegate = "tuf_on_ci_sign:delegate"
 tuf-on-ci-import-repo = "tuf_on_ci_sign:import_repo"
 tuf-on-ci-sign = "tuf_on_ci_sign:sign"
 
+[project.optional-dependencies]
+lint = [
+  "mypy == 1.8.0",
+  "ruff == 0.3.0",
+]
+
 [tool.hatch.version]
 path = "tuf_on_ci_sign/__init__.py"
 
