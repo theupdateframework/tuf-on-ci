@@ -36,7 +36,8 @@
                     ],
                     "name": "myrole2",
                     "paths": [
-                        "level1/*"
+                        "level1/*",
+                        "tfile2.txt"
                     ],
                     "terminating": true,
                     "threshold": 1

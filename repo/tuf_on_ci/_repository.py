@@ -2,7 +2,6 @@ import json
 import logging
 import os
 import shutil
-import fnmatch
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -531,6 +530,8 @@ class CIRepository(Repository):
         if rolename in ["root", "timestamp", "snapshot"]:
             return False
 
+        topLevelTargets = self.targets().targets.items()
+
         # use paths from targets delegated roles metadata to search for target files
         new_tfiles = {}
         if rolename != "targets":
@@ -538,21 +539,29 @@ class CIRepository(Repository):
             if isinstance(other_role, DelegatedRole):
                 for other_role_path in other_role.paths:
                     new_tfiles.update(self._build_targets(other_role_path, os.path.join(self._dir, "..", "targets")))
+            # ensure that delegated roles can't take over files from top-level targets
+            for path, tfile in topLevelTargets:
+                if path in new_tfiles:
+                    new_tfiles.pop(path)
         else:
             new_tfiles.update(self._build_targets('**', os.path.join(self._dir, "..", "targets"), True))
 
-        # check all other roles make sure the files in new_tfiles are matched first by the current role
+        # ensure new_tfiles are matched first by the current role
         if len(new_tfiles) > 0:
+            new_tfiles_all = new_tfiles.copy()
             for other_rolename in self.targets().delegations.roles:
                 if other_rolename == rolename or other_rolename == "targets":
                     continue
                 other_role = self.targets().get_delegated_role(other_rolename)
                 if isinstance(other_role, DelegatedRole):
                     for other_role_path in other_role.paths:
-                        for new_tfile in new_tfiles:
-                            if fnmatch.fnmatch(new_tfile, other_role_path):
+                        other_role_targets = self._build_targets(other_role_path, os.path.join(self._dir, "..", "targets"))
+                        for new_tfile in new_tfiles_all:
+                            if new_tfile in other_role_targets:
+                                # only allow delegated role to steal a file from top level targets if it's not currently in the good metadata
+                                if rolename == "targets" and new_tfile in self._known_good_targets(rolename).targets:
+                                    continue
                                 new_tfiles.pop(new_tfile)
-                                break
 
         with self.edit_targets(rolename) as targets:
             # Keep any existing custom fields

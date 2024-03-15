@@ -65,19 +65,27 @@ class TestCIRepository(unittest.TestCase):
             # no targets exist on disk yet, only in metadata
             self.assertIn("tfile1.txt", targets.targets)
             self.assertIn("tfile2.txt", targets.targets)
-            # on update, they'll be removed
+
+            # if a delegated role tries to take over a file that in currently in targets, it should fail and not be removed from targets
+            shutil.copy(os.path.join(src_targets, "tfile2.txt"), temp_targets)
+            repo.update_targets("myrole2")
+            targets = repo.targets("myrole2")
+            self.assertNotIn("tfile2.txt", targets.targets)
+
+            # on update, anything not present will be removed
             repo.update_targets("targets")
             targets = repo.targets("targets")
             self.assertNotIn("tfile1.txt", targets.targets)
-            self.assertNotIn("tfile2.txt", targets.targets)
+            self.assertIn("tfile2.txt", targets.targets)
+            self.assertEqual(len(targets.targets), 1)
 
             # now add a file not covered by another role
             shutil.copy(os.path.join(src_targets, "tfile1.txt"), temp_targets)
-            # on update, they'll be removed
+            # on update, it should be in targets
             repo.update_targets("targets")
             targets = repo.targets("targets")
             self.assertIn("tfile1.txt", targets.targets)
-            self.assertEqual(len(targets.targets), 1)
+            self.assertEqual(len(targets.targets), 2)
 
             # now add files covered by another role
             shutil.copytree(os.path.join(src_targets, "levela"), os.path.join(temp_targets, "levela"))
@@ -88,7 +96,7 @@ class TestCIRepository(unittest.TestCase):
             targets = repo.targets("targets")
             self.assertNotIn("levela/filea.txt", targets.targets)
             self.assertNotIn("levelb/fileb.txt", targets.targets)
-            self.assertEqual(len(targets.targets), 1)
+            self.assertEqual(len(targets.targets), 2)
 
             # but should be in myrole1
             repo.update_targets("myrole1")
@@ -96,12 +104,12 @@ class TestCIRepository(unittest.TestCase):
             self.assertIn("levela/filea.txt", targets.targets)
             self.assertIn("levelb/fileb.txt", targets.targets)
 
-            # if we copy over level1, then targts should pick this up because it's not covered by any othe roles
+            # if we copy over level1, then targts should pick this up because it's not covered by any other roles
             shutil.copytree(os.path.join(src_targets, "level1"), os.path.join(temp_targets, "level1"))
             repo.update_targets("targets")
             targets = repo.targets("targets")
 
-            self.assertIn("level1/level2/tfile2.txt", targets.targets)
+            self.assertIn("level1/level2/tfile3.txt", targets.targets)
 
             # except level1/file1.txt which is covered by myrole2
             self.assertNotIn("level1/file1.txt", targets.targets)
@@ -110,7 +118,6 @@ class TestCIRepository(unittest.TestCase):
             self.assertIn("level1/file1.txt", targets.targets)
 
             repo.build(temp_publish, temp_publish_artifactrs)
-
 
         finally:
             print(f"Removing {temp_dir}")
