@@ -2,6 +2,8 @@ import json
 import logging
 import os
 import shutil
+import fnmatch
+
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, unique
@@ -26,6 +28,7 @@ from tuf.api.metadata import (
     TargetFile,
     Targets,
     Timestamp,
+    DelegatedRole,
 )
 from tuf.api.serialization.json import CanonicalJSONSerializer, JSONSerializer
 from tuf.repository import AbortEdit, Repository
@@ -332,24 +335,17 @@ class CIRepository(Repository):
         return True, None
 
     @staticmethod
-    def _build_targets(target_dir: str, rolename: str) -> dict[str, TargetFile]:
+    def _build_targets(pattern: str, target_dir: str, recursive: bool = False) -> dict[str, TargetFile]:
         """Build a roles dict of TargetFile based on target files in a directory"""
         targetfiles = {}
-
-        if rolename == "targets":
-            root_dir = target_dir
-        else:
-            root_dir = os.path.join(target_dir, rolename)
-
-        for fname in glob("*", root_dir=root_dir):
-            realpath = os.path.join(root_dir, fname)
+        for fname in glob(pattern, root_dir=target_dir, recursive=recursive):
+            realpath = os.path.join(target_dir, fname)
             if not os.path.isfile(realpath):
                 continue
 
             # targetpath is a URL path, not OS path
-            targetpath = fname if rolename == "targets" else f"{rolename}/{fname}"
-            targetfiles[targetpath] = TargetFile.from_file(
-                targetpath, realpath, ["sha256"]
+            targetfiles[fname] = TargetFile.from_file(
+                fname, realpath, ["sha256"]
             )
 
         return targetfiles
@@ -535,9 +531,29 @@ class CIRepository(Repository):
         if rolename in ["root", "timestamp", "snapshot"]:
             return False
 
-        new_tfiles = self._build_targets(
-            os.path.join(self._dir, "..", "targets"), rolename
-        )
+        # use paths from targets delegated roles metadata to search for target files
+        new_tfiles = {}
+        if rolename != "targets":
+            other_role = self.targets().get_delegated_role(rolename)
+            if isinstance(other_role, DelegatedRole):
+                for other_role_path in other_role.paths:
+                    new_tfiles.update(self._build_targets(other_role_path, os.path.join(self._dir, "..", "targets")))
+        else:
+            new_tfiles.update(self._build_targets('**', os.path.join(self._dir, "..", "targets"), True))
+
+        # check all other roles make sure the files in new_tfiles are matched first by the current role
+        if len(new_tfiles) > 0:
+            for other_rolename in self.targets().delegations.roles:
+                if other_rolename == rolename or other_rolename == "targets":
+                    continue
+                other_role = self.targets().get_delegated_role(other_rolename)
+                if isinstance(other_role, DelegatedRole):
+                    for other_role_path in other_role.paths:
+                        for new_tfile in new_tfiles:
+                            if fnmatch.fnmatch(new_tfile, other_role_path):
+                                new_tfiles.pop(new_tfile)
+                                break
+
         with self.edit_targets(rolename) as targets:
             # Keep any existing custom fields
             for path, tfile in targets.targets.items():
