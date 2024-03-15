@@ -114,7 +114,7 @@ class TestCIRepository(unittest.TestCase):
 
         finally:
             print(f"Removing {temp_dir}")
-            #shutil.rmtree(temp_dir)
+            shutil.rmtree(temp_dir)
 
 if __name__ == "__main__":
     unittest.main()
