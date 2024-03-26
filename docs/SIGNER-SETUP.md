@@ -22,6 +22,8 @@ TUF-on-CI also needs access to a PKCS#11 module.
    $ brew install yubico-piv-tool
    ```
 
+> **_NOTE:_** Windows WSL users may need to attach a USB hardware device using [usbipd-win](https://learn.microsoft.com/en-us/windows/wsl/connect-usb)
+
 #### Sigstore signing requirements
 
 :warning: Sigstore signing is an experimental feature and may not be compatible with all TUF client implementations.
