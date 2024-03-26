@@ -50,15 +50,24 @@ def _find_changed_roles(known_good_dir: str, signing_event_dir: str) -> set[str]
 
 
 def _find_changed_target_roles(
-    known_good_targets_dir: str, targets_dir: str
+        repo: CIRepository,
+        known_good_targets_dir: str,
+        targets_dir: str
 ) -> set[str]:
     """Compare two artifact directories, return rolenames that have artifacts changes"""
-    files = (
-        glob("*", root_dir=targets_dir)
-        + glob("*/*", root_dir=targets_dir)
-        + glob("*", root_dir=known_good_targets_dir)
-        + glob("*/*", root_dir=known_good_targets_dir)
-    )
+
+    files = []
+    patterns = ["*"]
+    delegations = repo.targets("targets").delegations
+    if delegations and delegations.roles:
+        for role in delegations.roles:
+            paths = delegations.roles[role].paths
+            if paths:
+                patterns.extend(paths)
+    for pattern in patterns:
+        files += glob(pattern, root_dir=targets_dir)
+        files += glob(pattern, root_dir=known_good_targets_dir)
+
     changed_roles = set()
     for filepath in files:
         f1 = os.path.join(targets_dir, filepath)
@@ -79,8 +88,8 @@ def _find_changed_target_roles(
             pass
 
         # found a changed artifact, add rolename to set. "targets" is a special case
-        rolename, _, _ = filepath.rpartition("/")
-        if not rolename:
+        rolename, slash, _ = filepath.partition("/")
+        if not slash:
             rolename = "targets"
         changed_roles.add(rolename)
 
@@ -181,8 +190,7 @@ def update_targets(verbose: int, push: bool) -> None:
         # Find artifacts that have changed in this signing event
         # Update targets metadata for those artifacts if needed.
         repo = CIRepository("metadata", good_metadata)
-
-        roles = _find_changed_target_roles(good_targets, "targets")
+        roles = _find_changed_target_roles(repo, good_targets, "targets")
 
         # Update targets metadata if necessary
         updated_targets = []

@@ -1,7 +1,9 @@
 import json
 import logging
 import os
+from shlex import join
 import shutil
+
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, unique
@@ -331,27 +333,29 @@ class CIRepository(Repository):
 
         return True, None
 
-    @staticmethod
-    def _build_targets(target_dir: str, rolename: str) -> dict[str, TargetFile]:
+    def _build_targets(self, target_dir: str, rolename: str) -> dict[str, TargetFile]:
         """Build a roles dict of TargetFile based on target files in a directory"""
         targetfiles = {}
 
-        if rolename == "targets":
-            root_dir = target_dir
-        else:
-            root_dir = os.path.join(target_dir, rolename)
+        patterns = ["*"]
 
-        for fname in glob("*", root_dir=root_dir):
-            realpath = os.path.join(root_dir, fname)
-            if not os.path.isfile(realpath):
-                continue
+        if rolename != "targets":
+            delegations = self.targets("targets").delegations
+            if delegations and delegations.roles and rolename in delegations.roles:
+                    paths = delegations.roles[rolename].paths
+                    if paths:
+                        patterns = paths
 
-            # targetpath is a URL path, not OS path
-            targetpath = fname if rolename == "targets" else f"{rolename}/{fname}"
-            targetfiles[targetpath] = TargetFile.from_file(
-                targetpath, realpath, ["sha256"]
-            )
+        for pattern in patterns:
+            for fname in glob(pattern, root_dir=target_dir):
+                realpath = os.path.join(target_dir, fname)
+                if not os.path.isfile(realpath):
+                    continue
 
+                # fname is a URL path, not OS path
+                targetfiles[fname] = TargetFile.from_file(
+                    fname, realpath, ["sha256"]
+                )
         return targetfiles
 
     def _known_good_root(self) -> Root:
@@ -550,8 +554,6 @@ class CIRepository(Repository):
 
             targets.targets = new_tfiles
             return True
-
-        return False
 
     def is_signed(self, rolename: str) -> bool:
         """Return True if role is correctly signed and not in signing period
