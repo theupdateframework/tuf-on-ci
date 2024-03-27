@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+## v0.8.0
+
+**Changes**
+
+* Signer now opens PRs in a browser automatically when in
+  non-maintainer signing flow
+* Signer now has runtime version checking: A message is printed out
+  if a new version is available
+* Actions have dependency updates
+
+**GitHub Actions upgrade instructions**
+
+A plain version bump from 0.7 works: Workflows require no changes.
+
 ## v0.7.0
 
 **Changes**
