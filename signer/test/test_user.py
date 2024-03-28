@@ -94,6 +94,9 @@ class TestUser(unittest.TestCase):
                 "762cb22caca65de5e9b7b6baecb84ca989d337280ce6914b6440aea95769ad93",
             )
 
+            # Cache the signer
+            user.set_signer(HSM_KEY, hsm_signer)
+
             # If the signing key is not configured, we expect a generic HSM signer
             other_signer = user.get_signer(NONCONFIGURED_KEY)
             self.assertIsInstance(other_signer, HSMSigner)
