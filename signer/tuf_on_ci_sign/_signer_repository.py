@@ -243,19 +243,25 @@ class SignerRepository(Repository):
         return keys
 
     def _sign(self, role: str, md: Metadata, key: Key) -> None:
-        signer = self.user.get_signer(key)
         while True:
+            signer = self.user.get_signer(key)
             try:
-                md.sign(signer, True)
+                sig = md.sign(signer, True)
+                key.verify_signature(sig, md.signed_bytes)
+                self.user.set_signer(key, signer)
                 break
             except UnsignedMetadataError as e:
                 print(f"Failed to sign {role} with {self.user.name} key.\n    {e}")
                 logger.debug("Sign traceback", exc_info=True)
-                click.prompt(
-                    "Press any key to try again (Ctrl-C to cancel)",
-                    default=True,
-                    show_default=False,
-                )
+            except UnverifiedSignatureError as e:
+                print(f"Signature fails to verify with {self.user.name} key.\n    {e}")
+                logger.debug("Verify traceback", exc_info=True)
+
+            click.prompt(
+                "Press any key to try again (Ctrl-C to cancel)",
+                default=True,
+                show_default=False,
+            )
 
     def _write(self, role: str, md: Metadata) -> None:
         filename = self._get_filename(role)
