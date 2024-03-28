@@ -2,7 +2,7 @@
 
 This guide walks through using the YubiKey Manager UI to configure PIV for TUF signing operations.
 
-> [!IMPORTANT] 
+> [!IMPORTANT]
 > This is a general setup guide for using YubiKey with TUF-on-CI. When provisioning YubiKeys for production TUF use, you may want to consider additional procedures around the procurement, distribution, and configuration of the devices. (e.g. serial number tracking, offline device configuration, YubiKey Manager CLI, hardware random number generators, etc.)
 
 ### Requirements
@@ -56,12 +56,14 @@ The PUK PIN is used to unclock a device after a number of failed PIN entry attem
 The management key is used to perform many YubiKey management operations, such as generating a key pair.
 
 1. Navigate to the `Applications` > `PIV` menu in the YubiKey Manager UI
-1. Under `PIN Management`, select `Configure PINs`
-1. Under `Management Key`, select `Change Management Key`
-1. Select the algorithm, recommend selecting `AES256`
-1. Select `Generate` or generate a management key outside of the UI and populate the value here
-1. Select `Protect with PIN`, if you want to store the management key on the device
-1. Select `Finish`
+2. Under `PIN Management`, select `Configure PINs`
+3. Under `Management Key`, select `Change Management Key`
+4. Select the algorithm, recommend selecting `AES256`
+> [!NOTE]
+> The option to use an AES key is only available for [YubiKeys with firmware 5.4.2 or newer](https://docs.yubico.com/hardware/yubikey/yk-tech-manual/yk5-overview.html#piv-management-key-aes)
+5. Select `Generate` or generate a management key outside of the UI and populate the value here
+6. Select `Protect with PIN`, if you want to store the management key on the device
+7. Select `Finish`
 
 ### Generate Digital Signature Certificate
 
