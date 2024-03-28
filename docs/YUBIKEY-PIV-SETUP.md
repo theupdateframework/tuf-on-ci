@@ -2,14 +2,16 @@
 
 This guide walks through using the YubiKey Manager UI to configure PIV for TUF signing operations.
 
-> **_NOTE:_** This is a general setup guide for using YubiKey with TUF-on-CI. When provisioning YubiKeys for production TUF use, you may want to consider additional procedures around the procurement, distribution, and configuration of the devices. (e.g. serial number tracking, offline device configuration, YubiKey Manager CLI, hardware random number generators, etc.)
+> [!IMPORTANT] 
+> This is a general setup guide for using YubiKey with TUF-on-CI. When provisioning YubiKeys for production TUF use, you may want to consider additional procedures around the procurement, distribution, and configuration of the devices. (e.g. serial number tracking, offline device configuration, YubiKey Manager CLI, hardware random number generators, etc.)
 
 ### Requirements
 
 - Download [YubiKey manager](https://yubico.com/support/download/yubikey-manager/):
   ![Yubikey manager UI](yubikey-manager.png)
 
-> **_NOTE:_** Use https://www.yubico.com/genuine/ to confirm that your YubiKey device is genuine
+> [!TIP]
+> Use https://www.yubico.com/genuine/ to confirm that your YubiKey device is genuine
 
 ### Update PIV PIN Defaults
 
@@ -20,6 +22,9 @@ The default PIN codes must be updated with new values that you remember or store
 PIN codes are used for signing operations and to unlock a device.
 
 #### Reset PIV to Defaults
+
+> [!CAUTION]
+> Performing this operation will destroy all existing PIV data
 
 1. Navigate to the `Applications` > `PIV` menu in the YubiKey Manager UI
 1. Under `Reset`, select `Reset PIV`
