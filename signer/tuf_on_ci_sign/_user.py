@@ -70,6 +70,7 @@ class User:
         """Returns a Signer for the given public key
 
         The signer sources are (in order):
+        * signers cached via set_signer()
         * any configured signer from 'signing-keys' config section
         * for sigstore type keys, a Signer is automatically created
         * for any remaining keys, HSM is assumed and a signer is created
@@ -85,19 +86,20 @@ class User:
             return click.prompt(bold(msg), hide_input=True)
 
         if key.keyid in self._signers:
-            # signer is already cached
-            pass
-        elif key.keyid in self._signing_key_uris:
+            return self._signers[key.keyid]
+        if key.keyid in self._signing_key_uris:
             # signer is not cached yet, but config exists
             uri = self._signing_key_uris[key.keyid]
-            self._signers[key.keyid] = Signer.from_priv_key_uri(uri, key, get_secret)
-        elif key.keytype == "sigstore-oidc":
+            return Signer.from_priv_key_uri(uri, key, get_secret)
+        if key.keytype == "sigstore-oidc":
             # signer is not cached, no configuration was found, type is sigstore
-            self._signers[key.keyid] = Signer.from_priv_key_uri(
-                "sigstore:?ambient=false", key, get_secret
-            )
-        else:
-            # signer is not cached, no configuration was found: assume Yubikey
-            self._signers[key.keyid] = Signer.from_priv_key_uri("hsm:", key, get_secret)
+            return Signer.from_priv_key_uri("sigstore:?ambient=false", key, get_secret)
+        # signer is not cached, no configuration was found: assume Yubikey
+        return Signer.from_priv_key_uri("hsm:", key, get_secret)
 
-        return self._signers[key.keyid]
+    def set_signer(self, key: Key, signer: Signer) -> None:
+        """Cache a signer for a keyid
+
+        This should be called after a successful signing operation
+        """
+        self._signers[key.keyid] = signer
