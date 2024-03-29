@@ -11,6 +11,12 @@ inputs:
   expected_artifact:
     description: 'Optional artifact path that should be checked to exist in the repository'
     default: ''
+  time:
+    description: 'Optional timestamp. The repository is checked to be valid at this time'
+    default: ''
+  offline_time:
+    description: 'Optional timestamp. Root and targets role validity is checked at this time'
+    default: ''
 
 runs:
   using: "composite"
@@ -31,6 +37,8 @@ runs:
         ARTIFACT_URL: ${{ inputs.artifact_url }}
         EXPECTED_ARTIFACT: ${{ inputs.expected_artifact }}
         OWNER_REPO: ${{ github.repository }}
+        TIME: ${{ inputs.time }}
+        OFFLINE_TIME: ${{ inputs.offline_time }}
       run: |
         OWNER=${OWNER_REPO%/*}
         REPO=${OWNER_REPO#*/}
@@ -43,16 +51,30 @@ runs:
           ARTIFACT_URL="https://${OWNER}.github.io/${REPO}/targets/"
         fi
 
-        # set --expected-artifact if input is used
         if [ -z $EXPECTED_ARTIFACT ]; then
           ARTIFACT_ARG=""
         else
           ARTIFACT_ARG="--expected-artifact $EXPECTED_ARTIFACT"
         fi
 
+        if [ -z $TIME ]; then
+          TIME_ARG=""
+        else
+          TIME_ARG="--time $TIME"
+        fi
+
+        if [ -z $OFFLINE_TIME ]; then
+          OFFLINE_TIME_ARG=""
+        else
+          OFFLINE_TIME_ARG="--offline-time $OFFLINE_TIME"
+        fi
+
         echo "Testing repository at metadata-url $METADATA_URL, artifact-url $ARTIFACT_URL"
         tuf-on-ci-test-client \
           --metadata-url "$METADATA_URL" \
           --artifact-url "$ARTIFACT_URL" \
-          $ARTIFACT_ARG
+          $ARTIFACT_ARG \
+          $TIME_ARG \
+          $OFFLINE_TIME_ARG
+
       shell: bash
