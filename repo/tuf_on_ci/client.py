@@ -25,6 +25,7 @@ def expiry_check(dir: str, role: str, timestamp: int):
         sys.exit(f"Error: {role} expires {expiry} (expected valid at {ref_time})")
     print(f"Role {role} is valid on {ref_time}: OK")
 
+
 @click.command()
 @click.option("-v", "--verbose", count=True, default=0)
 @click.option("-m", "--metadata-url", type=str, required=True)
@@ -78,14 +79,15 @@ def client(
         if time is not None:
             # HACK: replace reference time with ours: initial root has been loaded
             # already but that is fine: the expiry check only happens during refresh
-            updater._trusted_set.reference_time = datetime.fromtimestamp(time)
-            ref_time_string = f" (reference time {updater._trusted_set.reference_time})"
+            ref_time = datetime.fromtimestamp(time)
+            updater._trusted_set.reference_time = ref_time
+            ref_time_string = f" at reference time {ref_time}"
 
         # Confirm we can get valid top level metadata from remote
         try:
             updater.refresh()
         except ExpiredMetadataError as e:
-            sys.exit(f"Update{ref_time_string} failed: {e}")
+            sys.exit(f"Error: Update failed: {e}{ref_time_string}")
         print(f"Client metadata update from {metadata_url}{ref_time_string}: OK")
 
         if compare_source:
