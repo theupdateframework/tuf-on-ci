@@ -11,6 +11,9 @@ inputs:
   expected_artifact:
     description: 'Optional artifact path that should be checked to exist in the repository'
     default: ''
+  compare_source:
+    description: 'When true, client metadata is compared to current repository content. Set to false if action is not running in a tuf-on-ci repository'
+    default: 'true'
   time:
     description: 'Optional timestamp. The repository is checked to be valid at this time'
     default: ''
@@ -37,6 +40,7 @@ runs:
         ARTIFACT_URL: ${{ inputs.artifact_url }}
         EXPECTED_ARTIFACT: ${{ inputs.expected_artifact }}
         OWNER_REPO: ${{ github.repository }}
+        COMPARE_SOURCE: ${{ inputs.compare_source }}
         TIME: ${{ inputs.time }}
         OFFLINE_TIME: ${{ inputs.offline_time }}
       run: |
@@ -57,6 +61,12 @@ runs:
           ARTIFACT_ARG="--expected-artifact $EXPECTED_ARTIFACT"
         fi
 
+        if [ "$COMPARE_SOURCE" = "true" ]; then
+          COMPARE_SOURCE_ARG="--compare-source"
+        else
+          COMPARE_SOURCE_ARG="--no-compare-source"
+        fi
+
         if [ -z $TIME ]; then
           TIME_ARG=""
         else
@@ -74,6 +84,7 @@ runs:
           --metadata-url "$METADATA_URL" \
           --artifact-url "$ARTIFACT_URL" \
           $ARTIFACT_ARG \
+          $COMPARE_SOURCE_ARG \
           $TIME_ARG \
           $OFFLINE_TIME_ARG
 
