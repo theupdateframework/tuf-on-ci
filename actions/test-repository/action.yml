@@ -39,7 +39,9 @@ runs:
       with:
         python-version: "3.11"
 
-    - run: pip --quiet install $GITHUB_ACTION_PATH/../../repo/
+    - run: |
+        # Install tuf-on-ci
+        pip --quiet install $GITHUB_ACTION_PATH/../../repo/
       shell: bash
 
     - env:
@@ -53,6 +55,8 @@ runs:
         OFFLINE_VALID_DAYS: ${{ inputs.offline_valid_days }}
         METADATA_DIR: ${{ inputs.metadata_dir }}
       run: |
+        # Run tuf-on-ci test client
+
         OWNER=${OWNER_REPO%/*}
         REPO=${OWNER_REPO#*/}
 
