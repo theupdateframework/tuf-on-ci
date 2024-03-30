@@ -17,12 +17,12 @@ inputs:
   compare_source:
     description: 'When true, client metadata is compared to current repository content. Set to false if action is not running in a tuf-on-ci repository'
     default: 'true'
-  time:
-    description: 'Optional timestamp. The repository is checked to be valid at this time'
-    default: ''
-  offline_time:
-    description: 'Optional timestamp. Root and targets role validity is checked at this time'
-    default: ''
+  valid_days:
+    description: 'Number of days. The repository is checked to be valid at "now + N days"'
+    default: '0'
+  offline_valid_days:
+    description: 'Number of days. Root and targets role validity is checked to be valid at "now + N days". Can be larger than repository validity'
+    default: '0'
   metadata_dir:
     description: 'Optional directory name. The metadata client receives will be stored here. Useful e.g. for deduplication purpose'
     default: ''
@@ -48,8 +48,8 @@ runs:
         EXPECTED_ARTIFACT: ${{ inputs.expected_artifact }}
         OWNER_REPO: ${{ github.repository }}
         COMPARE_SOURCE: ${{ inputs.compare_source }}
-        TIME: ${{ inputs.time }}
-        OFFLINE_TIME: ${{ inputs.offline_time }}
+        VALID_DAYS: ${{ inputs.valid_days }}
+        OFFLINE_VALID_DAYS: ${{ inputs.offline_valid_days }}
         METADATA_DIR: ${{ inputs.metadata_dir }}
       run: |
         OWNER=${OWNER_REPO%/*}
@@ -81,15 +81,17 @@ runs:
           COMPARE_SOURCE_ARG="--no-compare-source"
         fi
 
-        if [ -z $TIME ]; then
+        if [ $VALID_DAYS -eq 0 ]; then
           TIME_ARG=""
         else
+          TIME=$(date -d "+$VALID_DAYS days" '+%s')
           TIME_ARG="--time $TIME"
         fi
 
-        if [ -z $OFFLINE_TIME ]; then
+        if [ $OFFLINE_VALID_DAYS -eq 0 ]; then
           OFFLINE_TIME_ARG=""
         else
+          OFFLINE_TIME=$(date -d "+$OFFLINE_VALID_DAYS days" '+%s')
           OFFLINE_TIME_ARG="--offline-time $OFFLINE_TIME"
         fi
 
