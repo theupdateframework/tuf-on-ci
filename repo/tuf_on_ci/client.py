@@ -29,38 +29,49 @@ def expiry_check(dir: str, role: str, timestamp: int):
 @click.option("-v", "--verbose", count=True, default=0)
 @click.option("-m", "--metadata-url", type=str, required=True)
 @click.option("-a", "--artifact-url", type=str, required=True)
+@click.option("-u", "--update-base-url", type=str)
 @click.option("-e", "--expected-artifact", type=str)
 @click.option("--compare-source/--no-compare-source", default=True)
 @click.option("-t", "--time", type=int)
 @click.option("-o", "--offline-time", type=int)
+@click.option("-d", "--metadata-dir", type=str)
 def client(
     verbose: int,
     metadata_url: str,
     artifact_url: str,
+    update_base_url: str | None,
     expected_artifact: str | None,
     compare_source: bool,
     time: int | None,
     offline_time: int | None,
+    metadata_dir: str | None,
 ) -> None:
-    """Test client for tuf-on-ci
-
-    Client expects to be run in tuf-on-ci repository (current metadata
-    in the sources will be considered the expected expected metadata the
-    client should receive from remote)."""
+    """Test client for tuf-on-ci"""
 
     logging.basicConfig(level=logging.WARNING - verbose * 10)
 
     with TemporaryDirectory() as client_dir:
-        metadata_dir = os.path.join(client_dir, "metadata")
+        if metadata_dir is None:
+            metadata_dir = os.path.join(client_dir, "metadata")
         artifact_dir = os.path.join(client_dir, "artifacts")
-        os.mkdir(metadata_dir)
+        os.makedirs(metadata_dir, exist_ok=True)
         os.mkdir(artifact_dir)
 
+        # initialize client with a root.json from metadata_url
         root_url = f"{metadata_url}/1.root.json"
         try:
             request.urlretrieve(root_url, f"{metadata_dir}/root.json")  # noqa: S310
         except OSError as e:
             sys.exit(f"Failed to download initial root {root_url}: {e}")
+
+        if update_base_url is not None:
+            # Update client to update_base_url before doing the actual update
+            updater = Updater(metadata_dir, metadata_url, artifact_dir, artifact_url)
+            try:
+                updater.refresh()
+                print(f"Client metadata update from base url {update_base_url}: OK")
+            except ExpiredMetadataError as e:
+                print(f"WARNING: update base url has expired metadata: {e}")
 
         updater = Updater(metadata_dir, metadata_url, artifact_dir, artifact_url)
         ref_time_string = ""
@@ -75,7 +86,7 @@ def client(
             updater.refresh()
         except ExpiredMetadataError as e:
             sys.exit(f"Update{ref_time_string} failed: {e}")
-        print(f"Client metadata update{ref_time_string}: OK")
+        print(f"Client metadata update from {metadata_url}{ref_time_string}: OK")
 
         if compare_source:
             # Compare received metadata versions with source metadata

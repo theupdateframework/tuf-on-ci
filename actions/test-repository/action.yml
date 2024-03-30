@@ -8,6 +8,9 @@ inputs:
   artifact_url:
     description: 'Base artifact URL the client should use'
     default: ''
+  update_base_url:
+    description: 'Optional metadata URL to use as previous repository state'
+    default: ''
   expected_artifact:
     description: 'Optional artifact path that should be checked to exist in the repository'
     default: ''
@@ -19,6 +22,9 @@ inputs:
     default: ''
   offline_time:
     description: 'Optional timestamp. Root and targets role validity is checked at this time'
+    default: ''
+  metadata_dir:
+    description: 'Optional directory name. The metadata client receives will be stored here. Useful e.g. for deduplication purpose'
     default: ''
 
 runs:
@@ -38,11 +44,13 @@ runs:
     - env:
         METADATA_URL: ${{ inputs.metadata_url }}
         ARTIFACT_URL: ${{ inputs.artifact_url }}
+        UPDATE_BASE_URL: ${{ inputs.update_base_url }}
         EXPECTED_ARTIFACT: ${{ inputs.expected_artifact }}
         OWNER_REPO: ${{ github.repository }}
         COMPARE_SOURCE: ${{ inputs.compare_source }}
         TIME: ${{ inputs.time }}
         OFFLINE_TIME: ${{ inputs.offline_time }}
+        METADATA_DIR: ${{ inputs.metadata_dir }}
       run: |
         OWNER=${OWNER_REPO%/*}
         REPO=${OWNER_REPO#*/}
@@ -53,6 +61,12 @@ runs:
         fi
         if [ -z $ARTIFACT_URL ]; then
           ARTIFACT_URL="https://${OWNER}.github.io/${REPO}/targets/"
+        fi
+
+        if [ -z $UPDATE_BASE_URL ]; then
+          UPDATE_BASE_URL_ARG=""
+        else
+          UPDATE_BASE_URL_ARG="--update-base-url $UPDATE_BASE_URL"
         fi
 
         if [ -z $EXPECTED_ARTIFACT ]; then
@@ -79,13 +93,21 @@ runs:
           OFFLINE_TIME_ARG="--offline-time $OFFLINE_TIME"
         fi
 
+        if [ -z $METADATA_DIR ]; then
+          METADATA_DIR_ARG=""
+        else
+          METADATA_DIR_ARG="--metadata-dir $METADATA_DIR"
+        fi
+
         echo "Testing repository at metadata-url $METADATA_URL, artifact-url $ARTIFACT_URL"
         tuf-on-ci-test-client \
           --metadata-url "$METADATA_URL" \
           --artifact-url "$ARTIFACT_URL" \
+          $UPDATE_BASE_URL_ARG \
           $ARTIFACT_ARG \
           $COMPARE_SOURCE_ARG \
           $TIME_ARG \
-          $OFFLINE_TIME_ARG
+          $OFFLINE_TIME_ARG \
+          $METADATA_DIR_ARG
 
       shell: bash
