@@ -61,7 +61,7 @@ runs:
           METADATA_URL="https://${OWNER}.github.io/${REPO}/metadata/"
         fi
         if [ -z $ARTIFACT_URL ]; then
-          ARTIFACT_URL="https://${OWNER}.github.io/${REPO}/targets/"
+          ARTIFACT_URL=${METADATA_URL%metadata/}targets/
         fi
 
         if [ -z $UPDATE_BASE_URL ]; then
