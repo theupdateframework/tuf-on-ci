@@ -254,7 +254,10 @@ class SignerRepository(Repository):
                 print(f"Failed to sign {role} with {self.user.name} key.\n    {e}")
                 logger.debug("Sign traceback", exc_info=True)
             except UnverifiedSignatureError as e:
-                print(f"Signature fails to verify with {self.user.name} key.\n    {e}")
+                print(
+                    f"Failed to verify {self.user.name} signature "
+                    f"(is this the correct key?)\n    {e}"
+                )
                 logger.debug("Verify traceback", exc_info=True)
 
             click.prompt(
