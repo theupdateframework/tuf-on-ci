@@ -9,7 +9,7 @@ readme = "README.md"
 dependencies = [
   "packaging >= 23.2,< 25.0",
   "platformdirs ~= 4.2",
-  "securesystemslib[awskms,azurekms,gcpkms,hsm,sigstore] ~= 0.30",
+  "securesystemslib[awskms,azurekms,gcpkms,hsm,sigstore] ~= 0.31.0",
   "tuf ~= 3.0",
   "click ~= 8.1",
 ]
