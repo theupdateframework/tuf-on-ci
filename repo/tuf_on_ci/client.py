@@ -5,6 +5,7 @@
 
 import logging
 import os
+import shutil
 import sys
 from datetime import datetime
 from filecmp import cmp
@@ -31,6 +32,7 @@ def expiry_check(dir: str, role: str, timestamp: int):
 @click.option("-m", "--metadata-url", type=str, required=True)
 @click.option("-a", "--artifact-url", type=str, required=True)
 @click.option("-u", "--update-base-url", type=str)
+@click.option("-r", "--initial-root", type=str)
 @click.option("-e", "--expected-artifact", type=str)
 @click.option("--compare-source/--no-compare-source", default=True)
 @click.option("-t", "--time", type=int)
@@ -41,6 +43,7 @@ def client(
     metadata_url: str,
     artifact_url: str,
     update_base_url: str | None,
+    initial_root: str | None,
     expected_artifact: str | None,
     compare_source: bool,
     time: int | None,
@@ -58,12 +61,15 @@ def client(
         os.makedirs(metadata_dir, exist_ok=True)
         os.mkdir(artifact_dir)
 
-        # initialize client with a root.json from metadata_url
-        root_url = f"{metadata_url}/1.root.json"
-        try:
-            request.urlretrieve(root_url, f"{metadata_dir}/root.json")  # noqa: S310
-        except OSError as e:
-            sys.exit(f"Failed to download initial root {root_url}: {e}")
+        # initialize client with --initial-root or from metadata_url
+        if initial_root is not None:
+            shutil.copy(initial_root, os.path.join(metadata_dir, "root.json"))
+        else:
+            root_url = f"{metadata_url}/1.root.json"
+            try:
+                request.urlretrieve(root_url, f"{metadata_dir}/root.json")  # noqa: S310
+            except OSError as e:
+                sys.exit(f"Failed to download initial root {root_url}: {e}")
 
         if update_base_url is not None:
             # Update client to update_base_url before doing the actual update
