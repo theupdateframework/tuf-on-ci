@@ -56,7 +56,6 @@ runs:
         METADATA_DIR: ${{ inputs.metadata_dir }}
       run: |
         # Run tuf-on-ci test client
-
         OWNER=${OWNER_REPO%/*}
         REPO=${OWNER_REPO#*/}
 
