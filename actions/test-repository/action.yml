@@ -3,19 +3,46 @@ description: 'Test a published TUF-on-CI repository with a client'
 
 inputs:
   metadata_url:
-    description: 'base metadata URL the client should use'
+    description: |
+      base metadata URL the client should use. The client will be initialized with
+      `metadata_url/1.root.json` by default. However if there is a `root.json` file
+      in the working directory, that will be used instead.
     default: ''
   artifact_url:
-    description: 'Base artifact URL the client should use'
+    description: 'Base artifact URL the client should use.'
+    default: ''
+  update_base_url:
+    description: 'Optional metadata URL to use as previous repository state.'
     default: ''
   expected_artifact:
-    description: 'Optional artifact path that should be checked to exist in the repository'
+    description: |
+      Optional artifact path that should be checked to exist in the repository.
+    default: ''
+  compare_source:
+    description: |
+      When true, client metadata is compared to current repository content. Set to
+      false if action is not running in a tuf-on-ci repository.
+    default: 'true'
+  valid_days:
+    description: |
+      Number of days. The repository is checked to be valid at "now + N days".
+    default: '0'
+  offline_valid_days:
+    description: |
+      Number of days. Root and targets role validity is checked to be valid at
+      "now + N days". This number can be larger than repository validity.
+    default: '0'
+  metadata_dir:
+    description: |
+      Optional directory name. The metadata client receives will be left here.
+      Useful e.g. for deduplication purposes.
     default: ''
 
 runs:
   using: "composite"
   steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      if: inputs.compare_source == 'true'
       with:
         ref: "publish"
 
@@ -23,15 +50,23 @@ runs:
       with:
         python-version: "3.11"
 
-    - run: pip --quiet install $GITHUB_ACTION_PATH/../../repo/
+    - run: |
+        # Install tuf-on-ci
+        pip --quiet install $GITHUB_ACTION_PATH/../../repo/
       shell: bash
 
     - env:
         METADATA_URL: ${{ inputs.metadata_url }}
         ARTIFACT_URL: ${{ inputs.artifact_url }}
+        UPDATE_BASE_URL: ${{ inputs.update_base_url }}
         EXPECTED_ARTIFACT: ${{ inputs.expected_artifact }}
         OWNER_REPO: ${{ github.repository }}
+        COMPARE_SOURCE: ${{ inputs.compare_source }}
+        VALID_DAYS: ${{ inputs.valid_days }}
+        OFFLINE_VALID_DAYS: ${{ inputs.offline_valid_days }}
+        METADATA_DIR: ${{ inputs.metadata_dir }}
       run: |
+        # Run tuf-on-ci test client
         OWNER=${OWNER_REPO%/*}
         REPO=${OWNER_REPO#*/}
 
@@ -40,19 +75,63 @@ runs:
           METADATA_URL="https://${OWNER}.github.io/${REPO}/metadata/"
         fi
         if [ -z $ARTIFACT_URL ]; then
-          ARTIFACT_URL="https://${OWNER}.github.io/${REPO}/targets/"
+          ARTIFACT_URL=${METADATA_URL%metadata/}targets/
         fi
 
-        # set --expected-artifact if input is used
+        if [ -z $UPDATE_BASE_URL ]; then
+          UPDATE_BASE_URL_ARG=""
+        else
+          UPDATE_BASE_URL_ARG="--update-base-url $UPDATE_BASE_URL"
+        fi
+
         if [ -z $EXPECTED_ARTIFACT ]; then
           ARTIFACT_ARG=""
         else
           ARTIFACT_ARG="--expected-artifact $EXPECTED_ARTIFACT"
         fi
 
+        if [ "$COMPARE_SOURCE" = "true" ]; then
+          COMPARE_SOURCE_ARG="--compare-source"
+        else
+          COMPARE_SOURCE_ARG="--no-compare-source"
+        fi
+
+        if [ $VALID_DAYS -eq 0 ]; then
+          TIME_ARG=""
+        else
+          TIME=$(date -d "+$VALID_DAYS days" '+%s')
+          TIME_ARG="--time $TIME"
+        fi
+
+        if [ $OFFLINE_VALID_DAYS -eq 0 ]; then
+          OFFLINE_TIME_ARG=""
+        else
+          OFFLINE_TIME=$(date -d "+$OFFLINE_VALID_DAYS days" '+%s')
+          OFFLINE_TIME_ARG="--offline-time $OFFLINE_TIME"
+        fi
+
+        if [ -z $METADATA_DIR ]; then
+          METADATA_DIR_ARG=""
+        else
+          METADATA_DIR_ARG="--metadata-dir $METADATA_DIR"
+        fi
+
+        if [ -e root.json ]; then
+          ROOT_ARG="--initial-root root.json"
+        else
+          ROOT_ARG=""
+        fi
+
         echo "Testing repository at metadata-url $METADATA_URL, artifact-url $ARTIFACT_URL"
         tuf-on-ci-test-client \
           --metadata-url "$METADATA_URL" \
           --artifact-url "$ARTIFACT_URL" \
-          $ARTIFACT_ARG
+          $UPDATE_BASE_URL_ARG \
+          $ROOT_ARG \
+          $ARTIFACT_ARG \
+          $COMPARE_SOURCE_ARG \
+          $TIME_ARG \
+          $OFFLINE_TIME_ARG \
+          $METADATA_DIR_ARG
+
       shell: bash
