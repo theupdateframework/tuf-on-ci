@@ -51,8 +51,9 @@ runs:
         python-version: "3.11"
 
     - run: |
-        # Install tuf-on-ci
-        pip --quiet install $GITHUB_ACTION_PATH/../../repo/
+        echo "::group::Install tuf-on-ci"
+        pip install $GITHUB_ACTION_PATH/../../repo/
+        echo "::endgroup::"
       shell: bash
 
     - env:
