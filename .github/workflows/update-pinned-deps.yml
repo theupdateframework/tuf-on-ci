@@ -30,7 +30,7 @@ jobs:
       - name: Update actions/requirements.txt
         id: update
         run: |
-          pip-compile --generate-hashes --upgrade --output-file actions/requirements.txt repo/pyproject.toml
+          pip-compile --strip-extras --upgrade --output-file actions/requirements.txt repo/pyproject.toml
           if git diff --quiet; then
             echo "No dependency updates."
             echo "updated=false" >> $GITHUB_OUTPUT
