@@ -52,7 +52,7 @@ runs:
 
     - run: |
         echo "::group::Install tuf-on-ci"
-        pip install $GITHUB_ACTION_PATH/../../repo/
+        pip install -c $GITHUB_ACTION_PATH/../requirements.txt $GITHUB_ACTION_PATH/../../repo/
         echo "::endgroup::"
       shell: bash
 
