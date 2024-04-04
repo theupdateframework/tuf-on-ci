@@ -10,7 +10,7 @@ dependencies = [
   "packaging >= 23.2,< 25.0",
   "platformdirs ~= 4.2",
   "securesystemslib[awskms,azurekms,gcpkms,hsm,sigstore] ~= 0.31.0",
-  "tuf ~= 3.0",
+  "tuf >= 3,< 5",
   "click ~= 8.1",
 ]
 requires-python = ">=3.10"
