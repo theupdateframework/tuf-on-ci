@@ -352,7 +352,6 @@ class CIRepository(Repository):
                 if not os.path.isfile(realpath):
                     continue
 
-                # fname is a URL path, not OS path
                 targetfiles[fname] = TargetFile.from_file(
                     fname, realpath, ["sha256"]
                 )
