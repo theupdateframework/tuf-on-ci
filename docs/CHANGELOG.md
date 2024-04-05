@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+## v0.9.0
+
+GitHub Actions users are adviced to upgrade for safer dependency
+pinning that should avoid breakage in future.
+
+**Changes**
+
+* actions: test-repository action has many additional features (#239)
+* actions: python package versions are now in logs again (#247)
+* signer: Improve signing robustness (#237)
+* Dependency updates (including more strictly pinned securesystemslib)
+
+**GitHub Actions upgrade instructions**
+
+A plain version bump from 0.8 works: Workflows require no changes.
+
 ## v0.8.0
 
 **Changes**
