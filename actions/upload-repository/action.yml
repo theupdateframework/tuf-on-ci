@@ -32,7 +32,8 @@ runs:
 
     - run: |
         echo "::group::Install tuf-on-ci"
-        pip install -c $GITHUB_ACTION_PATH/../requirements.txt $GITHUB_ACTION_PATH/../../repo/
+        REPO=$GITHUB_ACTION_PATH/../../repo/
+        pip install -c $REPO/install/requirements.txt $REPO
         echo "::endgroup::"
       shell: bash
 
