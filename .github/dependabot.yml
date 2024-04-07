@@ -13,6 +13,12 @@ updates:
     interval: "daily"
     time: "10:25"
 
+- package-ecosystem: "pip"
+  directory: "/"
+  schedule:
+    interval: "daily"
+    time: "10:25"
+
 - package-ecosystem: "github-actions"
   directory: "/"
   schedule:

@@ -25,7 +25,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install pip-tools
-        run: pip install pip-tools
+        run: pip install -c build-constraints.txt pip-tools
 
       - name: Update repo/install/requirements.txt
         id: update

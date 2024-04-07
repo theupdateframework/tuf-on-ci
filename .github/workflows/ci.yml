@@ -27,7 +27,7 @@ jobs:
         echo "PYKCS11LIB=/usr/lib/softhsm/libsofthsm2.so" >> $GITHUB_ENV
 
     - name: Install tox
-      run: python -m pip install tox
+      run: python -m pip install -c build-constraints.txt tox
 
     - name: Lint
       run: tox -m lint
