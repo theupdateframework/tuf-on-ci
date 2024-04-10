@@ -25,7 +25,10 @@
      ],
      "name": "delegated",
      "paths": [
-      "delegated/*"
+      "delegated/*",
+      "delegated/*/*",
+      "delegated/*/*/*",
+      "delegated/*/*/*/*"
      ],
      "terminating": true,
      "threshold": 1
