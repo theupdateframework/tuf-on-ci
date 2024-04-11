@@ -7,8 +7,11 @@ class TestUser(unittest.TestCase):
     """Test delegate path generation"""
 
     def test_build_paths(self):
-       paths = build_paths("myrole", SignerRepository.MAX_DEPTH)
-       self.assertEqual(paths, ['myrole/*', 'myrole/*/*', 'myrole/*/*/*', 'myrole/*/*/*/*'])
+        paths = build_paths("myrole", SignerRepository.MAX_DEPTH)
+        self.assertEqual(
+            paths, ["myrole/*", "myrole/*/*", "myrole/*/*/*", "myrole/*/*/*/*"]
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -50,9 +50,7 @@ def _find_changed_roles(known_good_dir: str, signing_event_dir: str) -> set[str]
 
 
 def _find_changed_target_roles(
-        repo: CIRepository,
-        known_good_targets_dir: str,
-        targets_dir: str
+    repo: CIRepository, known_good_targets_dir: str, targets_dir: str
 ) -> set[str]:
     """Compare two artifact directories, return rolenames that have artifacts changes"""
 

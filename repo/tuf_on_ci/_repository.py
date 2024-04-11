@@ -1,9 +1,7 @@
 import json
 import logging
 import os
-from shlex import join
 import shutil
-
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, unique
@@ -342,9 +340,9 @@ class CIRepository(Repository):
         if rolename != "targets":
             delegations = self.targets("targets").delegations
             if delegations and delegations.roles and rolename in delegations.roles:
-                    paths = delegations.roles[rolename].paths
-                    if paths:
-                        patterns = paths
+                paths = delegations.roles[rolename].paths
+                if paths:
+                    patterns = paths
 
         for pattern in patterns:
             for fname in glob(pattern, root_dir=target_dir):
@@ -352,9 +350,7 @@ class CIRepository(Repository):
                 if not os.path.isfile(realpath):
                     continue
 
-                targetfiles[fname] = TargetFile.from_file(
-                    fname, realpath, ["sha256"]
-                )
+                targetfiles[fname] = TargetFile.from_file(fname, realpath, ["sha256"])
         return targetfiles
 
     def _known_good_root(self) -> Root:
