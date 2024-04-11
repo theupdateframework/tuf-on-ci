@@ -30,7 +30,11 @@ runs:
       with:
         python-version: "3.11"
 
-    - run: pip --quiet install $GITHUB_ACTION_PATH/../../repo/
+    - run: |
+        echo "::group::Install tuf-on-ci"
+        REPO=$GITHUB_ACTION_PATH/../../repo/
+        pip install -c $REPO/install/requirements.txt $REPO
+        echo "::endgroup::"
       shell: bash
 
     - id: build-repository

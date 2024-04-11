@@ -1,0 +1,74 @@
+name: Update pinned Python dependencies for the actions
+
+on:
+  push:
+    branches: [main]
+    paths: ['repo/pyproject.toml']
+  schedule:
+    - cron:  '21 9 * * 1'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  update-dependencies:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # for pushing a branch
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+
+      - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
+        with:
+          python-version: "3.11"
+
+      - name: Install pip-tools
+        run: pip install -c build-constraints.txt pip-tools
+
+      - name: Update repo/install/requirements.txt
+        id: update
+        run: |
+          pip-compile --strip-extras --upgrade --output-file repo/install/requirements.txt repo/pyproject.toml
+          if git diff --quiet; then
+            echo "No dependency updates."
+            echo "updated=false" >> $GITHUB_OUTPUT
+          else
+            echo "updated=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Push branch
+        id: push
+        if: steps.update.outputs.updated == 'true'
+        run: |
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add repo/install/requirements.txt
+          git commit -m "repo: Update pinned requirements"
+          SHA=$(sha256sum repo/install/requirements.txt)
+          NAME="pin-requirements/${SHA:0:7}"
+          if git ls-remote --exit-code origin $NAME; then
+            echo "Branch $NAME exists, nothing to do."
+            echo "pushed=false" >> $GITHUB_OUTPUT
+          else
+            git push origin HEAD:$NAME
+            echo "Pushed branch $NAME."
+            echo "pushed=true" >> $GITHUB_OUTPUT
+            echo "branch=$NAME" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Open pull request
+        if: steps.push.outputs.pushed == 'true'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          BRANCH: ${{ steps.push.outputs.branch }}
+        with:
+          script: |
+            await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: "actions: Update pinned requirements",
+              head: process.env.BRANCH,
+              base: "main",
+            })
