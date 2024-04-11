@@ -20,7 +20,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install build dependencies
-        run: python3 -m pip install --constraint build-constraints.txt build
+        run: python3 -m pip install -c build-constraints.txt build
 
       - name: Build binary wheel and source tarball
         run: PIP_CONSTRAINT=build-constraints.txt python3 -m build --sdist --wheel --outdir dist/ signer/
