@@ -20,7 +20,7 @@ betterproto==2.0.0b6
     # via sigstore-protobuf-specs
 boto3==1.34.82
     # via securesystemslib
-botocore==1.34.82
+botocore==1.34.83
     # via
     #   boto3
     #   s3transfer
