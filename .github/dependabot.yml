@@ -2,22 +2,35 @@ version: 2
 updates:
 
 - package-ecosystem: "pip"
-  directory: "signer/"
-  schedule:
-    interval: "daily"
-    time: "10:25"
-
-- package-ecosystem: "pip"
-  directory: "repo/"
-  schedule:
-    interval: "daily"
-    time: "10:25"
-
-- package-ecosystem: "pip"
   directory: "/"
   schedule:
-    interval: "daily"
-    time: "10:25"
+    interval: "weekly"
+  groups:
+    build-dependencies:
+      # Critical build/release dependencies
+      patterns:
+        - "build"
+        - "hatchling"
+        - "pip-tools"
+    test-dependencies:
+      # Python dependencies that are only pinned to ensure test reproducibility
+      patterns:
+        - "mypy"
+        - "ruff"
+        - "tox"
+    pyproject-dependencies:
+      # Dependency ranges set in signer & repo pyproject.toml. Also any new
+      # dependencies not caught by earlier groups
+      patterns:
+        - "*"
+
+- package-ecosystem: "pip"
+  # Disabled: this is managed in update-pinned-dependencies.yml
+  directory: "repo/install"
+  open-pull-requests-limit: 0
+  schedule:
+    interval: "weekly"
+
 
 - package-ecosystem: "github-actions"
   directory: "/"
