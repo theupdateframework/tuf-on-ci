@@ -22,7 +22,7 @@ jobs:
 
       - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
         with:
-          python-version: "3.11"
+          python-version: '3.12'
 
       - name: Install pip-tools
         run: pip install -c build-constraints.txt pip-tools
