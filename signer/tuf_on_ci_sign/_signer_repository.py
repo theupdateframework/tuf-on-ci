@@ -100,6 +100,9 @@ def _find_changed_roles(known_good_dir: str, signing_event_dir: str) -> list[str
 class SignerRepository(Repository):
     """A repository implementation for the signer tool"""
 
+    # Maximum depth within role directory
+    MAX_DEPTH: int = 4
+
     def __init__(
         self,
         dir: str,
@@ -511,7 +514,13 @@ class SignerRepository(Repository):
             except ValueError:
                 # Role does not exist yet: create delegation
                 assert isinstance(delegator, Targets)
-                role = DelegatedRole(rolename, [], 1, True, [f"{rolename}/*"])
+                role = DelegatedRole(
+                    rolename,
+                    [],
+                    1,
+                    True,
+                    build_paths(rolename, SignerRepository.MAX_DEPTH),
+                )
                 if not delegator.delegations:
                     delegator.delegations = Delegations({}, {})
                 assert delegator.delegations.roles is not None
@@ -740,3 +749,13 @@ class SignerRepository(Repository):
                     return
 
         raise ValueError(f"{rolename} signing key for {self.user.name} not found")
+
+
+def build_paths(rolename: str, depth: int) -> list[str]:
+    """Build the paths for delegated roles"""
+    paths = []
+    pattern = f"{rolename}/*"
+    for _ in range(depth):
+        paths.append(pattern)
+        pattern = f"{pattern}/*"
+    return paths

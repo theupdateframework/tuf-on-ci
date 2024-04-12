@@ -360,7 +360,7 @@ signer_modify_targets()
     git push --quiet origin $EVENT
 }
 
-signer_add_delegated_target()
+signer_add_delegated_targets()
 {
     USER=$1
     EVENT=$2
@@ -374,10 +374,11 @@ signer_add_delegated_target()
     # Make target file changes, push to remote signing event branch
     git fetch --quiet origin
     git switch --quiet -C $EVENT origin/main
-    mkdir -p targets/delegated
+    mkdir -p targets/delegated/1/2/3
     echo "file1" > targets/delegated/file1.txt
-    git add targets/delegated/file1.txt
-    git commit  --quiet -m "Add a delegated target file"
+    echo "file2" > targets/delegated/1/2/3/file2.txt
+    git add targets/delegated/file1.txt targets/delegated/1/2/3/file2.txt
+    git commit  --quiet -m "Add delegated artifacts"
     git push --quiet origin $EVENT
 }
 
@@ -701,7 +702,7 @@ test_target_changes_in_delegations()
 
     # second signing event: Any user adds target to delegated role
     # Signing-event requires a signature from user1
-    signer_add_delegated_target user2 sign/new-delegated-target
+    signer_add_delegated_targets user2 sign/new-delegated-target
     repo_update_targets sign/new-delegated-target
     repo_status_fail sign/new-delegated-target
     signer_sign user1 sign/new-delegated-target

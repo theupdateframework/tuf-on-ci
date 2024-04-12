@@ -1,0 +1,19 @@
+{
+    "signatures": [
+        {
+            "keyid": "198f00ff96ea7cbfa7eac480cc9bfc43ce13bb434b901011ab777856533997d3",
+            "sig": "3045022056ab47c4a391473363f56f39379004f536e047a4bb1a2d7cae15782767655acd022100a4dc9d203a3b3e355fb2af2450dbe4f94d9097c14f00650ed37cb95623f1f122"
+        }
+    ],
+    "signed": {
+        "_type": "snapshot",
+        "expires": "2025-03-08T15:24:43Z",
+        "meta": {
+            "myrole.json": {
+                "version": 1
+            }
+        },
+        "spec_version": "1.0.31",
+        "version": 1
+    }
+}

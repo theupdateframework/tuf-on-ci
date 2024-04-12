@@ -1,0 +1,68 @@
+{
+    "signatures": [
+        {
+            "keyid": "95da323daa78f7b2557ae91e23be619ff932f9aec035abd4e40301405b363999",
+            "sig": ""
+        }
+    ],
+    "signed": {
+        "_type": "targets",
+        "delegations": {
+            "keys": {
+                "95da323daa78f7b2557ae91e23be619ff932f9aec035abd4e40301405b363999": {
+                    "keytype": "ecdsa",
+                    "keyval": {
+                        "public": "95da323daa78f7b2557ae91e23be619ff932f9aec035abd4e40301405b363999"
+                    },
+                    "scheme": "ecdsa-sha2-nistp256"
+                }
+            },
+            "roles": [
+                {
+                    "keyids": [
+                        "95da323daa78f7b2557ae91e23be619ff932f9aec035abd4e40301405b363999"
+                    ],
+                    "name": "myrole",
+                    "paths": [
+                        "myrole/*",
+                        "myrole/*/*",
+                        "myrole/*/*/*",
+                        "myrole/*/*/*/*"
+                    ],
+                    "terminating": true,
+                    "threshold": 1
+                },
+                {
+                    "keyids": [
+                        "95da323daa78f7b2557ae91e23be619ff932f9aec035abd4e40301405b363999"
+                    ],
+                    "name": "oldrole",
+                    "paths": [
+                        "oldrole/*"
+                    ],
+                    "terminating": true,
+                    "threshold": 1
+                }
+            ]
+        },
+        "expires": "2024-07-15T23:18:30Z",
+        "spec_version": "1.0.31",
+        "targets": {
+            "tfile1.txt": {
+                "hashes": {
+                    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                },
+                "length": 0
+            },
+            "tfile2.txt": {
+                "hashes": {
+                    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                },
+                "length": 0
+            }
+        },
+        "version": 2,
+        "x-tuf-on-ci-expiry-period": 123,
+        "x-tuf-on-ci-signing-period": 40
+    }
+}

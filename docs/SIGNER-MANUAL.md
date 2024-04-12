@@ -1,8 +1,8 @@
 # TUF-on-CI Signer Manual
 
 The purpose of A TUF-on-CI repository is to secure artifact delivery to
-downloaders. This is accomplished by _signers_ digitally signing TUF metadata using 
-the `tuf-on-ci-sign` tool. 
+downloaders. This is accomplished by _signers_ digitally signing TUF metadata using
+the `tuf-on-ci-sign` tool.
 
 This page documents `tuf-on-ci-sign` usage.
 
@@ -14,7 +14,7 @@ _Signer_: A person who has agreed to verify the integrity of artifact hashes and
 metadata of a _role_ by signing that role's metadata with their personal signing method
 (e.g. a Yubikey).
 
-_Signing event_: Collaboration of one or more signers to produce and sign a new version of 
+_Signing event_: Collaboration of one or more signers to produce and sign a new version of
 a role's metadata. A signing event happens in a GitHub pull request. Signing event names
 start with "sign/".
 
@@ -22,7 +22,7 @@ _Role_: A role manages a set of artifacts and (optionally) a set of delegations 
 roles. A role has a set of _signers_ (defined by the delegating role): their signatures
 are needed when the role is changed.
 The default delegation structure includes only a `root` role and a `targets`
-role (delegated by root). The targets role can further delegate to other roles.  
+role (delegated by root). The targets role can further delegate to other roles.
 
 ## Usage
 
@@ -47,7 +47,7 @@ fetching, pushing or switching branches is not necessary: the tool will always u
 up-to-date signing event branch and when the signer decides to sign, the signature is
 automatically pushed to the signing event branch.
 
-### Accepting an invitation 
+### Accepting an invitation
 
 When a signing event pull request invites to become a signer:
 ```shell
@@ -77,10 +77,15 @@ git tools: the signing tool is not used. Artifact modification commits should ge
 branch on the repository (with a branch name starting with "sign/"): this creates a signing
 event for the artifact change allowing signers to sign that change.
 
-The role where the artifact belongs to is chosen with pathname: 
-* files in the targets directory are artifacts managed by top level role "targets" 
+The role where the artifact belongs to is chosen with pathname:
+* files in the targets directory are artifacts managed by top level role "targets"
+    * NB: only files in the top level `targets` directory are owned by the "targets" role
+      (so `targets/somefile` is owned by "targets", but `targets/somedir/otherfile` is not)
 * files in a subdirectory are artifacts of the role with the same name (so
   `targets/A/file.txt` is an artifact managed by role "A")
+    * NB: Four levels of directories are supported below each role directory
+     (so `targets/A/dir1/dir2/dir3/dir4/file.txt`) is owned by "A", but
+     `targets/A/dir1/dir2/dir3/dir4/dir5/file.txt` is not
 
 <details>
   <summary>Example</summary>
