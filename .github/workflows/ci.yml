@@ -8,20 +8,32 @@ on:
 permissions: {}
 
 jobs:
-  build-and-test:
+  test:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        toxenv: [lint-signer, lint-repo, test-signer, test-repo, test-e2e]
+    env:
+      TOXENV: ${{ matrix.toxenv }}
+
     steps:
     - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
 
     - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
       with:
-        python-version: "3.11"
+        python-version: '3.12'
         cache: 'pip'
-        cache-dependency-path: "**/pyproject.toml"
+        cache-dependency-path: |
+          signer/pyproject.toml
+          repo/pyproject.toml
+          repo/install/requirements.txt
+          build-constraints.txt
 
     - name: Install system dependencies for e2e test
+      if: matrix.toxenv == 'test-e2e'
       run: |
         sudo apt-get install libfaketime softhsm2
         echo "PYKCS11LIB=/usr/lib/softhsm/libsofthsm2.so" >> $GITHUB_ENV
@@ -29,11 +41,5 @@ jobs:
     - name: Install tox
       run: python -m pip install -c build-constraints.txt tox
 
-    - name: Lint
-      run: tox -m lint
-
-    - name: Repository unit tests
-      run: tox -e test-repo
-
-    - name: End-to-end tests
-      run: tox -e test-e2e
+    - name: ${{ matrix.toxenv }}
+      run: tox
