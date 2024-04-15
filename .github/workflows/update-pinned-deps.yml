@@ -72,3 +72,6 @@ jobs:
               head: process.env.BRANCH,
               base: "main",
             })
+
+  call-workflow-passing-data:
+    uses: ./.github/workflows/ci.yml
