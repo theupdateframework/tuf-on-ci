@@ -69,6 +69,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: "actions: Update pinned requirements",
+              body: "Note: close and reopen the PR to trigger CI.",
               head: process.env.BRANCH,
               base: "main",
             })
