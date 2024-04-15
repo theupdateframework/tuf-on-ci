@@ -72,3 +72,8 @@ jobs:
               head: process.env.BRANCH,
               base: "main",
             })
+
+  run-tests:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml
