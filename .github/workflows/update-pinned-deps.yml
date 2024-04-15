@@ -16,7 +16,7 @@ jobs:
     permissions:
       contents: write # for pushing a branch
       pull-requests: write
-
+      actions: write # for dispatching CI workflow
     steps:
       - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
 
@@ -58,17 +58,25 @@ jobs:
             echo "branch=$NAME" >> $GITHUB_OUTPUT
           fi
 
-      - name: Open pull request
+      - name: Open pull request, dispatch tests
         if: steps.push.outputs.pushed == 'true'
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
           BRANCH: ${{ steps.push.outputs.branch }}
         with:
           script: |
+            console.log('Creating PR')
             await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: "actions: Update pinned requirements",
               head: process.env.BRANCH,
               base: "main",
+            })
+            console.log('Dispatching CI workflow')
+            github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'ci.yml',
+              ref: process.env.BRANCH,
             })
