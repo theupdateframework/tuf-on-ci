@@ -104,6 +104,13 @@ Supported ways to configure and modify tuf-on-ci workflows:
   see [ONLINE-SIGNING-SETUP.md](ONLINE-SIGNING-SETUP.md) for details
 * A custom GitHub token can be optionally configured with _Repository Secret_
   `TUF_ON_CI_TOKEN`, see details below
+* Workflow failure messages can be configured with `.github/TUF_ON_CI_TEMPLATE/failure.md`:
+  Contents of this file will be included in issues that are opened if workflows fail. This is
+  useful to e.g. notify the maintenance team with @-mentions.
+* Signing pull request templates can be configured with
+  `.github/PULL_REQUEST_TEMPLATE/signing_event.md`. Contents of this file will be included in
+  the pull request message when non-maintainer signers contribute to signing events. This is
+  useful to e.g. notify the maintenance team with @-mentions.
 * The `publish` workflow can be customized to publish to a destination that is not
   the default GitHub Pages
 

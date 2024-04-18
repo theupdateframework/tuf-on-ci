@@ -19,6 +19,8 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
     - name: Update issue
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
       env:
@@ -26,7 +28,7 @@ runs:
       with:
         github-token: ${{ inputs.token }}
         script: |
-          var path = require("path")
+          const fs = require('fs')
 
           success = (process.env.SUCCESS == "true")
 
@@ -53,19 +55,22 @@ runs:
             body = `### Workflow run succeeded for ${context.workflow}.\n` +
                    `Successful run: ${run_url}\n\n` +
                    `Closing issue based on this success.`
-          } else if (issue_number){
-            body = `### Workflow run failed for ${context.workflow}.\n` +
-                   `Failed run: ${run_url}\n\n`
           } else {
             body = `### Workflow run failed for ${context.workflow}.\n` +
-                   `Failed run: ${run_url}\n\n` +
-                   "* Maintainers can re-run the failing job manually\n" +
-                   "* This issue will be automatically closed if a later run succeeds"
+                   `Failed run: ${run_url}\n\n`
           }
 
           // open, comment on, and close issue as needed
           if (!success && !issue_number) {
             console.log("update-issue: Opening a new issue on failure")
+            try {
+              body += fs.readFileSync(`.github/TUF_ON_CI_TEMPLATE/failure.md`).toString()
+            } catch(err) {
+              if (err.code != 'ENOENT') {
+                console.log(err)
+              }
+            }
+
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
