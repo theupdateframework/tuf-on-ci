@@ -45,13 +45,13 @@ runs:
         find build -type f | xargs ls -lh
       shell: bash
 
-    - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+    - uses: actions/upload-artifact@1746f4ab65b179e0ea60a494b83293b640dd5bba # v4.3.2
       if: inputs.gh_pages != 'true'
       with:
         name: metadata
         path: build/${{inputs.metadata_path}}/*
 
-    - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+    - uses: actions/upload-artifact@1746f4ab65b179e0ea60a494b83293b640dd5bba # v4.3.2
       if: inputs.gh_pages != 'true'
       with:
         name: artifacts
