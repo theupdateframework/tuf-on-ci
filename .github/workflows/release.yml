@@ -40,7 +40,7 @@ jobs:
       id-token: write # to authenticate as Trusted Publisher to pypi.org
     steps:
       - name: Fetch build artifacts
-        uses: actions/download-artifact@9c19ed7fe5d278cd354c7dfd5d3b88589c7e2395 # v4.1.6
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: signer-artifacts
           path: dist
@@ -57,7 +57,7 @@ jobs:
       contents: write # to modify GitHub releases
     steps:
       - name: Fetch build artifacts
-        uses: actions/download-artifact@9c19ed7fe5d278cd354c7dfd5d3b88589c7e2395 # v4.1.6
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: signer-artifacts
           path: dist
