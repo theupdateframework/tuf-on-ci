@@ -32,11 +32,13 @@ updates:
     interval: "weekly"
 
 - package-ecosystem: "github-actions"
-  directories:
+  directories:  
     - "/"
     - "/actions/create-signing-events/"
     - "/actions/online-sign/"
     - "/actions/signing-event/"
+    - "/actions/test-repository/"
+    - "/actions/update-issue/"
     - "/actions/upload-repository/"
   schedule:
     interval: "daily"
