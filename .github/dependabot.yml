@@ -31,33 +31,13 @@ updates:
   schedule:
     interval: "weekly"
 
-
 - package-ecosystem: "github-actions"
-  directory: "/"
-  schedule:
-    interval: "daily"
-    time: "10:25"
-
-- package-ecosystem: "github-actions"
-  directory: "actions/create-signing-events/"
-  schedule:
-    interval: "daily"
-    time: "10:25"
-
-- package-ecosystem: "github-actions"
-  directory: "actions/online-sign/"
-  schedule:
-    interval: "daily"
-    time: "10:25"
-
-- package-ecosystem: "github-actions"
-  directory: "actions/signing-event/"
-  schedule:
-    interval: "daily"
-    time: "10:25"
-
-- package-ecosystem: "github-actions"
-  directory: "actions/upload-repository/"
+  directories:
+    - "/"
+    - "/actions/create-signing-events/"
+    - "/actions/online-sign/"
+    - "/actions/signing-event/"
+    - "/actions/upload-repository/"
   schedule:
     interval: "daily"
     time: "10:25"
