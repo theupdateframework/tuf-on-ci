@@ -20,22 +20,14 @@ updates:
         - "tox"
 
 - package-ecosystem: "pip"
-  directory: "signer"
+  directories:
+    - "/signer"
+    - "/repo"
   schedule:
     interval: "weekly"
   groups:
     pyproject-dependencies:
-      # Dependency ranges set in pyproject.toml
-      patterns:
-        - "*"
-
-- package-ecosystem: "pip"
-  directory: "repo"
-  schedule:
-    interval: "weekly"
-  groups:
-    pyproject-dependencies:
-      # Dependency ranges set in pyproject.toml
+      # Dependency ranges set in {signer,repo}/pyproject.toml
       patterns:
         - "*"
 
