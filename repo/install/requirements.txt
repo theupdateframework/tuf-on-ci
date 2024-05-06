@@ -37,7 +37,7 @@ charset-normalizer==3.3.2
     # via requests
 click==8.1.7
     # via tuf-on-ci (repo/pyproject.toml)
-cryptography==42.0.6
+cryptography==42.0.7
     # via
     #   azure-identity
     #   azure-keyvault-keys
