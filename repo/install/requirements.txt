@@ -71,7 +71,7 @@ grpcio==1.63.0
     #   googleapis-common-protos
     #   grpc-google-iam-v1
     #   grpcio-status
-grpcio-status==1.62.2
+grpcio-status==1.63.0
     # via google-api-core
 grpclib==0.4.7
     # via betterproto
@@ -113,7 +113,7 @@ proto-plus==1.23.0
     # via
     #   google-api-core
     #   google-cloud-kms
-protobuf==4.25.3
+protobuf==5.26.1
     # via
     #   google-api-core
     #   google-cloud-kms
@@ -164,7 +164,7 @@ rsa==4.9
     # via google-auth
 s3transfer==0.10.1
     # via boto3
-securesystemslib==0.31.0
+securesystemslib==1.0.0
     # via
     #   sigstore
     #   tuf
@@ -173,14 +173,14 @@ sigstore==2.1.5
     # via securesystemslib
 sigstore-protobuf-specs==0.3.1
     # via sigstore
-sigstore-rekor-types==0.0.11
+sigstore-rekor-types==0.0.13
     # via sigstore
 six==1.16.0
     # via
     #   azure-core
     #   isodate
     #   python-dateutil
-tuf==3.1.1
+tuf==4.0.0
     # via
     #   sigstore
     #   tuf-on-ci (repo/pyproject.toml)
