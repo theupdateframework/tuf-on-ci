@@ -20,6 +20,13 @@ updates:
         - "tox"
 
 - package-ecosystem: "pip"
+  # Disabled: this is managed in update-pinned-dependencies.yml
+  directory: "/repo/install"
+  open-pull-requests-limit: 0
+  schedule:
+    interval: "weekly"
+
+- package-ecosystem: "pip"
   directories:
     - "/signer"
     - "/repo"
@@ -30,13 +37,6 @@ updates:
       # Dependency ranges set in {signer,repo}/pyproject.toml
       patterns:
         - "*"
-
-- package-ecosystem: "pip"
-  # Disabled: this is managed in update-pinned-dependencies.yml
-  directory: "repo/install"
-  open-pull-requests-limit: 0
-  schedule:
-    interval: "weekly"
 
 - package-ecosystem: "github-actions"
   directories:  
