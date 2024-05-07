@@ -4,19 +4,38 @@
 
 import logging
 import os
+import subprocess
+from datetime import UTC, datetime, timedelta
+from urllib import parse
 
 import click
-from tuf.api.metadata import Root, Targets
+from tuf.api.metadata import Root, Signed, Targets
 
 from tuf_on_ci._repository import CIRepository
+from tuf_on_ci._version import __version__
 
 logger = logging.getLogger(__name__)
+
+
+def _git(cmd: list[str]) -> subprocess.CompletedProcess:
+    cmd = [
+        "git",
+        "-c",
+        "user.name=tuf-on-ci",
+        "-c",
+        "user.email=41898282+github-actions[bot]@users.noreply.github.com",
+        *cmd,
+    ]
+    proc = subprocess.run(cmd, check=True, capture_output=True, text=True)
+    logger.debug("%s:\n%s", cmd, proc.stdout)
+    return proc
 
 
 def build_description(repo: CIRepository) -> str:
     lines = [
         "## Signers",
-        "| Role | required # of signatures | Signers |",
+        "",
+        "| Role | Next signing | Signers |",
         "| - | - | - |",
     ]
     root = repo.root()
@@ -40,7 +59,37 @@ def build_description(repo: CIRepository) -> str:
                 signers.append(key.unrecognized_fields["x-tuf-on-ci-keyowner"])
             else:
                 signers.append("_online key_")
-        lines.append(f"| {rolename} | {role.threshold} | {', '.join(signers)} |")
+
+        delegate: Signed = repo.open(rolename).signed
+        if rolename == "timestamp":
+            json_link = f"{rolename}.json"
+        else:
+            json_link = f"{delegate.version}.{rolename}.json"
+        expiry = delegate.expires
+        signing_days, _ = repo.signing_expiry_period(rolename)
+        signing = expiry - timedelta(days=signing_days)
+        name_str = f"{rolename} ([json]({json_link}))"
+        date_str = f"[Starts {signing.strftime('%Y-%m-%d')}](## '{signing} - {expiry}')"
+        signer_str = f"{role.threshold} of {', '.join(signers)}"
+
+        lines.append(
+            f"| {name_str} | {date_str} | {signer_str} |"
+        )
+
+    now = datetime.now(UTC).isoformat(timespec="minutes")
+    head = _git(["rev-parse", "HEAD"]).stdout.strip()
+
+    url = parse.urlparse(_git(["config", "--get", "remote.origin.url"]).stdout.strip())
+    owner_project = url.path.removesuffix(".git")
+    _, _, project = owner_project.rpartition("/")
+    project_link = f"https://github.com{owner_project}"
+
+    commit_link = f"[{head[:7]}]({project_link}/tree/{head})"
+    tuf_on_ci_url = "https://github.com/theupdateframework/tuf-on-ci"
+
+    lines.append(f"\n_Generated {now} from")
+    lines.append(f"[{project}]({project_link}) commit {commit_link}")
+    lines.append(f"by [TUF-on-CI]({tuf_on_ci_url}) v{__version__}._")
 
     return "\n".join(lines)
 
