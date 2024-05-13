@@ -33,7 +33,7 @@ def _git(cmd: list[str]) -> subprocess.CompletedProcess:
 
 def build_description(repo: CIRepository) -> str:
     lines = [
-        "## Signers",
+        "## TUF Repository state",
         "",
         "| Role | Next signing | Signers |",
         "| - | - | - |",
@@ -72,9 +72,7 @@ def build_description(repo: CIRepository) -> str:
         date_str = f"[Starts {signing.strftime('%Y-%m-%d')}](## '{signing} - {expiry}')"
         signer_str = f"{role.threshold} of {', '.join(signers)}"
 
-        lines.append(
-            f"| {name_str} | {date_str} | {signer_str} |"
-        )
+        lines.append(f"| {name_str} | {date_str} | {signer_str} |")
 
     now = datetime.now(UTC).isoformat(timespec="minutes")
     head = _git(["rev-parse", "HEAD"]).stdout.strip()
