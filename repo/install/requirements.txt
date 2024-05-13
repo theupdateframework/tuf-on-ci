@@ -171,7 +171,7 @@ securesystemslib==0.31.0
     #   tuf-on-ci (repo/pyproject.toml)
 sigstore==2.1.5
     # via securesystemslib
-sigstore-protobuf-specs==0.3.1
+sigstore-protobuf-specs==0.3.2
     # via sigstore
 sigstore-rekor-types==0.0.11
     # via sigstore
