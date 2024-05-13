@@ -56,7 +56,7 @@ google-auth==2.29.0
     # via
     #   google-api-core
     #   google-cloud-kms
-google-cloud-kms==2.21.4
+google-cloud-kms==2.22.0
     # via securesystemslib
 googleapis-common-protos==1.63.0
     # via
