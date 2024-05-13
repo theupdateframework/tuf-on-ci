@@ -113,7 +113,7 @@ proto-plus==1.23.0
     # via
     #   google-api-core
     #   google-cloud-kms
-protobuf==4.25.3
+protobuf==5.26.1
     # via
     #   google-api-core
     #   google-cloud-kms
