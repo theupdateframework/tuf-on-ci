@@ -55,10 +55,8 @@ def build_description(repo: CIRepository) -> str:
         keys = [delegator.get_key(keyid) for keyid in role.keyids]
         signers = []
         for key in keys:
-            if "x-tuf-on-ci-keyowner" in key.unrecognized_fields:
-                signers.append(key.unrecognized_fields["x-tuf-on-ci-keyowner"])
-            else:
-                signers.append("_online key_")
+            owner = key.unrecognized_fields.get("x-tuf-on-ci-keyowner", "_online key_")
+            signers.append(owner)
 
         delegate: Signed = repo.open(rolename).signed
         if rolename == "timestamp":
@@ -68,9 +66,11 @@ def build_description(repo: CIRepository) -> str:
         expiry = delegate.expires
         signing_days, _ = repo.signing_expiry_period(rolename)
         signing = expiry - timedelta(days=signing_days)
+
         name_str = f"{rolename} ([json]({json_link}))"
         date_str = f"[Starts {signing.strftime('%Y-%m-%d')}](## '{signing} - {expiry}')"
-        signer_str = f"{role.threshold} of {', '.join(signers)}"
+        threshold_str = f"{role.threshold} of {len(signers)}"
+        signer_str = f"{', '.join(signers)} ({threshold_str} required)"
 
         lines.append(f"| {name_str} | {date_str} | {signer_str} |")
 
