@@ -180,7 +180,7 @@ six==1.16.0
     #   azure-core
     #   isodate
     #   python-dateutil
-tuf==3.1.1
+tuf==5.0.0
     # via
     #   sigstore
     #   tuf-on-ci (repo/pyproject.toml)
