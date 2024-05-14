@@ -33,7 +33,7 @@ lint = [
 ]
 
 [tool.hatch.version]
-path = "tuf_on_ci/__init__.py"
+path = "tuf_on_ci/_version.py"
 
 [[tool.mypy.overrides]]
 module = [
