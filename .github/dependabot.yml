@@ -50,3 +50,7 @@ updates:
   schedule:
     interval: "daily"
     time: "10:25"
+  groups:
+    actions-dependencies:
+      patterns:
+        - "*"
