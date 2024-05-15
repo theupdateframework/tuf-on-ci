@@ -20,10 +20,10 @@ jobs:
           python-version: '3.12'
 
       - name: Install build dependencies
-        run: python3 -m pip install -c build-constraints.txt build
+        run: python3 -m pip install -c build/build-constraints.txt build
 
       - name: Build binary wheel and source tarball
-        run: PIP_CONSTRAINT=build-constraints.txt python3 -m build --sdist --wheel --outdir dist/ signer/
+        run: PIP_CONSTRAINT=build/build-constraints.txt python3 -m build --sdist --wheel --outdir dist/ signer/
 
       - name: Store build artifacts
         uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
