@@ -2,29 +2,14 @@ version: 2
 updates:
 
 - package-ecosystem: "pip"
-  directory: "/"
+  directory: "/build"
   schedule:
     interval: "weekly"
   groups:
     build-dependencies:
-      # Critical build/release dependencies
+      # Critical build/release dependencies constrained in build/build-constraints.txt
       patterns:
-        - "build"
-        - "hatchling"
-        - "pip-tools"
-    test-dependencies:
-      # Python dependencies that are only pinned to ensure test reproducibility
-      patterns:
-        - "mypy"
-        - "ruff"
-        - "tox"
-
-- package-ecosystem: "pip"
-  # Disabled: this is managed in update-pinned-dependencies.yml
-  directory: "/repo/install"
-  open-pull-requests-limit: 0
-  schedule:
-    interval: "weekly"
+        - "*"
 
 - package-ecosystem: "pip"
   directories:
@@ -33,8 +18,13 @@ updates:
   schedule:
     interval: "weekly"
   groups:
-    pyproject-dependencies:
-      # Dependency ranges set in {signer,repo}/pyproject.toml
+    pinned-test-dependencies:
+      # Dependencies pinned in {signer,repo}/pyproject.toml to ensure test reproducibility
+      patterns:
+        - "mypy"
+        - "ruff"
+    minimum-runtime-dependencies:
+      # Runtime dependency ranges set in {signer,repo}/pyproject.toml
       patterns:
         - "*"
 
@@ -48,8 +38,7 @@ updates:
     - "/actions/update-issue/"
     - "/actions/upload-repository/"
   schedule:
-    interval: "daily"
-    time: "10:25"
+    interval: "weekly"
   groups:
     actions-dependencies:
       patterns:

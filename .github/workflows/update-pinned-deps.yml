@@ -25,12 +25,12 @@ jobs:
           python-version: '3.12'
 
       - name: Install pip-tools
-        run: pip install -c build-constraints.txt pip-tools
+        run: pip install -c build/build-constraints.txt pip-tools
 
-      - name: Update repo/install/requirements.txt
+      - name: Update action-constraints.txt
         id: update
         run: |
-          pip-compile --strip-extras --upgrade --output-file repo/install/requirements.txt repo/pyproject.toml
+          pip-compile --strip-extras --upgrade --output-file action-constraints.txt repo/pyproject.toml
           if git diff --quiet; then
             echo "No dependency updates."
             echo "updated=false" >> $GITHUB_OUTPUT
@@ -44,9 +44,9 @@ jobs:
         run: |
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
-          git add repo/install/requirements.txt
+          git add action-constraints.txt
           git commit -m "repo: Update pinned requirements"
-          SHA=$(sha256sum repo/install/requirements.txt)
+          SHA=$(sha256sum action-constraints.txt)
           NAME="pin-requirements/${SHA:0:7}"
           if git ls-remote --exit-code origin $NAME; then
             echo "Branch $NAME exists, nothing to do."
