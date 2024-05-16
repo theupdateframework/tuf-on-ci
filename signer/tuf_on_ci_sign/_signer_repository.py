@@ -14,6 +14,8 @@ from glob import glob
 
 import click
 from securesystemslib.exceptions import UnverifiedSignatureError
+from securesystemslib.formats import encode_canonical
+from securesystemslib.hash import digest
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
     SIGNER_FOR_URI_SCHEME,
@@ -95,6 +97,15 @@ def _find_changed_roles(known_good_dir: str, signing_event_dir: str) -> list[str
             changed_roles.insert(0, toplevel)
 
     return changed_roles
+
+
+def set_key_field(key: Key, name: str, value: str) -> None:
+    key.unrecognized_fields[f"x-tuf-on-ci-{name}"] = value
+    # This is dumb but TUF spec requires the keyid to change at this point
+    data: bytes = encode_canonical(key.to_dict()).encode()
+    hasher = digest("sha256")
+    hasher.update(data)
+    key.keyid = hasher.hexdigest()
 
 
 class SignerRepository(Repository):
@@ -547,7 +558,7 @@ class SignerRepository(Repository):
                 and rolename in self._invites[self.user.name]
             )
             if invited and signing_key:
-                signing_key.unrecognized_fields["x-tuf-on-ci-keyowner"] = self.user.name
+                set_key_field(signing_key, "keyowner", self.user.name)
                 delegator.add_key(signing_key, rolename)
 
                 self._invites[self.user.name].remove(rolename)

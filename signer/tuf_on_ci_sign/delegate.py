@@ -33,6 +33,7 @@ from tuf_on_ci_sign._signer_repository import (
     OnlineConfig,
     SignerRepository,
     SignerState,
+    set_key_field,
 )
 from tuf_on_ci_sign._user import User
 
@@ -127,7 +128,7 @@ def _sigstore_import(pull_remote: str) -> Key:
     key = SigstoreKey(
         "abcd", "sigstore-oidc", "Fulcio", {"issuer": issuer, "identity": id}
     )
-    key.unrecognized_fields["x-tuf-on-ci-online-uri"] = "sigstore:"
+    set_key_field(key, "online-uri", "sigstore:")
     return key
 
 
@@ -201,7 +202,7 @@ def _collect_online_key(user_config: User) -> Key:
             key_id = _collect_string("Enter a Google Cloud KMS key id")
             try:
                 uri, key = GCPSigner.import_(key_id)
-                key.unrecognized_fields["x-tuf-on-ci-online-uri"] = uri
+                set_key_field(key, "online-uri", uri)
                 return key
             except Exception as e:
                 raise click.ClickException(
@@ -212,7 +213,7 @@ def _collect_online_key(user_config: User) -> Key:
             key_name = _collect_string("Enter key name")
             try:
                 uri, key = AzureSigner.import_(vault_name, key_name)
-                key.unrecognized_fields["x-tuf-on-ci-online-uri"] = uri
+                set_key_field(key, "online-uri", uri)
                 return key
             except Exception as e:
                 raise click.ClickException(
@@ -223,7 +224,7 @@ def _collect_online_key(user_config: User) -> Key:
             scheme = _collect_key_scheme()
             try:
                 uri, key = AWSSigner.import_(key_id, scheme)
-                key.unrecognized_fields["x-tuf-on-ci-online-uri"] = uri
+                set_key_field(key, "online-uri", uri)
                 return key
             except Exception as e:
                 raise click.ClickException(f"Failed to read AWS KMS key: {e}") from e
