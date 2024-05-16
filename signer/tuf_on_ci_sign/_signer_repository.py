@@ -742,24 +742,26 @@ class SignerRepository(Repository):
     def sign(self, rolename: str):
         """Sign without payload changes"""
         md = self.open(rolename)
+        signing_keys: dict[str, Key] = {}
         for key in self._get_keys(rolename):
             keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
             if keyowner == self.user.name:
-                self._sign(rolename, md, key)
-                self._write(rolename, md)
-                return
+                signing_keys[key.keyid] = key
 
-        # Root is eligible to sign current root if the signer was valid
+        # user is also eligible to sign current root if the signer was valid
         # in previous version
         if rolename == "root":
             for key in self._get_keys(rolename, True):
                 keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
                 if keyowner == self.user.name:
-                    self._sign(rolename, md, key)
-                    self._write(rolename, md)
-                    return
+                    signing_keys[key.keyid] = key
 
-        raise ValueError(f"{rolename} signing key for {self.user.name} not found")
+        if not signing_keys:
+            raise ValueError(f"{rolename} signing key for {self.user.name} not found")
+
+        for key in signing_keys.values():
+            self._sign(rolename, md, key)
+        self._write(rolename, md)
 
 
 def build_paths(rolename: str, depth: int) -> list[str]:
