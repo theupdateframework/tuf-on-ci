@@ -203,7 +203,7 @@ def _collect_online_key(user_config: User) -> Key:
                 uri, key = GCPSigner.import_(key_id)
                 key.unrecognized_fields["x-tuf-on-ci-online-uri"] = uri
                 return key
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 raise click.ClickException(
                     f"Failed to read Google Cloud KMS key: {e}"
                 ) from e
@@ -214,7 +214,7 @@ def _collect_online_key(user_config: User) -> Key:
                 uri, key = AzureSigner.import_(vault_name, key_name)
                 key.unrecognized_fields["x-tuf-on-ci-online-uri"] = uri
                 return key
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 raise click.ClickException(
                     f"Failed to read Azure Keyvault key: {e}"
                 ) from e
@@ -225,7 +225,7 @@ def _collect_online_key(user_config: User) -> Key:
                 uri, key = AWSSigner.import_(key_id, scheme)
                 key.unrecognized_fields["x-tuf-on-ci-online-uri"] = uri
                 return key
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 raise click.ClickException(f"Failed to read AWS KMS key: {e}") from e
         if choice == 0:
             # This could be generic support, but for now it's a hidden test key.
