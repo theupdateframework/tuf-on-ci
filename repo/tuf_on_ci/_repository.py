@@ -498,20 +498,31 @@ class CIRepository(Repository):
         dst_path = os.path.join(metadata_path, f"{snapshot.version}.snapshot.json")
         shutil.copy(os.path.join(self._dir, "snapshot.json"), dst_path)
 
-        for filename, metafile in snapshot.meta.items():
+        # Include all targets/artifacts that are part of the delegation tree
+        delegated_roles = ["targets"]
+        while delegated_roles:
+            rolename = delegated_roles.pop()
+            filename = f"{rolename}.json"
+            role = self.targets(rolename)
+
+            # copy delegated targets role metadata
             src_path = os.path.join(self._dir, filename)
-            dst_path = os.path.join(metadata_path, f"{metafile.version}.{filename}")
+            dst_path = os.path.join(metadata_path, f"{role.version}.{filename}")
             shutil.copy(src_path, dst_path)
 
             if artifact_path:
-                targets = self.targets(filename[: -len(".json")])
-                for target in targets.targets.values():
-                    role, sep, name = target.path.rpartition("/")
-                    os.makedirs(os.path.join(artifact_path, role), exist_ok=True)
-                    src_path = os.path.join(self._dir, "..", "targets", role, name)
+                # copy artifacts
+                for target in role.targets.values():
+                    rdir, sep, name = target.path.rpartition("/")
+                    os.makedirs(os.path.join(artifact_path, rdir), exist_ok=True)
+                    src_path = os.path.join(self._dir, "..", "targets", rdir, name)
                     for hash in target.hashes.values():
-                        dst_path = os.path.join(artifact_path, role, f"{hash}.{name}")
+                        dst_path = os.path.join(artifact_path, rdir, f"{hash}.{name}")
                         shutil.copy(src_path, dst_path)
+
+            # Add delegated roles
+            if role.delegations and role.delegations.roles:
+                delegated_roles.extend(role.delegations.roles.keys())
 
     def bump_expiring(self, rolename: str) -> int | None:
         """Create a new version of role if it is about to expire"""
