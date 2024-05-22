@@ -34,7 +34,7 @@ def expiry_check(dir: str, role: str, timestamp: int):
 @click.option("-u", "--update-base-url", type=str)
 @click.option("-r", "--initial-root", type=str)
 @click.option("-e", "--expected-artifact", type=str)
-@click.option("--compare-source/--no-compare-source", default=True)
+@click.option("-c", "--compare-source", type=str)
 @click.option("-t", "--time", type=int)
 @click.option("-o", "--offline-time", type=int)
 @click.option("-d", "--metadata-dir", type=str)
@@ -45,7 +45,7 @@ def client(
     update_base_url: str | None,
     initial_root: str | None,
     expected_artifact: str | None,
-    compare_source: bool,
+    compare_source: str | None,
     time: int | None,
     offline_time: int | None,
     metadata_dir: str | None,
@@ -101,7 +101,7 @@ def client(
             # Compare received metadata versions with source metadata
             for f in ["root.json", "timestamp.json"]:
                 client_file = os.path.join(metadata_dir, f)
-                source_file = os.path.join("metadata", f)
+                source_file = os.path.join(compare_source, f)
                 if not cmp(source_file, client_file, shallow=False):
                     sys.exit(f"Error: metadata does not match sources: {f} failed")
             print("Client metadata matches sources: OK")

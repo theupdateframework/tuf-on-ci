@@ -45,6 +45,7 @@ runs:
       if: inputs.compare_source == 'true'
       with:
         ref: "publish"
+        path: "source/"
 
     - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
       with:
@@ -93,9 +94,9 @@ runs:
         fi
 
         if [ "$COMPARE_SOURCE" = "true" ]; then
-          COMPARE_SOURCE_ARG="--compare-source"
+          COMPARE_SOURCE_ARG="--compare-source source/metadata"
         else
-          COMPARE_SOURCE_ARG="--no-compare-source"
+          COMPARE_SOURCE_ARG=""
         fi
 
         if [ $VALID_DAYS -eq 0 ]; then
