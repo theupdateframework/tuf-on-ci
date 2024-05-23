@@ -9,8 +9,6 @@ import re
 from copy import deepcopy
 
 import click
-from securesystemslib.formats import encode_canonical
-from securesystemslib.hash import digest
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
     AWSSigner,
@@ -31,7 +29,6 @@ from tuf_on_ci_sign._common import (
     signing_event,
 )
 from tuf_on_ci_sign._signer_repository import (
-    AbortEdit,
     OfflineConfig,
     OnlineConfig,
     SignerRepository,
@@ -337,68 +334,6 @@ def _update_offline_role(repo: SignerRepository, role: str) -> bool:
     return True
 
 
-def _force_compliant_keyids(repo: SignerRepository, rolename: str) -> bool:
-    """Hidden feature to fix issue #294.
-
-    Requires resigning with care: Root signatures should be duplicated for new and old
-    keyids."""
-
-    def _calculate_keyid(key: Key) -> str:
-        data: bytes = encode_canonical(key.to_dict()).encode()
-        hasher = digest("sha256")
-        hasher.update(data)
-        return hasher.hexdigest()
-
-    changed = False
-    delegates = set()
-    if rolename == "root":
-        with repo.edit_root() as root:
-            for key in list(root.keys.values()):
-                compliant_keyid = _calculate_keyid(key)
-                if key.keyid == compliant_keyid:
-                    continue
-                # Update keyid in all roles
-                for rolename, role in root.roles.items():
-                    for i, id in enumerate(role.keyids):
-                        if id == key.keyid:
-                            role.keyids[i] = compliant_keyid
-                            if rolename == "targets":
-                                delegates.add(rolename)
-
-                # update the actual key
-                del root.keys[key.keyid]
-                key.keyid = compliant_keyid
-                root.keys[key.keyid] = key
-
-                changed = True
-    elif rolename == "targets":
-        with repo.edit_targets() as targets:
-            if not targets.delegations or not targets.delegations.roles:
-                raise AbortEdit
-            for key in list(targets.delegations.keys.values()):
-                compliant_keyid = _calculate_keyid(key)
-                if key.keyid == compliant_keyid:
-                    continue
-                # Update keyid in the key and all roles
-                for rolename, role in targets.delegations.roles.items():
-                    for i, id in enumerate(role.keyids):
-                        if id == key.keyid:
-                            role.keyids[i] = compliant_keyid
-                            delegates.add(rolename)
-                # update the actual key
-                del targets.delegations.keys[key.keyid]
-                key.keyid = compliant_keyid
-                targets.delegations.keys[key.keyid] = key
-                changed = True
-
-    for delegate in delegates:
-        # Force resigning of delegates
-        with repo.edit_targets(delegate):
-            pass
-
-    return changed
-
-
 @click.command()  # type: ignore[arg-type]
 @click.version_option()
 @click.option("-v", "--verbose", count=True, default=0)
@@ -430,7 +365,7 @@ def delegate(
                 role = click.prompt(bold("Enter name of role to modify"))
 
             if force_compliant_keyids:
-                changed = _force_compliant_keyids(repo, role)
+                changed = repo.force_compliant_keyids(role)
             elif role in ["timestamp", "snapshot"]:
                 changed = _update_online_roles(repo)
             else:

@@ -2,6 +2,7 @@
 
 """Internal repository module for TUF-on-CI signer tools"""
 
+import copy
 import filecmp
 import json
 import logging
@@ -739,6 +740,21 @@ class SignerRepository(Repository):
 
         return "\n".join(output)
 
+    def _get_legacy_root_key(self, key: Key) -> Key | None:
+        # calculate keyid _without custom metadata_, then lookup key from known good
+        # root keys. This is useful in import situation where the legacy key does not
+        # have the custom metadata but is otherwise the same key
+        def _calculate_keyid(key: Key) -> str:
+            data: bytes = encode_canonical(key.to_dict()).encode()
+            hasher = digest("sha256")
+            hasher.update(data)
+            return hasher.hexdigest()
+
+        test_key = copy.deepcopy(key)
+        del test_key.unrecognized_fields["x-tuf-on-ci-keyowner"]
+        legacy_keyid = _calculate_keyid(test_key)
+        return self._known_good_root().keys.get(legacy_keyid)
+
     def sign(self, rolename: str):
         """Sign without payload changes"""
         md = self.open(rolename)
@@ -748,9 +764,16 @@ class SignerRepository(Repository):
             if keyowner == self.user.name:
                 signing_keys[key.keyid] = key
 
-        # user is also eligible to sign current root if the signer was valid
-        # in previous version
         if rolename == "root":
+            # special case for import: if the same key was used with different keyid
+            # we want to sign with that keyid too
+            for key in list(signing_keys.values()):
+                legacy_key = self._get_legacy_root_key(key)
+                if legacy_key:
+                    signing_keys[legacy_key.keyid] = legacy_key
+
+            # user is also eligible to sign current root if they were a signer
+            # in previous version
             for key in self._get_keys(rolename, True):
                 keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
                 if keyowner == self.user.name:
@@ -762,6 +785,72 @@ class SignerRepository(Repository):
         for key in signing_keys.values():
             self._sign(rolename, md, key)
         self._write(rolename, md)
+
+    def force_compliant_keyids(self, rolename: str) -> bool:
+        """Make all keyids defined in rolename spec compliant
+
+        This is a hidden feature to fix issue #294. It updates all keyids defined
+        in the role so that they are spec compliant: this means changes in the
+        delegated roles that use the keyids and requires resigning the metadata
+        of those roles.
+
+        Requires resigning with care: Root signatures should be duplicated for new and
+        old keyids."""
+
+        def _calculate_keyid(key: Key) -> str:
+            data: bytes = encode_canonical(key.to_dict()).encode()
+            hasher = digest("sha256")
+            hasher.update(data)
+            return hasher.hexdigest()
+
+        changed = False
+        delegates = set()
+        if rolename == "root":
+            with self.edit_root() as root:
+                for key in list(root.keys.values()):
+                    compliant_keyid = _calculate_keyid(key)
+                    if key.keyid == compliant_keyid:
+                        continue
+                    # Update keyid in all roles
+                    for rolename, role in root.roles.items():
+                        for i, id in enumerate(role.keyids):
+                            if id == key.keyid:
+                                role.keyids[i] = compliant_keyid
+                                if rolename == "targets":
+                                    delegates.add(rolename)
+
+                    # update the actual key
+                    del root.keys[key.keyid]
+                    key.keyid = compliant_keyid
+                    root.keys[key.keyid] = key
+
+                    changed = True
+        elif rolename == "targets":
+            with self.edit_targets() as targets:
+                if not targets.delegations or not targets.delegations.roles:
+                    raise AbortEdit
+                for key in list(targets.delegations.keys.values()):
+                    compliant_keyid = _calculate_keyid(key)
+                    if key.keyid == compliant_keyid:
+                        continue
+                    # Update keyid in the key and all roles
+                    for rolename, role in targets.delegations.roles.items():
+                        for i, id in enumerate(role.keyids):
+                            if id == key.keyid:
+                                role.keyids[i] = compliant_keyid
+                                delegates.add(rolename)
+                    # update the actual key
+                    del targets.delegations.keys[key.keyid]
+                    key.keyid = compliant_keyid
+                    targets.delegations.keys[key.keyid] = key
+                    changed = True
+
+        for delegate in delegates:
+            # Force resigning of delegates
+            with self.edit_targets(delegate):
+                pass
+
+        return changed
 
 
 def build_paths(rolename: str, depth: int) -> list[str]:
