@@ -22,14 +22,18 @@ jobs:
       - name: Install build dependencies
         run: python3 -m pip install -c build/build-constraints.txt build
 
-      - name: Build binary wheel and source tarball
-        run: PIP_CONSTRAINT=build/build-constraints.txt python3 -m build --sdist --wheel --outdir dist/ signer/
+      - name: Build release changelog, signer wheel & source tarball
+        run: |
+          PIP_CONSTRAINT=build/build-constraints.txt python3 -m build --sdist --wheel --outdir dist/ signer/
+          awk "/## $GITHUB_REF_NAME/{flag=1; next} /## v/{flag=0} flag" docs/CHANGELOG.md > changelog
 
       - name: Store build artifacts
         uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
-          name: signer-artifacts
-          path: dist
+          name: build-artifacts
+          path: |
+            dist
+            changelog
 
   release-pypi:
     name: Release Signer on PyPI
@@ -42,8 +46,7 @@ jobs:
       - name: Fetch build artifacts
         uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
-          name: signer-artifacts
-          path: dist
+          name: build-artifacts
 
       - name: Publish binary wheel and source tarball on PyPI
         if: github.repository == 'theupdateframework/tuf-on-ci'
@@ -59,8 +62,7 @@ jobs:
       - name: Fetch build artifacts
         uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
-          name: signer-artifacts
-          path: dist
+          name: build-artifacts
 
       - name: Make a GitHub release
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
@@ -72,9 +74,7 @@ jobs:
               repo: context.repo.repo,
               name: '${{ github.ref_name }}',
               tag_name: '${{ github.ref }}',
-              body: 'See [CHANGELOG.md](https://github.com/' +
-                     context.repo.owner + '/' + context.repo.repo +
-                    '/blob/${{ github.ref_name }}/docs/CHANGELOG.md) for details.'
+              body: fs.readFileSync('changelog', 'utf8'),
             })
             fs.readdirSync('dist/').forEach(file => {
               github.rest.repos.uploadReleaseAsset({
