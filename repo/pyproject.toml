@@ -11,8 +11,8 @@ name = "tuf-on-ci"
 description = "TUF-on-CI repository tools, intended to be executed on a CI system"
 readme = "README.md"
 dependencies = [
-  "securesystemslib[awskms, azurekms, gcpkms, sigstore, pynacl] ~= 0.31.0",
-  "tuf ~= 3.1",
+  "securesystemslib[awskms, azurekms, gcpkms, sigstore, pynacl] ~= 1.0.0",
+  "tuf ~= 5.0",
   "click ~= 8.1",
 ]
 requires-python = ">=3.10"
@@ -29,7 +29,7 @@ tuf-on-ci-update-targets = "tuf_on_ci:update_targets"
 [project.optional-dependencies]
 lint = [
   "mypy == 1.10.0",
-  "ruff == 0.4.4",
+  "ruff == 0.4.5",
 ]
 
 [tool.hatch.version]
