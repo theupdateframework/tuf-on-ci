@@ -162,6 +162,7 @@ def import_repo(verbose: int, push: bool, event_name: str, import_file: str | No
                     ok = _update_keys(root.keys, role_data) and ok
                     if not ok:
                         raise AbortEdit("Missing values")
+
             else:
                 with repo.edit_targets(rolename) as targets:
                     ok = _update_expiry(targets, role_data) and ok
@@ -171,6 +172,10 @@ def import_repo(verbose: int, push: bool, event_name: str, import_file: str | No
                         ok = _update_keys(targets.delegations.keys, role_data) and ok
                     if not ok:
                         raise AbortEdit("Missing values")
+
+        # we have updated keys defined in root/targets: make sure keyids are compliant
+        repo.force_compliant_keyids("root")
+        repo.force_compliant_keyids("targets")
 
         if not ok:
             print("Error: Undefined values found. please save this in a file,")

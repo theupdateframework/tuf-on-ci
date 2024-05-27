@@ -338,9 +338,16 @@ def _update_offline_role(repo: SignerRepository, role: str) -> bool:
 @click.version_option()
 @click.option("-v", "--verbose", count=True, default=0)
 @click.option("--push/--no-push", default=True)
+@click.option("--force-compliant-keyids", hidden=True, is_flag=True)
 @click.argument("event-name", metavar="SIGNING-EVENT")
 @click.argument("role", required=False)
-def delegate(verbose: int, push: bool, event_name: str, role: str | None):
+def delegate(
+    verbose: int,
+    push: bool,
+    force_compliant_keyids: bool,
+    event_name: str,
+    role: str | None,
+):
     """Tool for modifying TUF-on-CI delegations."""
     logging.basicConfig(level=logging.WARNING - verbose * 10)
 
@@ -357,7 +364,9 @@ def delegate(verbose: int, push: bool, event_name: str, role: str | None):
             if role is None:
                 role = click.prompt(bold("Enter name of role to modify"))
 
-            if role in ["timestamp", "snapshot"]:
+            if force_compliant_keyids:
+                changed = repo.force_compliant_keyids(role)
+            elif role in ["timestamp", "snapshot"]:
                 changed = _update_online_roles(repo)
             else:
                 changed = _update_offline_role(repo, role)
@@ -381,7 +390,6 @@ def delegate(verbose: int, push: bool, event_name: str, role: str | None):
                 git_expect(
                     ["commit", "-m", f"Signed by {user_config.name}", "--signoff"]
                 )
-
             if push:
                 push_changes(user_config, event_name, msg)
             else:
