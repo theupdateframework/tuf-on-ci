@@ -2,6 +2,36 @@
 
 ## Unreleased
 
+## v0.10.0
+
+Release includes several new features. It also fixes an issue with TUF keyids,
+see issue #292 (note that existing keyids are not automatically made compliant:
+`tuf-on-ci-delegate --force-compliant-keyids` can be used in a signing event to
+make that happen).
+
+GitHub workflows require no changes (but you may want to add a
+`.github/TUF_ON_CI_TEMPLATE/failure.md` file, see below).
+
+**Changes**
+
+* Artifact directories can now be up to 5 levels deep (#238)
+* actions: All action requirements are now version pinned (#248)
+* actions: `.github/TUF_ON_CI_TEMPLATE/failure.md` can now be used to
+  define custom content for workflow failure issues (#270)
+* `build-repository` action: A human readable repository description
+  is generated in index.html in the published metadata dir (#313)
+
+**Fixes**
+
+* signer: keyid generation was fixed to be specification compliant (#294)
+  * A feature was added to fix noncompliant keyids in repositories
+    where they non-compliant keyids already present (#338)
+* `test-repository` action: Use a better default artifact-url (#275),
+  handle a initial root in more cases (#346)
+* `build-repository` action: Delegation tree is now used to decide which
+  metadata to include in published repo (#344)
+* tuf minimum dependency is now correctly set to 3.1 (#329)
+
 ## v0.9.0
 
 GitHub Actions users are adviced to upgrade for safer dependency
