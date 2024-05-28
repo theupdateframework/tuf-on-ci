@@ -54,7 +54,12 @@ def create_signing_events(verbose: int, push: bool) -> None:
         msg = f"Periodic version bump: {rolename} v{version}"
         event = f"sign/{rolename}-v{version}"
         ref = f"refs/remotes/origin/{event}" if push else f"refs/heads/{event}"
-        _git(["commit", "-m", msg, "--signoff", "--", f"metadata/{rolename}.json"])
+        files = [f"metadata/{rolename}.json"]
+        if rolename == "root":
+            files.append(f"metadata/root_history/{version}.root.json")
+
+        _git(["add", "--", *files])
+        _git(["commit", "-m", msg, "--signoff"])
         try:
             _git(["show-ref", "--quiet", "--verify", ref])
             logging.debug("Signing event branch %s already exists", event)

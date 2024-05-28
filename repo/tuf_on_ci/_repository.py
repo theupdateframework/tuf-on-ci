@@ -191,6 +191,18 @@ class CIRepository(Repository):
 
         return (signing_days, expiry_days)
 
+    def _write(self, rolename: str, md: Metadata) -> None:
+        filename = self._get_filename(rolename)
+        data = md.to_bytes(JSONSerializer())
+        with open(filename, "wb") as f:
+            f.write(data)
+
+        # For root, also store the versioned file
+        if rolename == "root":
+            fname = f"{md.signed.version}.root.json"
+            with open(os.path.join(self._dir, "root_history", fname), "wb") as f:
+                f.write(data)
+
     def close(self, rolename: str, md: Metadata) -> None:
         """Write metadata to a file in repo dir
 
@@ -217,10 +229,7 @@ class CIRepository(Repository):
             # repository should never write unsigned online roles
             root_md.verify_delegate(rolename, md)
 
-        filename = self._get_filename(rolename)
-        data = md.to_bytes(JSONSerializer())
-        with open(filename, "wb") as f:
-            f.write(data)
+        self._write(rolename, md)
 
     @property
     def targets_infos(self) -> dict[str, MetaFile]:
