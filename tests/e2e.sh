@@ -237,6 +237,42 @@ signer_init_shorter_snapshot_expiry()
     done | tuf-on-ci-delegate $EVENT >> $SIGNER_DIR/out 2>&1
 }
 
+signer_init_offline_roles_in_signing_period()
+{
+    # run tuf-on-ci-delegate: creates a commit, pushes it to remote branch
+    USER=$1
+    EVENT=$2
+
+    SIGNER_DIR="$WORK_DIR/$TEST_NAME/$USER"
+    SIGNER_GIT="$SIGNER_DIR/git"
+    export SOFTHSM2_CONF="$SIGNER_DIR/softhsm2.conf"
+
+    INPUT=(
+        "2"                 # Configure root ? [2:configure expiry]
+        "7"                 # Enter root expiry period
+        "6"                 # Enter root signing period
+        ""                  # Configure root ? [enter to continue]
+        "2"                 # Configure targets ? [2:configure expiry]
+        "7"                 # Enter targets expiry period
+        "6"                 # Enter targets signing period
+        ""                  # Configure targets ? [enter to continue]
+        "1"                 # Configure online roles? [1: configure key]
+        "0"                 # Enter online key type
+        ""                  # Configure online roles? [enter to continue]
+        "2"                 # Choose signing key [2: yubikey]
+        ""                  # Insert HW key and press enter
+        "0000"              # sign root
+        "0000"              # sign targets
+        ""                  # press enter to push
+    )
+
+    cd $SIGNER_GIT
+
+    for line in "${INPUT[@]}"; do
+        echo $line
+    done | tuf-on-ci-delegate $EVENT >> $SIGNER_DIR/out 2>&1
+}
+
 signer_init_multiuser()
 {
     # run tuf-on-ci-delegate: creates a commit, pushes it to remote branch
@@ -408,6 +444,18 @@ non_signer_change_online_delegation()
     done | tuf-on-ci-delegate $EVENT timestamp >> $SIGNER_DIR/out 2>&1
 }
 
+repo_create_signing_events()
+{
+
+    # update repo from upstream and merge the event branch
+    git_repo fetch --quiet origin
+    git_repo switch --quiet main
+    git_repo pull --quiet
+
+    cd $REPO_GIT
+    tuf-on-ci-create-signing-events --push >> $REPO_DIR/out
+}
+
 repo_update_targets()
 {
     EVENT=$1
@@ -430,7 +478,7 @@ repo_merge()
     # update repo from upstream and merge the event branch
     git_repo switch --quiet main
     git_repo fetch --quiet origin
-    git_repo merge --quiet origin/$EVENT
+    git_repo merge --quiet --no-edit origin/$EVENT
 
     # run tuf-on-ci-update-targets, tuf-on-ci-status to check that all is ok
     cd $REPO_GIT
@@ -530,6 +578,62 @@ test_basic()
 
     # the resulting metadata should match expected metadata exactly
     diff -r $SCRIPT_DIR/expected/basic/ $PUBLISH_DIR
+
+    echo "OK"
+}
+
+test_signing_event_creation()
+{
+    echo -n "Signing event creation... "
+    setup_test "signing-event-creation"
+
+    # Run the processes under test
+    # user1: Start signing event, sign root and targets
+    signer_init_offline_roles_in_signing_period user1 sign/initial
+    # merge successful signing event, create snapshot
+    repo_merge sign/initial
+    repo_online_sign
+    repo_online_sign # no-op expected
+
+    export FAKETIME="2021-02-05 01:02:03"
+    # repository is now valid but both root and targets are in signing period
+    # create signing event branches
+    repo_create_signing_events
+
+    # sign, merge signing event and online sign
+    signer_sign user1 sign/root-v2
+    repo_merge sign/root-v2
+    repo_online_sign
+
+    signer_sign user1 sign/targets-v2
+    repo_merge sign/targets-v2
+    repo_online_sign
+
+    # this time nothing is in signing period: expect no new branches
+    repo_create_signing_events
+    if git_repo ls-remote --quiet --exit-code --heads origin sign/root-v3; then
+        echo "unexpected signing event sign/root-v3 created"
+        exit 1
+    fi
+    if git_repo ls-remote --quiet --exit-code --heads origin sign/targets-v3; then
+        echo "unexpected signing event sign/targets-v3 created"
+        exit 1
+    fi
+
+    repo_publish
+
+    export FAKETIME="2021-02-03 01:02:03"
+
+    # Verify test result
+    # ECDSA signatures are not deterministic: wipe all sigs so diffing is easy
+    for t in ${PUBLISH_DIR}/metadata/*.json; do
+        strip_signatures $t
+    done
+    # Expected Markdown could be maintained but is currently not
+    rm ${PUBLISH_DIR}/metadata/index.md
+
+    # the resulting metadata should match expected metadata exactly
+    diff -r $SCRIPT_DIR/expected/signing-event-creation/ $PUBLISH_DIR
 
     echo "OK"
 }
@@ -815,6 +919,7 @@ ONLINE_KEY="1d9a024348e413892aeeb8cc8449309c152f48177200ee61a02ae56f450c6480"
 
 # Run tests
 test_basic
+test_signing_event_creation
 test_delegated_role
 test_online_bumps
 test_multi_user_signing
