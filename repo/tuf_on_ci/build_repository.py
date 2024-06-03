@@ -67,7 +67,7 @@ def build_description(repo: CIRepository) -> str:
         signing_days, _ = repo.signing_expiry_period(rolename)
         signing = expiry - timedelta(days=signing_days)
 
-        name_str = f"{rolename} ([json]({json_link}))"
+        name_str = f'{rolename} (<a href="{json_link}">json</a>)'
         date_str = f"[Starts {signing.strftime('%Y-%m-%d')}](## '{signing} - {expiry}')"
         threshold_str = f"{role.threshold} of {len(signers)}"
         signer_str = f"{', '.join(signers)} ({threshold_str} required)"
