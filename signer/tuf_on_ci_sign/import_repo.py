@@ -173,15 +173,15 @@ def import_repo(verbose: int, push: bool, event_name: str, import_file: str | No
                     if not ok:
                         raise AbortEdit("Missing values")
 
-        # we have updated keys defined in root/targets: make sure keyids are compliant
-        repo.force_compliant_keyids("root")
-        repo.force_compliant_keyids("targets")
-
         if not ok:
             print("Error: Undefined values found. please save this in a file,")
             print("fill in the values and use the file as import-file argument:\n")
             print(json.dumps(import_data, indent=2))
         else:
+            # we have updated keys defined in root/targets: make sure they are compliant
+            repo.force_compliant_keyids("root")
+            repo.force_compliant_keyids("targets")
+
             git_expect(["add", "metadata"])
             git_expect(
                 ["commit", "-m", f"Repo import by {user_config.name}", "--signoff"]
