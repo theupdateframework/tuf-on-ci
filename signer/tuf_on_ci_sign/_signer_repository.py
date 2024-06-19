@@ -47,6 +47,9 @@ logger = logging.getLogger(__name__)
 KEY_FOR_TYPE_AND_SCHEME[("sigstore-oidc", "Fulcio")] = SigstoreKey
 SIGNER_FOR_URI_SCHEME[SigstoreSigner.SCHEME] = SigstoreSigner
 
+TAG_KEYOWNER = "x-tuf-on-ci-keyowner"
+TAG_ONLINE_URI = "x-tuf-on-ci-online-uri"
+
 
 @unique
 class SignerState(Enum):
@@ -109,6 +112,13 @@ def set_key_field(key: Key, name: str, value: str) -> None:
     key.keyid = hasher.hexdigest()
 
 
+def get_signer(key: Key) -> str:
+    if TAG_KEYOWNER in key.unrecognized_fields:
+        return key.unrecognized_fields[TAG_KEYOWNER]
+
+    return key.unrecognized_fields[TAG_ONLINE_URI]
+
+
 class SignerRepository(Repository):
     """A repository implementation for the signer tool"""
 
@@ -162,7 +172,10 @@ class SignerRepository(Repository):
         """Return true if current role metadata is unsigned by user"""
         md = self.open(rolename)
         for key in self._get_keys(rolename):
-            keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
+            if TAG_KEYOWNER not in key.unrecognized_fields:
+                continue
+
+            keyowner = key.unrecognized_fields[TAG_KEYOWNER]
             if keyowner == self.user.name:
                 try:
                     payload = CanonicalJSONSerializer().serialize(md.signed)
@@ -174,7 +187,7 @@ class SignerRepository(Repository):
         # the current version
         if rolename == "root":
             for key in self._get_keys(rolename, True):
-                keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
+                keyowner = key.unrecognized_fields[TAG_KEYOWNER]
                 if keyowner == self.user.name:
                     try:
                         payload = CanonicalJSONSerializer().serialize(md.signed)
@@ -246,7 +259,10 @@ class SignerRepository(Repository):
             r = delegator.get_delegated_role(role)
             for keyid in r.keyids:
                 key = delegator.get_key(keyid)
-                if known_good and "x-tuf-on-ci-keyowner" not in key.unrecognized_fields:
+                if known_good and (
+                    TAG_KEYOWNER not in key.unrecognized_fields
+                    and TAG_ONLINE_URI not in key.unrecognized_fields
+                ):
                     # this is allowed for repo import case: we cannot identify known
                     # good keys and have to trust that delegations have not changed
                     continue
@@ -365,7 +381,7 @@ class SignerRepository(Repository):
             md.signatures[key.keyid] = Signature(key.keyid, "")
 
             # Mark role as unsigned if user is a signer (and there are no open invites)
-            keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
+            keyowner = key.unrecognized_fields[TAG_KEYOWNER]
             if keyowner == self.user.name and not open_invites:
                 self.unsigned.add(role)
 
@@ -475,7 +491,7 @@ class SignerRepository(Repository):
         for keyid in role.keyids:
             try:
                 key = delegator.get_key(keyid)
-                signers.append(key.unrecognized_fields["x-tuf-on-ci-keyowner"])
+                signers.append(get_signer(key))
             except ValueError:
                 pass
 
@@ -501,10 +517,19 @@ class SignerRepository(Repository):
 
         # Handle new invitations
         for signer in config.signers:
+            if (
+                signing_key is not None
+                and TAG_ONLINE_URI in signing_key.unrecognized_fields
+                and signer == signing_key.unrecognized_fields[TAG_ONLINE_URI]
+            ):
+                # Don't create invitations for online signers where the
+                # key is known
+                continue
+
             # Does signer already have a key?
             is_signer = False
             for key in self._get_keys(rolename):
-                if signer == key.unrecognized_fields["x-tuf-on-ci-keyowner"]:
+                if signer == get_signer(key):
                     is_signer = True
 
             # If signer does not have key, add invitation
@@ -542,12 +567,10 @@ class SignerRepository(Repository):
             keyids = role.keyids.copy()
             for keyid in keyids:
                 key = delegator.get_key(keyid)
-                key_owner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
+                key_owner = get_signer(key)
                 if key_owner in config.signers:
                     # signer is still a signer
-                    config.signers.remove(
-                        key.unrecognized_fields["x-tuf-on-ci-keyowner"]
-                    )
+                    config.signers.remove(key.unrecognized_fields[TAG_KEYOWNER])
                 else:
                     # signer was removed
                     delegator.revoke_key(keyid, rolename)
@@ -570,6 +593,15 @@ class SignerRepository(Repository):
                 self.unsigned.add(rolename)
 
                 changed = True
+
+            # For online keys, the signing key is known, so lets add it
+            # now. No invitation is required to gather the key material.
+            if (
+                signing_key is not None
+                and TAG_ONLINE_URI in signing_key.unrecognized_fields
+            ):
+                # key is an online key
+                delegator.add_key(signing_key, rolename)
 
             if role.threshold != config.threshold:
                 changed = True
@@ -636,11 +668,12 @@ class SignerRepository(Repository):
         # (think keyid staying the same but public key bytes changing)
 
         def _get_signer_name(key: Key) -> str:
-            if name in ["timestamp", "snapshot"]:
+            if TAG_ONLINE_URI in key.unrecognized_fields:
                 # there's no "signer" in the online case: use signing system as signer
-                uri = key.unrecognized_fields["x-tuf-on-ci-online-uri"]
+                uri = key.unrecognized_fields[TAG_ONLINE_URI]
                 return uri.split(":")[0]
-            return key.unrecognized_fields["x-tuf-on-ci-keyowner"]
+
+            return key.unrecognized_fields[TAG_KEYOWNER]
 
         output = []
         delegations: dict[str, Role] = {}
@@ -688,6 +721,7 @@ class SignerRepository(Repository):
             else:
                 old_role = old_delegations[name]
                 old_signers = []
+
                 for key in self._get_keys(name, known_good=True):
                     old_signers.append(_get_signer_name(key))
 
@@ -751,7 +785,7 @@ class SignerRepository(Repository):
             return hasher.hexdigest()
 
         test_key = copy.deepcopy(key)
-        del test_key.unrecognized_fields["x-tuf-on-ci-keyowner"]
+        del test_key.unrecognized_fields[TAG_KEYOWNER]
         legacy_keyid = _calculate_keyid(test_key)
         return self._known_good_root().keys.get(legacy_keyid)
 
@@ -760,9 +794,13 @@ class SignerRepository(Repository):
         md = self.open(rolename)
         signing_keys: dict[str, Key] = {}
         for key in self._get_keys(rolename):
-            keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
-            if keyowner == self.user.name:
+            # Detect if the key is an online key
+            if TAG_ONLINE_URI in key.unrecognized_fields:
                 signing_keys[key.keyid] = key
+            else:
+                keyowner = key.unrecognized_fields[TAG_KEYOWNER]
+                if keyowner == self.user.name:
+                    signing_keys[key.keyid] = key
 
         if rolename == "root":
             # special case for import: if the same key was used with different keyid
@@ -775,7 +813,7 @@ class SignerRepository(Repository):
             # user is also eligible to sign current root if they were a signer
             # in previous version
             for key in self._get_keys(rolename, True):
-                keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
+                keyowner = key.unrecognized_fields[TAG_KEYOWNER]
                 if keyowner == self.user.name:
                     signing_keys[key.keyid] = key
 
