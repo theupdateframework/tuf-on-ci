@@ -34,6 +34,9 @@ from tuf.repository import AbortEdit, Repository
 KEY_FOR_TYPE_AND_SCHEME[("sigstore-oidc", "Fulcio")] = SigstoreKey
 SIGNER_FOR_URI_SCHEME[SigstoreSigner.SCHEME] = SigstoreSigner
 
+TAG_KEYOWNER = "x-tuf-on-ci-keyowner"
+TAG_ONLINE_URI = "x-tuf-on-ci-online-uri"
+
 # TODO Add a metadata cache so we don't constantly open files
 # TODO; Signing status probably should include an error message when valid=False
 
@@ -136,7 +139,7 @@ class CIRepository(Repository):
         for keyid in r.keyids:
             try:
                 key = delegator.get_key(keyid)
-                if known_good and "x-tuf-on-ci-keyowner" not in key.unrecognized_fields:
+                if known_good and TAG_KEYOWNER not in key.unrecognized_fields:
                     # this is allowed for repo import case: we cannot identify known
                     # good keys and have to trust that delegations have not changed
                     continue
@@ -217,7 +220,7 @@ class CIRepository(Repository):
         md.signatures.clear()
         for key in self._get_keys(rolename):
             if rolename in ["timestamp", "snapshot"]:
-                uri = key.unrecognized_fields["x-tuf-on-ci-online-uri"]
+                uri = key.unrecognized_fields[TAG_ONLINE_URI]
                 signer = Signer.from_priv_key_uri(uri, key)
                 md.sign(signer, True)
             else:
@@ -230,6 +233,35 @@ class CIRepository(Repository):
             root_md.verify_delegate(rolename, md)
 
         self._write(rolename, md)
+
+    def sign(self, rolename: str) -> None:
+        fname = self._get_filename(rolename)
+
+        if not os.path.exists(fname):
+            raise ValueError(f"Cannot create new {rolename} metadata")
+
+        with open(fname, "rb") as f:
+            md = Metadata.from_bytes(f.read())
+
+        # sign the metadata
+        candidate_keys = self._get_keys(rolename)
+        valid_keys = []
+        for k in candidate_keys:
+            if TAG_ONLINE_URI in k.unrecognized_fields:
+                valid_keys.append(k)
+
+        if len(valid_keys) == 0:
+            raise ValueError(f"No signers for {rolename}")
+
+        for k in valid_keys:
+            uri = k.unrecognized_fields[TAG_ONLINE_URI]
+            signer = Signer.from_priv_key_uri(uri, k)
+            md.sign(signer, True)
+
+        # persist updated metadata
+        self._write(rolename, md)
+
+        return
 
     @property
     def targets_infos(self) -> dict[str, MetaFile]:
@@ -457,7 +489,7 @@ class CIRepository(Repository):
 
         # Build lists of signed signers and not signed signers
         for key in self._get_keys(rolename, known_good):
-            keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
+            keyowner = key.unrecognized_fields[TAG_KEYOWNER]
             try:
                 payload = CanonicalJSONSerializer().serialize(md.signed)
                 key.verify_signature(md.signatures[key.keyid], payload)
