@@ -1,6 +1,6 @@
 # these packages are used as constraints during build
 build==1.2.1
-hatchling==1.24.2
+hatchling==1.25.0
 
 # These packages are used used as constraints in workflows
 tox==4.15.1
