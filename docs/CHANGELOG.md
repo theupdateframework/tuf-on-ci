@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+## v0.11.0
+
+This release contains bug fixes, stability fixes and dependency
+updates.
+
+Updating to this version does not require any changes to GitHub
+workflow files.
+
+**Changes**
+
+* Increased the number of root rotations allowed in the client unsed by
+  the test workflow (#377)
+* Versioned root metadata file is now created by the signing event (#352)
+
+**Fixes**
+
+* TUF key ids are now updated only when the repository is successfully
+  imported (#358)
+* Relative links in published TUF repository state are now correct
+  (#354)
+
 ## v0.10.0
 
 Release includes several new features. It also fixes an issue with TUF keyids,
