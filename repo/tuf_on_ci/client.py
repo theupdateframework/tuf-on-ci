@@ -15,7 +15,7 @@ from urllib import request
 import click
 from tuf.api.exceptions import ExpiredMetadataError
 from tuf.api.metadata import Metadata
-from tuf.ngclient import Updater
+from tuf.ngclient import Updater, UpdaterConfig
 
 
 def expiry_check(dir: str, role: str, timestamp: int):
@@ -61,6 +61,10 @@ def client(
         os.makedirs(metadata_dir, exist_ok=True)
         os.mkdir(artifact_dir)
 
+        # Allow for a large number of root rotations, as metadata is
+        # not cached during testing
+        config = UpdaterConfig(max_root_rotations=256)
+
         # initialize client with --initial-root or from metadata_url
         if initial_root is not None:
             shutil.copy(initial_root, os.path.join(metadata_dir, "root.json"))
@@ -73,7 +77,11 @@ def client(
 
         if update_base_url is not None:
             # Update client to update_base_url before doing the actual update
-            updater = Updater(metadata_dir, update_base_url, artifact_dir, artifact_url)
+            updater = Updater(metadata_dir,
+                              update_base_url,
+                              artifact_dir,
+                              artifact_url,
+                              config=config)
             try:
                 updater.refresh()
                 print(f"Client metadata update from base url {update_base_url}: OK")
@@ -81,10 +89,11 @@ def client(
                 print(f"WARNING: update base url has expired metadata: {e}")
 
         # Update client to metadata_url
-        # Allow for a large number of root rotations, as metadata is
-        # not cached during testing
-        config = UpdaterConfig(max_root_rotations=256)
-        updater = Updater(metadata_dir, metadata_url, artifact_dir, artifact_url, config=config)
+        updater = Updater(metadata_dir,
+                          metadata_url,
+                          artifact_dir,
+                          artifact_url,
+                          config=config)
         ref_time_string = ""
         if time is not None:
             # HACK: replace reference time with ours: initial root has been loaded
