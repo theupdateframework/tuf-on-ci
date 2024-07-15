@@ -81,7 +81,10 @@ def client(
                 print(f"WARNING: update base url has expired metadata: {e}")
 
         # Update client to metadata_url
-        updater = Updater(metadata_dir, metadata_url, artifact_dir, artifact_url)
+        # Allow for a large number of root rotations, as metadata is
+        # not cached during testing
+        config = UpdaterConfig(max_root_rotations=256)
+        updater = Updater(metadata_dir, metadata_url, artifact_dir, artifact_url, config=config)
         ref_time_string = ""
         if time is not None:
             # HACK: replace reference time with ours: initial root has been loaded
