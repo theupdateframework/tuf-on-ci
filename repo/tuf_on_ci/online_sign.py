@@ -60,7 +60,7 @@ def online_sign(verbose: int, push: bool, role: str) -> None:
 
     if role != "":
         repo.sign(role)
-        # Execptionn is raised if nothing is signed
+        # Exception is raised if nothing is signed
         signed = True
         roles = role
         files = [repo._get_filename(role)]
