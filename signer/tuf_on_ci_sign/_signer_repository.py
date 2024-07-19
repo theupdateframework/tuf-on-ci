@@ -721,7 +721,6 @@ class SignerRepository(Repository):
             else:
                 old_role = old_delegations[name]
                 old_signers = []
-
                 for key in self._get_keys(name, known_good=True):
                     old_signers.append(_get_signer_name(key))
 
