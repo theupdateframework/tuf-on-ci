@@ -43,6 +43,13 @@ TAG_ONLINE_URI = "x-tuf-on-ci-online-uri"
 logger = logging.getLogger(__name__)
 
 
+def get_signer(key: Key) -> str:
+    if TAG_KEYOWNER in key.unrecognized_fields:
+        return key.unrecognized_fields[TAG_KEYOWNER]
+
+    return key.unrecognized_fields[TAG_ONLINE_URI]
+
+
 @unique
 class State(Enum):
     ADDED = (0,)
@@ -489,7 +496,7 @@ class CIRepository(Repository):
 
         # Build lists of signed signers and not signed signers
         for key in self._get_keys(rolename, known_good):
-            keyowner = key.unrecognized_fields[TAG_KEYOWNER]
+            keyowner = get_signer(key)
             try:
                 payload = CanonicalJSONSerializer().serialize(md.signed)
                 key.verify_signature(md.signatures[key.keyid], payload)
