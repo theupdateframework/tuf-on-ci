@@ -241,34 +241,36 @@ class CIRepository(Repository):
 
         self._write(rolename, md)
 
-    def sign(self, rolename: str) -> None:
+    def sign(self, rolename: str) -> bool:
+        """Sign without payload changes
+
+        Only targets roles are supported."""
         fname = self._get_filename(rolename)
 
         if not os.path.exists(fname):
-            raise ValueError(f"Cannot create new {rolename} metadata")
-
-        with open(fname, "rb") as f:
-            md = Metadata.from_bytes(f.read())
+            return False
 
         # sign the metadata
-        candidate_keys = self._get_keys(rolename)
         valid_keys = []
-        for k in candidate_keys:
+        for k in self._get_keys(rolename):
             if TAG_ONLINE_URI in k.unrecognized_fields:
                 valid_keys.append(k)
 
-        if len(valid_keys) == 0:
-            raise ValueError(f"No signers for {rolename}")
+        if not valid_keys:
+            return False
+
+        with open(fname, "rb") as f:
+            md = Metadata.from_bytes(f.read())
 
         for k in valid_keys:
             uri = k.unrecognized_fields[TAG_ONLINE_URI]
             signer = Signer.from_priv_key_uri(uri, k)
             md.sign(signer, True)
 
-        # persist updated metadata
+        # persist signed metadata
         self._write(rolename, md)
 
-        return
+        return True
 
     @property
     def targets_infos(self) -> dict[str, MetaFile]:

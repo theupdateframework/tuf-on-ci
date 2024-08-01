@@ -225,6 +225,67 @@ def update_targets(verbose: int, push: bool) -> None:
     sys.exit(0 if updated_targets else 1)
 
 
+@click.command()
+@click.option("-v", "--verbose", count=True, default=0)
+@click.option("--push/--no-push", default=True)
+@click.argument("roles", nargs=-1, metavar="role")
+def online_sign_targets(verbose: int, push: bool, roles: list[str]) -> None:
+    """Sign targets metadata with KMS during a signing event.
+
+    Attempts to sign specified targets roles metadata with online signing keys.
+
+    Return value is 0 if any targets metadata was signed.
+    """
+    logging.basicConfig(level=logging.WARNING - verbose * 10)
+
+    if not os.path.exists("metadata/root.json"):
+        sys.exit(1)
+
+    event_name = _git(["branch", "--show-current"]).stdout.strip()
+    head = _git(["rev-parse", "HEAD"]).stdout.strip()
+
+    signed_targets = []
+    repo = CIRepository("metadata")
+    for role in roles:
+        if role in ["root", "timestamp", "snapshot"]:
+            raise ValueError(f"Non-targets role '{role}' cannot be signed")
+
+        if repo.is_signed(role):
+            click.echo(f"Signing not required for role '{role}'")
+            continue
+
+        # no need to modify the metadata: just sign what is there
+        if repo.sign(role):
+            msg = f"Online sign targets role {role}"
+            _git(["commit", "-m", msg, "--signoff", "--", f"metadata/{role}.json"])
+            signed_targets.append(f"`{role}`")
+
+    if signed_targets:
+        click.echo("### Online signed targets roles")
+        click.echo(f"Event [{event_name}](../compare/{event_name}) (commit {head[:7]})")
+
+        role_str = ", ".join(signed_targets)
+        click.echo(f"Committed signatures for role(s) {role_str}.")
+        click.echo("Updating signing event state, please wait.")
+
+    if push and signed_targets:
+        try:
+            _git(["push", "origin", event_name])
+        except subprocess.CalledProcessError as e:
+            # Figure out if this is an error caused by remote being ahead
+            # of local branch
+            msg = "Updates were rejected because the remote contains work that you do"
+            found = e.stdout.find(msg)
+            if found:
+                m = "There are changes in the signing event. Skipping metadata update"
+                print(m)
+            else:
+                print("Git output on error:", e.stdout, e.stderr)
+                raise e
+
+    sys.exit(0 if signed_targets else 1)
+
+
 @click.command()  # type: ignore[arg-type]
 @click.option("-v", "--verbose", count=True, default=0)
 def status(verbose: int) -> None:
