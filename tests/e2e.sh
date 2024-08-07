@@ -160,6 +160,7 @@ signer_add_delegation()
     INPUT=(
         "delegated"         # select role to modify
         "1"                 # Configure role delegated? [1: configure signers]
+        "1"                 # Chose offline signer
         ""                  # Enter list of signers [Enter to accept default of @user1]
         ""                  # Configure sole delegated? [enter to continue]
         "2"                 # Choose signing key [2: yubikey]
