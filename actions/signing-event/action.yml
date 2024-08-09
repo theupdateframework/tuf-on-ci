@@ -56,7 +56,7 @@ runs:
       shell: bash
 
     - id: sign_targets
-      if: inputs.targets_to_sign != ""
+      if: inputs.targets_to_sign != ''
       env:
         TARGETS_TO_SIGN: ${{ inputs.targets_to_sign }}
       run: |
