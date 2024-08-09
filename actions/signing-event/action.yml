@@ -24,6 +24,14 @@ inputs:
     description: "whitespace separated list of targets role names that should be signed with KMS"
     required: false
     default: ""
+  gcp_workload_identity_provider:
+    description: "Google Cloud workload identity provider (required if GCP is used to sign targets roles)"
+    required: false
+    default: ""
+  gcp_service_account:
+    description: "Google Cloud service account name (required if GCP is used to sign targets roles)"
+    required: false
+    default: ""
 
 runs:
   using: "composite"
@@ -32,6 +40,14 @@ runs:
       with:
         token: ${{ inputs.token }}
         fetch-depth: 0
+
+    - name: Authenticate to Google Cloud
+      if: inputs.gcp_workload_identity_provider != ''
+      uses: google-github-actions/auth@71fee32a0bb7e97b4d33d548e7d957010649d8fa # v2.1.3
+      with:
+        token_format: access_token
+        workload_identity_provider: ${{ inputs.gcp_workload_identity_provider }}
+        service_account: ${{ inputs.gcp_service_account }}
 
     - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5.1.1
       with:
