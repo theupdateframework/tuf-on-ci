@@ -68,6 +68,7 @@ runs:
           echo "targets_updated=false" >> $GITHUB_OUTPUT
         fi
         cat update-output
+        cat update-output >> output
         cat update-output >> "$GITHUB_STEP_SUMMARY"
       shell: bash
 
@@ -82,6 +83,7 @@ runs:
           echo "targets_signed=false" >> $GITHUB_OUTPUT
         fi
         cat sign-output
+        cat sign-output >> output
         cat sign-output >> "$GITHUB_STEP_SUMMARY"
       shell: bash
 
@@ -94,6 +96,7 @@ runs:
           echo "status=failure" >> $GITHUB_OUTPUT
         fi
         cat status-output
+        cat status-output >> output
         cat status-output >> "$GITHUB_STEP_SUMMARY"
       shell: bash
 
@@ -130,7 +133,7 @@ runs:
             console.log(`Found existing pull request #${pr}`)
           }
 
-          message = fs.readFileSync('./status-output').toString()
+          message = fs.readFileSync('./output').toString()
           summary = "Signing event in progress"
           should_be_draft = true
           if (process.env.STATUS == 'success') {
