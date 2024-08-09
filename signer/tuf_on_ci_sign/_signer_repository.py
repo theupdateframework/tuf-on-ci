@@ -381,7 +381,7 @@ class SignerRepository(Repository):
             md.signatures[key.keyid] = Signature(key.keyid, "")
 
             # Mark role as unsigned if user is a signer (and there are no open invites)
-            keyowner = key.unrecognized_fields[TAG_KEYOWNER]
+            keyowner = key.unrecognized_fields.get(TAG_KEYOWNER)
             if keyowner == self.user.name and not open_invites:
                 self.unsigned.add(role)
 
