@@ -287,6 +287,7 @@ signer_init_multiuser()
     INPUT=(
         ""                  # Configure root? [enter to continue]
         "1"                 # Configure targets? [1: configure signers]
+        "1"                 # Chose offline signer
         "@tuf-on-ci-user1, @tuf-on-ci-user2" # Enter signers
         "2"                 # Enter threshold
         ""                  # Configure targets? [enter to continue]
