@@ -793,7 +793,6 @@ class SignerRepository(Repository):
         md = self.open(rolename)
         signing_keys: dict[str, Key] = {}
         for key in self._get_keys(rolename):
-            # Detect if the key is an online key
             keyowner = key.unrecognized_fields[TAG_KEYOWNER]
             if keyowner == self.user.name:
                 signing_keys[key.keyid] = key
