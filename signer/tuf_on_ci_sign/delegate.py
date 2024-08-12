@@ -92,8 +92,8 @@ def _get_offline_input(
         if choice == 0:
             break
         if choice == 1:
-            # if role is not root or targets, allow online keys
-            if role in ["root", "targets"]:
+            # if role is not root, allow online keys
+            if role in ["root"]:
                 config.signers = click.prompt(
                     bold(f"Please enter list of {role} signers"),
                     default=", ".join(config.signers),
