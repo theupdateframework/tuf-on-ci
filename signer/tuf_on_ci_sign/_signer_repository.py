@@ -794,12 +794,9 @@ class SignerRepository(Repository):
         signing_keys: dict[str, Key] = {}
         for key in self._get_keys(rolename):
             # Detect if the key is an online key
-            if TAG_ONLINE_URI in key.unrecognized_fields:
+            keyowner = key.unrecognized_fields[TAG_KEYOWNER]
+            if keyowner == self.user.name:
                 signing_keys[key.keyid] = key
-            else:
-                keyowner = key.unrecognized_fields[TAG_KEYOWNER]
-                if keyowner == self.user.name:
-                    signing_keys[key.keyid] = key
 
         if rolename == "root":
             # special case for import: if the same key was used with different keyid
