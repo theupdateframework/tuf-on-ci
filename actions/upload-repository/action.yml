@@ -45,18 +45,18 @@ runs:
         find build -type f | xargs ls -lh
       shell: bash
 
-    - uses: actions/jekyll-build-pages@b178f9334b208360999a0a57b523613563698c66 # 1.0.12
+    - uses: actions/jekyll-build-pages@44a6e6beabd48582f863aeeb6cb2151cc1716697 # 1.0.13
       with:
         source: build
         destination: build-jekyll
 
-    - uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
+    - uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
       if: inputs.gh_pages != 'true'
       with:
         name: metadata
         path: build-jekyll/${{inputs.metadata_path}}/*
 
-    - uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
+    - uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
       if: inputs.gh_pages != 'true'
       with:
         name: artifacts
