@@ -32,6 +32,26 @@ inputs:
     description: "Google Cloud service account name (required if GCP is used to sign targets roles)"
     required: false
     default: ""
+  aws_region:
+    description: "AWS region"
+    required: false
+    default: ""
+  aws_role_to_assume:
+    description: "AWS role to assume"
+    required: false
+    default: ""
+  azure_client_id:
+    description: "Azure SPN client id (required to use Azure to sign target roles)"
+    required: false
+    default: ""
+  azure_tenant_id:
+    description: "Azure SPN tenant id (required to use Azure to sign target roles)"
+    required: false
+    default: ""
+  azure_subscription_id:
+    description: "Azure SPN subscription id (required to use Azure to sign target roles)"
+    required: false
+    default: ""
 
 runs:
   using: "composite"
@@ -48,6 +68,21 @@ runs:
         token_format: access_token
         workload_identity_provider: ${{ inputs.gcp_workload_identity_provider }}
         service_account: ${{ inputs.gcp_service_account }}
+
+    - name: Authenticate to AWS
+      if: inputs.aws_role_to_assume != ''
+      uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 #v4.0.2
+      with:
+        aws-region: ${{ inputs.aws_region }}
+        role-to-assume: ${{ inputs.aws_role_to_assume }}
+
+    - name: Authenticate to Azure cloud
+      if: inputs.azure_client_id != ''
+      uses: azure/login@6c251865b4e6290e7b78be643ea2d005bc51f69a # v2.1.1
+      with:
+        client-id: ${{ inputs.azure_client_id }}
+        tenant-id: ${{ inputs.azure_tenant_id }}
+        subscription-id: ${{ inputs.azure_subscription_id }}
 
     - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5.1.1
       with:

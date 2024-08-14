@@ -21,6 +21,18 @@ inputs:
     description: "AWS role to assume"
     required: false
     default: ""
+  azure_client_id:
+    description: "Azure SPN client id (required to use Azure to sign target roles)"
+    required: false
+    default: ""
+  azure_tenant_id:
+    description: "Azure SPN tenant id (required to use Azure to sign target roles)"
+    required: false
+    default: ""
+  azure_subscription_id:
+    description: "Azure SPN subscription id (required to use Azure to sign target roles)"
+    required: false
+    default: ""
 
 runs:
   using: "composite"
@@ -44,6 +56,14 @@ runs:
       with:
         aws-region: ${{ inputs.aws_region }}
         role-to-assume: ${{ inputs.aws_role_to_assume }}
+
+    - name: Authenticate to Azure cloud
+      if: inputs.azure_client_id != ''
+      uses: azure/login@6c251865b4e6290e7b78be643ea2d005bc51f69a # v2.1.1
+      with:
+        client-id: ${{ inputs.azure_client_id }}
+        tenant-id: ${{ inputs.azure_tenant_id }}
+        subscription-id: ${{ inputs.azure_subscription_id }}
 
     - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5.1.1
       with:
