@@ -100,94 +100,18 @@ runs:
         cat sign-output >> "$GITHUB_STEP_SUMMARY"
       shell: bash
 
-    - id: status
-      if: steps.update_targets.outputs.targets_updated != 'true' && steps.sign_targets.outputs.targets_signed != 'true'
-      run: |
-        if tuf-on-ci-status >> status-output;  then
-          echo "status=success" >> $GITHUB_OUTPUT
-        else
-          echo "status=failure" >> $GITHUB_OUTPUT
-        fi
-        cat status-output
-        cat status-output >> output
-        cat status-output >> "$GITHUB_STEP_SUMMARY"
-      shell: bash
-
-    - id: update-pr
+    - name: Dispatch another signing event workflow
+      # dispatch if using default token: otherwise update_targets step
+      # has alreaddy triggered a push event
+      if: inputs.token == github.token && steps.update_targets.outputs.targets_updated == 'true'
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-      env:
-        STATUS: ${{ steps.status.outputs.status }}
       with:
         github-token: ${{ inputs.token }}
         script: |
-          const fs = require('fs')
-          const title = `Signing event: ${process.env.GITHUB_REF_NAME}`
-          const repo = `${context.repo.owner}/${context.repo.repo}`
-          const prs = await github.rest.search.issuesAndPullRequests({
-            q: `in:title+"${title}"+state:open+type:pr+repo:${repo}`
-          })
-
-          if (prs.data.total_count > 1) {
-            core.setFailed("Found more than one open pull request with same title")
-          } else if (prs.data.total_count == 0) {
-            const response = await github.rest.pulls.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: title,
-              body: `Processing signing event ${process.env.GITHUB_REF_NAME}, please wait.`,
-              draft: true,
-              head: process.env.GITHUB_REF_NAME,
-              base: "main",
-            })
-            pr = response.data.number
-            console.log(`Created pull request #${pr}`)
-          } else {
-            pr = prs.data.items[0].number
-            console.log(`Found existing pull request #${pr}`)
-          }
-
-          message = fs.readFileSync('./output').toString()
-          summary = "Signing event in progress"
-          should_be_draft = true
-          if (process.env.STATUS == 'success') {
-            message += "### Signing event is successful\n\n"
-            message += "Threshold of signatures has been reached: this signing event can be reviewed and merged."
-            summary = "Signing event is successful"
-            should_be_draft = false
-          }
-
-          // Pull request numbers are also valid issue numbers
-          github.rest.issues.createComment({
+          console.log('Dispatching another signing event workflow after a targets metadata update')
+          github.rest.actions.createWorkflowDispatch({
             owner: context.repo.owner,
             repo: context.repo.repo,
-            issue_number: pr,
-            body: message,
+            workflow_id: 'signing-event.yml',
+            ref: process.env.GITHUB_REF_NAME,
           })
-
-          // Following pile of GraphQL is here because draft state cannot
-          // be modified through rest API at all!
-
-          // First get the PR "Id" and current draft state...
-          response = await github.graphql(`query {
-            repository(owner: "${context.repo.owner}", name: "${context.repo.repo}") {
-              pullRequest(number: ${pr}) { id, isDraft }
-            }
-          }`)
-          pr_id = response.repository.pullRequest.id
-          is_draft = response.repository.pullRequest.isDraft
-          // Then modify PR if needed
-          if (should_be_draft && !is_draft) {
-            await github.graphql(`mutation SetPullRequestDraft {
-              convertPullRequestToDraft(input: {pullRequestId: "${pr_id}"}) {
-                pullRequest { isDraft }
-              }
-            }`)
-          } else if (!should_be_draft && is_draft) {
-            await github.graphql(`mutation SetPullRequestReady {
-              markPullRequestReadyForReview(input: {pullRequestId: "${pr_id}"}) {
-                pullRequest { isDraft }
-              }
-            }`)
-          }
-
-          await core.summary.addHeading(summary).write()
