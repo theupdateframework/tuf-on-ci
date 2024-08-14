@@ -1,25 +1,47 @@
-name: 'Signing event'
-description: 'TUF-on-CI Signing event management'
+name: 'Online signing of targets'
+description: 'TUF-on-CI Online signer for targets'
 
-# This action is called from signing-event workflow, which is dispatched in multiple ways
-# depending on the type of token provided in inputs.
-#
-# 1. create-signing-events action creates a new signing event branch
-#     * When using a custom token this triggers push event handler
-#     * When using the default GitHub token the action calls createWorkflowDispatch()
-# 2. A signer pushes artifact changes to a signing event branch
-#     * This triggers push event handler
-# 3. This action (signing-event) makes a metadata change in update_targets step as a result of an artifact change
-#     * When using a custom token this triggers push event handler
-#     * When using the default GitHub token the action calls createWorkflowDispatch()
-#
-# Cases 1 & 3 lead to status step running. Case 2 leads to skipping status step, but
-# triggering case 3 immediately afterwards.
+# This action is not called from any standard workflows.
+# To use this, create custom workflow that triggers this action when
+# needed. This is typically done for delegations, that would be
+# triggered based on a change to the delegation metadata file.
 
 inputs:
   token:
     description: 'GitHub token'
     required: true
+  targets_to_sign:
+    description: "whitespace separated list of targets role names that should be signed with KMS"
+    required: false
+    default: ""
+  gcp_workload_identity_provider:
+    description: "Google Cloud workload identity provider (required if GCP is used to sign targets roles)"
+    required: false
+    default: ""
+  gcp_service_account:
+    description: "Google Cloud service account name (required if GCP is used to sign targets roles)"
+    required: false
+    default: ""
+  aws_region:
+    description: "AWS region"
+    required: false
+    default: ""
+  aws_role_to_assume:
+    description: "AWS role to assume"
+    required: false
+    default: ""
+  azure_client_id:
+    description: "Azure SPN client id (required to use Azure to sign target roles)"
+    required: false
+    default: ""
+  azure_tenant_id:
+    description: "Azure SPN tenant id (required to use Azure to sign target roles)"
+    required: false
+    default: ""
+  azure_subscription_id:
+    description: "Azure SPN subscription id (required to use Azure to sign target roles)"
+    required: false
+    default: ""
 
 runs:
   using: "composite"
@@ -28,6 +50,29 @@ runs:
       with:
         token: ${{ inputs.token }}
         fetch-depth: 0
+
+    - name: Authenticate to Google Cloud
+      if: inputs.gcp_workload_identity_provider != ''
+      uses: google-github-actions/auth@71fee32a0bb7e97b4d33d548e7d957010649d8fa # v2.1.3
+      with:
+        token_format: access_token
+        workload_identity_provider: ${{ inputs.gcp_workload_identity_provider }}
+        service_account: ${{ inputs.gcp_service_account }}
+
+    - name: Authenticate to AWS
+      if: inputs.aws_role_to_assume != ''
+      uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 #v4.0.2
+      with:
+        aws-region: ${{ inputs.aws_region }}
+        role-to-assume: ${{ inputs.aws_role_to_assume }}
+
+    - name: Authenticate to Azure cloud
+      if: inputs.azure_client_id != ''
+      uses: azure/login@6c251865b4e6290e7b78be643ea2d005bc51f69a # v2.1.1
+      with:
+        client-id: ${{ inputs.azure_client_id }}
+        tenant-id: ${{ inputs.azure_tenant_id }}
+        subscription-id: ${{ inputs.azure_subscription_id }}
 
     - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5.1.1
       with:
@@ -40,20 +85,23 @@ runs:
         echo "::endgroup::"
       shell: bash
 
-    - id: update_targets
+    - id: sign_targets
+      if: inputs.targets_to_sign != ''
+      env:
+        TARGETS_TO_SIGN: ${{ inputs.targets_to_sign }}
       run: |
-        if tuf-on-ci-update-targets >> update-output;  then
-          echo "targets_updated=true" >> $GITHUB_OUTPUT
+        if tuf-on-ci-online-sign-targets $TARGETS_TO_SIGN >> sign-output;  then
+          echo "targets_signed=true" >> $GITHUB_OUTPUT
         else
-          echo "targets_updated=false" >> $GITHUB_OUTPUT
+          echo "targets_signed=false" >> $GITHUB_OUTPUT
         fi
-        cat update-output
-        cat update-output >> output
-        cat update-output >> "$GITHUB_STEP_SUMMARY"
+        cat sign-output
+        cat sign-output >> output
+        cat sign-output >> "$GITHUB_STEP_SUMMARY"
       shell: bash
 
     - id: status
-      if: steps.update_targets.outputs.targets_updated != 'true'
+      if: steps.update_targets.outputs.targets_updated != 'true' && steps.sign_targets.outputs.targets_signed != 'true'
       run: |
         if tuf-on-ci-status >> status-output;  then
           echo "status=success" >> $GITHUB_OUTPUT
@@ -143,19 +191,3 @@ runs:
           }
 
           await core.summary.addHeading(summary).write()
-
-    - name: Dispatch another signing event workflow
-      # dispatch if using default token: otherwise update_targets step
-      # has alreaddy triggered a push event
-      if: inputs.token == github.token && steps.update_targets.outputs.targets_updated == 'true'
-      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-      with:
-        github-token: ${{ inputs.token }}
-        script: |
-          console.log('Dispatching another signing event workflow after a targets metadata update')
-          github.rest.actions.createWorkflowDispatch({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            workflow_id: 'signing-event.yml',
-            ref: process.env.GITHUB_REF_NAME,
-          })
