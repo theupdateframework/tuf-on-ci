@@ -103,7 +103,7 @@ runs:
     - name: Dispatch another signing event workflow
       # dispatch if using default token: otherwise update_targets step
       # has alreaddy triggered a push event
-      if: inputs.token == github.token && steps.update_targets.outputs.targets_signed == 'true'
+      if: inputs.token == github.token && steps.sign_targets.outputs.targets_signed == 'true'
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
       with:
         github-token: ${{ inputs.token }}
