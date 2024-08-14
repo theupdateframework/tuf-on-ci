@@ -612,12 +612,7 @@ class CIRepository(Repository):
             return True
 
     def is_signed(self, rolename: str) -> bool:
-        """Return True if role is correctly signed and not in signing period
-
-        NOTE: a role in signing period is valid for TUF clients but this method returns
-        false in this case: this is useful when repository decides if it needs a new
-        online role version.
-        """
+        """Return True if role is correctly signed"""
         role_md = self.open(rolename)
         if rolename in ["root", "timestamp", "snapshot", "targets"]:
             delegator = self.open("root")
@@ -628,7 +623,11 @@ class CIRepository(Repository):
         except UnsignedMetadataError:
             return False
 
+        return True
+
+    def is_in_signing_period(self, rolename: str) -> bool:
+        """Return True if roles signing period has started"""
+        role_md = self.open(rolename)
         signing_days, _ = self.signing_expiry_period(rolename)
         delta = timedelta(days=signing_days)
-
-        return datetime.utcnow() + delta < role_md.signed.expires
+        return datetime.utcnow() >= role_md.signed.expires - delta
