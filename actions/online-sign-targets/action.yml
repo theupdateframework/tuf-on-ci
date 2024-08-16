@@ -1,16 +1,25 @@
-name: "Online sign"
-description: "Creates a snapshot and timestamp if needed, moves publish branch if needed"
+name: 'Online signing of targets'
+description: 'TUF-on-CI Online signer for targets'
+
+# This action is not called from any standard workflows.
+# To use this, create custom workflow that triggers this action when
+# needed. This is typically done for delegations, that would be
+# triggered based on a change to the delegation metadata file.
 
 inputs:
   token:
     description: 'GitHub token'
     required: true
+  targets_to_sign:
+    description: "whitespace separated list of targets role names that should be signed with KMS"
+    required: false
+    default: ""
   gcp_workload_identity_provider:
-    description: "Google Cloud workload identity provider"
+    description: "Google Cloud workload identity provider (required if GCP is used to sign targets roles)"
     required: false
     default: ""
   gcp_service_account:
-    description: "Google Cloud service account name"
+    description: "Google Cloud service account name (required if GCP is used to sign targets roles)"
     required: false
     default: ""
   aws_region:
@@ -44,7 +53,7 @@ runs:
 
     - name: Authenticate to Google Cloud
       if: inputs.gcp_workload_identity_provider != ''
-      uses: google-github-actions/auth@f112390a2df9932162083945e46d439060d66ec2 # v2.1.4
+      uses: google-github-actions/auth@71fee32a0bb7e97b4d33d548e7d957010649d8fa # v2.1.3
       with:
         token_format: access_token
         workload_identity_provider: ${{ inputs.gcp_workload_identity_provider }}
@@ -76,43 +85,33 @@ runs:
         echo "::endgroup::"
       shell: bash
 
-    - id: online-sign
+    - id: sign_targets
+      if: inputs.targets_to_sign != ''
+      env:
+        TARGETS_TO_SIGN: ${{ inputs.targets_to_sign }}
       run: |
-        tuf-on-ci-online-sign --push
-
-        # did we actually create a snapshot/timestamp commit?
-        if [[ $GITHUB_SHA == $(git rev-parse HEAD) ]]; then
-          echo "ONLINE_SIGNED=false"
-          echo "ONLINE_SIGNED=false" >> "$GITHUB_ENV"
-          echo "### Nothing to sign" >> "$GITHUB_STEP_SUMMARY"
+        if tuf-on-ci-online-sign-targets $TARGETS_TO_SIGN >> sign-output;  then
+          echo "targets_signed=true" >> $GITHUB_OUTPUT
         else
-          echo "ONLINE_SIGNED=true"
-          echo "ONLINE_SIGNED=true" >> "$GITHUB_ENV"
+          echo "targets_signed=false" >> $GITHUB_OUTPUT
         fi
+        cat sign-output
+        cat sign-output >> output
+        cat sign-output >> "$GITHUB_STEP_SUMMARY"
       shell: bash
 
-    - id: move-publish-branch
-      if: github.event_name != 'schedule' || env.ONLINE_SIGNED == 'true'
-      run: |
-        git show --oneline --no-patch HEAD
-        git push origin HEAD:publish
-        echo "rev=`git rev-parse HEAD`" >> $GITHUB_OUTPUT
-        echo "### Online signing finished, will now publish" >> $GITHUB_STEP_SUMMARY
-      shell: bash
-
-    - id: dispatch-publish-workflow
-      if: github.event_name != 'schedule' || env.ONLINE_SIGNED == 'true'
+    - name: Dispatch another signing event workflow
+      # dispatch if using default token: otherwise update_targets step
+      # has alreaddy triggered a push event
+      if: inputs.token == github.token && steps.sign_targets.outputs.targets_signed == 'true'
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
       with:
         github-token: ${{ inputs.token }}
         script: |
-          console.log('Dispatching publish workflow')
+          console.log('Dispatching another signing event workflow after a targets metadata update')
           github.rest.actions.createWorkflowDispatch({
             owner: context.repo.owner,
             repo: context.repo.repo,
-            workflow_id: 'publish.yml',
-            ref: 'publish',
-            inputs: {
-              ref: '${{ steps.move-publish-branch.outputs.rev }}',
-            },
+            workflow_id: 'signing-event.yml',
+            ref: process.env.GITHUB_REF_NAME,
           })

@@ -34,10 +34,20 @@ from tuf.repository import AbortEdit, Repository
 KEY_FOR_TYPE_AND_SCHEME[("sigstore-oidc", "Fulcio")] = SigstoreKey
 SIGNER_FOR_URI_SCHEME[SigstoreSigner.SCHEME] = SigstoreSigner
 
+TAG_KEYOWNER = "x-tuf-on-ci-keyowner"
+TAG_ONLINE_URI = "x-tuf-on-ci-online-uri"
+
 # TODO Add a metadata cache so we don't constantly open files
 # TODO; Signing status probably should include an error message when valid=False
 
 logger = logging.getLogger(__name__)
+
+
+def get_signer(key: Key) -> str:
+    if TAG_KEYOWNER in key.unrecognized_fields:
+        return key.unrecognized_fields[TAG_KEYOWNER]
+
+    return key.unrecognized_fields[TAG_ONLINE_URI]
 
 
 @unique
@@ -136,7 +146,7 @@ class CIRepository(Repository):
         for keyid in r.keyids:
             try:
                 key = delegator.get_key(keyid)
-                if known_good and "x-tuf-on-ci-keyowner" not in key.unrecognized_fields:
+                if known_good and TAG_KEYOWNER not in key.unrecognized_fields:
                     # this is allowed for repo import case: we cannot identify known
                     # good keys and have to trust that delegations have not changed
                     continue
@@ -217,7 +227,7 @@ class CIRepository(Repository):
         md.signatures.clear()
         for key in self._get_keys(rolename):
             if rolename in ["timestamp", "snapshot"]:
-                uri = key.unrecognized_fields["x-tuf-on-ci-online-uri"]
+                uri = key.unrecognized_fields[TAG_ONLINE_URI]
                 signer = Signer.from_priv_key_uri(uri, key)
                 md.sign(signer, True)
             else:
@@ -230,6 +240,37 @@ class CIRepository(Repository):
             root_md.verify_delegate(rolename, md)
 
         self._write(rolename, md)
+
+    def sign(self, rolename: str) -> bool:
+        """Sign without payload changes
+
+        Only targets roles are supported."""
+        fname = self._get_filename(rolename)
+
+        if not os.path.exists(fname):
+            return False
+
+        # sign the metadata
+        valid_keys = []
+        for k in self._get_keys(rolename):
+            if TAG_ONLINE_URI in k.unrecognized_fields:
+                valid_keys.append(k)
+
+        if not valid_keys:
+            return False
+
+        with open(fname, "rb") as f:
+            md = Metadata.from_bytes(f.read())
+
+        for k in valid_keys:
+            uri = k.unrecognized_fields[TAG_ONLINE_URI]
+            signer = Signer.from_priv_key_uri(uri, k)
+            md.sign(signer, True)
+
+        # persist signed metadata
+        self._write(rolename, md)
+
+        return True
 
     @property
     def targets_infos(self) -> dict[str, MetaFile]:
@@ -457,7 +498,7 @@ class CIRepository(Repository):
 
         # Build lists of signed signers and not signed signers
         for key in self._get_keys(rolename, known_good):
-            keyowner = key.unrecognized_fields["x-tuf-on-ci-keyowner"]
+            keyowner = get_signer(key)
             try:
                 payload = CanonicalJSONSerializer().serialize(md.signed)
                 key.verify_signature(md.signatures[key.keyid], payload)
@@ -571,12 +612,7 @@ class CIRepository(Repository):
             return True
 
     def is_signed(self, rolename: str) -> bool:
-        """Return True if role is correctly signed and not in signing period
-
-        NOTE: a role in signing period is valid for TUF clients but this method returns
-        false in this case: this is useful when repository decides if it needs a new
-        online role version.
-        """
+        """Return True if role is correctly signed"""
         role_md = self.open(rolename)
         if rolename in ["root", "timestamp", "snapshot", "targets"]:
             delegator = self.open("root")
@@ -587,7 +623,11 @@ class CIRepository(Repository):
         except UnsignedMetadataError:
             return False
 
+        return True
+
+    def is_in_signing_period(self, rolename: str) -> bool:
+        """Return True if roles signing period has started"""
+        role_md = self.open(rolename)
         signing_days, _ = self.signing_expiry_period(rolename)
         delta = timedelta(days=signing_days)
-
-        return datetime.utcnow() + delta < role_md.signed.expires
+        return datetime.utcnow() >= role_md.signed.expires - delta

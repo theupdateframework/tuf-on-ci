@@ -42,13 +42,14 @@ runs:
 
     - id: update_targets
       run: |
-        if tuf-on-ci-update-targets >> status-output;  then
+        if tuf-on-ci-update-targets >> update-output;  then
           echo "targets_updated=true" >> $GITHUB_OUTPUT
         else
           echo "targets_updated=false" >> $GITHUB_OUTPUT
         fi
-        cat status-output
-        cat status-output >> "$GITHUB_STEP_SUMMARY"
+        cat update-output
+        cat update-output >> output
+        cat update-output >> "$GITHUB_STEP_SUMMARY"
       shell: bash
 
     - id: status
@@ -60,6 +61,7 @@ runs:
           echo "status=failure" >> $GITHUB_OUTPUT
         fi
         cat status-output
+        cat status-output >> output
         cat status-output >> "$GITHUB_STEP_SUMMARY"
       shell: bash
 
@@ -96,7 +98,7 @@ runs:
             console.log(`Found existing pull request #${pr}`)
           }
 
-          message = fs.readFileSync('./status-output').toString()
+          message = fs.readFileSync('./output').toString()
           summary = "Signing event in progress"
           should_be_draft = true
           if (process.env.STATUS == 'success') {
@@ -143,7 +145,8 @@ runs:
           await core.summary.addHeading(summary).write()
 
     - name: Dispatch another signing event workflow
-      # dispatch if using default token: otherwise update_targets step has already triggered a push event
+      # dispatch if using default token: otherwise update_targets step
+      # has alreaddy triggered a push event
       if: inputs.token == github.token && steps.update_targets.outputs.targets_updated == 'true'
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
       with:

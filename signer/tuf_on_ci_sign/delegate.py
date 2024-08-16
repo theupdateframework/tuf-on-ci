@@ -40,6 +40,8 @@ from tuf_on_ci_sign._user import User
 # sigstore is not a supported key by default
 KEY_FOR_TYPE_AND_SCHEME[("sigstore-oidc", "Fulcio")] = SigstoreKey
 
+TAG_KEYOWNER = "x-tuf-on-ci-keyowner"
+TAG_ONLINE_URI = "x-tuf-on-ci-online-uri"
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +49,7 @@ logger = logging.getLogger(__name__)
 def _get_offline_input(
     role: str,
     config: OfflineConfig,
-) -> OfflineConfig:
+) -> tuple[OfflineConfig, Key]:
     config = copy.deepcopy(config)
     click.echo(f"\nConfiguring role {role}")
     username_re = re.compile("^\\@[0-9a-zA-Z\\-]+$")
@@ -71,6 +73,7 @@ def _get_offline_input(
 
         return signers
 
+    online_key = None
     while True:
         click.echo(
             f" 1. Configure signers: [{', '.join(config.signers)}], "
@@ -89,11 +92,35 @@ def _get_offline_input(
         if choice == 0:
             break
         if choice == 1:
-            config.signers = click.prompt(
-                bold(f"Please enter list of {role} signers"),
-                default=", ".join(config.signers),
-                value_proc=verify_signers,
-            )
+            # if role is not root, allow online keys
+            if role in ["root"]:
+                config.signers = click.prompt(
+                    bold(f"Please enter list of {role} signers"),
+                    default=", ".join(config.signers),
+                    value_proc=verify_signers,
+                )
+            else:
+                click.echo("Choose what keytype to use:")
+                click.echo("1. Configure offline signers:")
+                click.echo("2. Configure online signers")
+                signer_choice = click.prompt(
+                    bold("Please choose an option or press enter to continue"),
+                    type=click.IntRange(1, 2),
+                )
+
+                if signer_choice == 1:
+                    config.signers = click.prompt(
+                        bold(f"Please enter list of {role} signers"),
+                        default=", ".join(config.signers),
+                        value_proc=verify_signers,
+                    )
+                elif signer_choice == 2:
+                    toplevel = git_expect(["rev-parse", "--show-toplevel"])
+                    settings_path = os.path.join(toplevel, ".tuf-on-ci-sign.ini")
+                    user_config = User(settings_path)
+                    online_key = _collect_online_key(user_config)
+                    uri = online_key.unrecognized_fields[TAG_ONLINE_URI]
+                    config.signers = [uri]
 
             if len(config.signers) == 1:
                 config.threshold = 1
@@ -116,7 +143,7 @@ def _get_offline_input(
                 default=config.signing_period,
             )
 
-    return config
+    return (config, online_key)
 
 
 def _sigstore_import(pull_remote: str) -> Key:
@@ -136,7 +163,7 @@ def _get_online_input(config: OnlineConfig, user_config: User) -> OnlineConfig:
     config = copy.deepcopy(config)
     click.echo("\nConfiguring online roles")
     while True:
-        keyuri = config.key.unrecognized_fields["x-tuf-on-ci-online-uri"]
+        keyuri = config.key.unrecognized_fields[TAG_ONLINE_URI]
         click.echo(f" 1. Configure online key: {keyuri}")
         click.echo(
             f" 2. Configure timestamp: Expires in {config.timestamp_expiry} days,"
@@ -238,7 +265,7 @@ def _collect_online_key(user_config: User) -> Key:
                 "ed25519",
                 "ed25519",
                 {"public": pub_key},
-                {"x-tuf-on-ci-online-uri": uri},
+                {TAG_ONLINE_URI: uri},
             )
 
 
@@ -275,10 +302,10 @@ def _collect_key_scheme() -> str:
 def _init_repository(repo: SignerRepository) -> bool:
     click.echo("Creating a new TUF-on-CI repository")
 
-    root_config = _get_offline_input(
+    root_config, _ = _get_offline_input(
         "root", OfflineConfig([repo.user.name], 1, 365, 60)
     )
-    targets_config = _get_offline_input("targets", deepcopy(root_config))
+    targets_config, _ = _get_offline_input("targets", deepcopy(root_config))
 
     # As default we offer sigstore online key(s)
     keys = _sigstore_import(repo.user.pull_remote)
@@ -314,21 +341,25 @@ def _update_online_roles(repo: SignerRepository) -> bool:
 
 def _update_offline_role(repo: SignerRepository, role: str) -> bool:
     config = repo.get_role_config(role)
+    online_key = None
     if not config:
         # Non existent role
         click.echo(f"Creating a new delegation for {role}")
-        new_config = _get_offline_input(
+        new_config, online_key = _get_offline_input(
             role, OfflineConfig([repo.user.name], 1, 365, 60)
         )
     else:
         click.echo(f"Modifying delegation for {role}")
-        new_config = _get_offline_input(role, config)
+        new_config, online_key = _get_offline_input(role, config)
         if new_config == config:
             return False
 
     key = None
-    if repo.user.name in new_config.signers:
-        key = get_signing_key_input()
+    if online_key is None:
+        if repo.user.name in new_config.signers:
+            key = get_signing_key_input()
+    else:
+        key = online_key
 
     repo.set_role_config(role, new_config, key)
     return True
