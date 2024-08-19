@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## v0.12.0
+
+In addition to dependency updates, this release contains one new (experimental) repository
+feature: _Online signed targets_. Updating to this version does not require any changes to
+GitHub workflow files.
+
+The _Online signed targets_ feature (#75) currently has some significant limitations
+and may be changed in the future, see DELEGATION-MANUAL.md for details.
+
 ## v0.11.0
 
 This release contains bug fixes, stability fixes and dependency
