@@ -570,6 +570,14 @@ class CIRepository(Repository):
                         dst_path = os.path.join(artifact_path, rdir, f"{hash}.{name}")
                         shutil.copy(src_path, dst_path)
 
+                    # FIXME: Temporary hack to prevent sigstore-java from breaking
+                    # https://github.com/sigstore/root-signing-staging/issues/161
+                    if "sha512" not in target.hashes:
+                        tgt = TargetFile.from_file(target.path, src_path, ["sha512"])
+                        hash = tgt.hashes["sha512"]
+                        dst_path = os.path.join(artifact_path, rdir, f"{hash}.{name}")
+                        shutil.copy(src_path, dst_path)
+
             # Add delegated roles
             if role.delegations and role.delegations.roles:
                 delegated_roles.extend(role.delegations.roles.keys())
