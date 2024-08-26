@@ -18,9 +18,9 @@ azure-keyvault-keys==4.9.0
     # via securesystemslib
 betterproto==2.0.0b6
     # via sigstore-protobuf-specs
-boto3==1.35.0
+boto3==1.35.5
     # via securesystemslib
-botocore==1.35.0
+botocore==1.35.5
     # via
     #   boto3
     #   s3transfer
@@ -65,13 +65,13 @@ googleapis-common-protos==1.63.2
     #   grpcio-status
 grpc-google-iam-v1==0.13.1
     # via google-cloud-kms
-grpcio==1.65.5
+grpcio==1.66.0
     # via
     #   google-api-core
     #   googleapis-common-protos
     #   grpc-google-iam-v1
     #   grpcio-status
-grpcio-status==1.65.5
+grpcio-status==1.66.0
     # via google-api-core
 grpclib==0.4.7
     # via betterproto
@@ -83,7 +83,7 @@ hyperframe==6.0.1
     # via h2
 id==1.4.0
     # via sigstore
-idna==3.7
+idna==3.8
     # via
     #   email-validator
     #   requests
