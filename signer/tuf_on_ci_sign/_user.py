@@ -39,6 +39,8 @@ class User:
             raise click.ClickException(f"Settings file {path} not found")
         try:
             self.name = self._config["settings"]["user-name"]
+            if not self.name.startswith("@"):
+                self.name = f"@{self.name}"
             self.push_remote = self._config["settings"]["push-remote"]
             self.pull_remote = self._config["settings"]["pull-remote"]
         except KeyError as e:
