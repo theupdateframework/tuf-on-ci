@@ -25,6 +25,14 @@ push-remote = origin
 pull-remote = myremote
 """
 
+NAME_WITH_NO_PREFIX = """
+[settings]
+pykcs11lib = /usr/lib/x86_64-linux-gnu/libykcs11.so
+user-name = signer
+push-remote = origin
+pull-remote = myremote
+"""
+
 REQUIRED_AND_SIGNING_KEYS = """
 [settings]
 pykcs11lib = /usr/lib/x86_64-linux-gnu/libykcs11.so
@@ -70,6 +78,12 @@ class TestUser(unittest.TestCase):
             self.assertEqual(user.pykcs11lib, "/usr/lib/x86_64-linux-gnu/libykcs11.so")
             self.assertEqual(user.push_remote, "origin")
             self.assertEqual(user.pull_remote, "myremote")
+
+            with open(inifile, "w") as f:
+                f.write(NAME_WITH_NO_PREFIX)
+
+            user2 = User(inifile)
+            self.assertEqual(user.name, user2.name)
 
             with open(inifile, "w") as f:
                 f.write(MISSING_NAME)
