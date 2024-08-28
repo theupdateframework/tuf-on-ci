@@ -63,7 +63,7 @@ def _get_offline_input(
 
         signers: list[str] = []
         for s in response.split(","):
-            s = s.strip()
+            s = s.strip().lower()
             if not s.startswith("@"):
                 s = f"@{s}"
 
