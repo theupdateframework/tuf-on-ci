@@ -97,14 +97,14 @@ repo_setup()
 signer_setup()
 {
     USER=$1
-    SIGNER_DIR="$WORK_DIR/$TEST_NAME/$USER"
+    SIGNER_DIR="$WORK_DIR/$TEST_NAME/${USER,,}"
     SIGNER_GIT="$SIGNER_DIR/git"
 
     mkdir -p $SIGNER_GIT
 
     # initialize softhsm: Make it look like we have HW key attached
     echo "directories.tokendir = $SIGNER_DIR/tokens" > "$SIGNER_DIR/softhsm2.conf"
-    cp -r $SCRIPT_DIR/softhsm/tokens-$USER $SIGNER_DIR/tokens
+    cp -r "$SCRIPT_DIR/softhsm/tokens-${USER,,}" $SIGNER_DIR/tokens
 
     # clone the test repository
     git_clone $SIGNER_GIT $UPSTREAM_GIT "$USER@example.com" "$USER"
@@ -123,7 +123,7 @@ signer_init()
     USER=$1
     EVENT=$2
 
-    SIGNER_DIR="$WORK_DIR/$TEST_NAME/$USER"
+    SIGNER_DIR="$WORK_DIR/$TEST_NAME/${USER,,}"
     SIGNER_GIT="$SIGNER_DIR/git"
     export SOFTHSM2_CONF="$SIGNER_DIR/softhsm2.conf"
 
@@ -153,7 +153,7 @@ signer_add_delegation()
     USER1=$1
     EVENT=$2
 
-    SIGNER_DIR="$WORK_DIR/$TEST_NAME/$USER1"
+    SIGNER_DIR="$WORK_DIR/$TEST_NAME/${USER1,,}"
     SIGNER_GIT="$SIGNER_DIR/git"
     export SOFTHSM2_CONF="$SIGNER_DIR/softhsm2.conf"
 
@@ -184,7 +184,7 @@ signer_change_root_signer()
     USER2=$2
     EVENT=$3
 
-    SIGNER_DIR="$WORK_DIR/$TEST_NAME/$USER1"
+    SIGNER_DIR="$WORK_DIR/$TEST_NAME/${USER1,,}"
     SIGNER_GIT="$SIGNER_DIR/git"
     export SOFTHSM2_CONF="$SIGNER_DIR/softhsm2.conf"
 
@@ -211,7 +211,7 @@ signer_init_shorter_snapshot_expiry()
     USER=$1
     EVENT=$2
 
-    SIGNER_DIR="$WORK_DIR/$TEST_NAME/$USER"
+    SIGNER_DIR="$WORK_DIR/$TEST_NAME/${USER,,}"
     SIGNER_GIT="$SIGNER_DIR/git"
     export SOFTHSM2_CONF="$SIGNER_DIR/softhsm2.conf"
 
@@ -244,7 +244,7 @@ signer_init_offline_roles_in_signing_period()
     USER=$1
     EVENT=$2
 
-    SIGNER_DIR="$WORK_DIR/$TEST_NAME/$USER"
+    SIGNER_DIR="$WORK_DIR/$TEST_NAME/${USER,,}"
     SIGNER_GIT="$SIGNER_DIR/git"
     export SOFTHSM2_CONF="$SIGNER_DIR/softhsm2.conf"
 
@@ -280,7 +280,7 @@ signer_init_multiuser()
     USER=$1
     EVENT=$2
 
-    SIGNER_DIR="$WORK_DIR/$TEST_NAME/$USER"
+    SIGNER_DIR="$WORK_DIR/$TEST_NAME/${USER,,}"
     SIGNER_GIT="$SIGNER_DIR/git"
     export SOFTHSM2_CONF="$SIGNER_DIR/softhsm2.conf"
 
@@ -288,7 +288,7 @@ signer_init_multiuser()
         ""                  # Configure root? [enter to continue]
         "1"                 # Configure targets? [1: configure signers]
         "1"                 # Chose offline signer
-        "@tuf-on-ci-user1, @tuf-on-ci-user2" # Enter signers
+        "@tuf-on-ci-user1, @tuf-on-ci-User2" # Enter signers
         "2"                 # Enter threshold
         ""                  # Configure targets? [enter to continue]
         "1"                 # Configure online roles? [1: configure key]
@@ -313,7 +313,7 @@ signer_accept_invite()
     USER=$1
     EVENT=$2
 
-    SIGNER_DIR="$WORK_DIR/$TEST_NAME/$USER"
+    SIGNER_DIR="$WORK_DIR/$TEST_NAME/${USER,,}"
     SIGNER_GIT="$SIGNER_DIR/git"
     export SOFTHSM2_CONF="$SIGNER_DIR/softhsm2.conf"
 
@@ -339,7 +339,7 @@ signer_sign()
 
     EVENT=$2
 
-    SIGNER_DIR="$WORK_DIR/$TEST_NAME/$USER"
+    SIGNER_DIR="$WORK_DIR/$TEST_NAME/${USER,,}"
     SIGNER_GIT="$SIGNER_DIR/git"
     export SOFTHSM2_CONF="$SIGNER_DIR/softhsm2.conf"
 
@@ -360,7 +360,7 @@ signer_add_targets()
     USER=$1
     EVENT=$2
 
-    SIGNER_DIR="$WORK_DIR/$TEST_NAME/$USER"
+    SIGNER_DIR="$WORK_DIR/$TEST_NAME/${USER,,}"
     SIGNER_GIT="$SIGNER_DIR/git"
     export SOFTHSM2_CONF="$SIGNER_DIR/softhsm2.conf"
 
@@ -382,7 +382,7 @@ signer_modify_targets()
     USER=$1
     EVENT=$2
 
-    SIGNER_DIR="$WORK_DIR/$TEST_NAME/$USER"
+    SIGNER_DIR="$WORK_DIR/$TEST_NAME/${USER,,}"
     SIGNER_GIT="$SIGNER_DIR/git"
     export SOFTHSM2_CONF="$SIGNER_DIR/softhsm2.conf"
 
@@ -403,7 +403,7 @@ signer_add_delegated_targets()
     USER=$1
     EVENT=$2
 
-    SIGNER_DIR="$WORK_DIR/$TEST_NAME/$USER"
+    SIGNER_DIR="$WORK_DIR/$TEST_NAME/${USER,,}"
     SIGNER_GIT="$SIGNER_DIR/git"
     export SOFTHSM2_CONF="$SIGNER_DIR/softhsm2.conf"
 
@@ -427,7 +427,7 @@ non_signer_change_online_delegation()
     USER=$1
     EVENT=$2
 
-    SIGNER_DIR="$WORK_DIR/$TEST_NAME/$USER"
+    SIGNER_DIR="$WORK_DIR/$TEST_NAME/${USER,,}"
     SIGNER_GIT="$SIGNER_DIR/git"
     export SOFTHSM2_CONF="$SIGNER_DIR/softhsm2.conf"
 
@@ -551,7 +551,7 @@ setup_test() {
     mkdir -p $REPO_GIT $UPSTREAM_GIT $PUBLISH_DIR
 
     repo_setup
-    signer_setup "user1"
+    signer_setup "User1"
     signer_setup "user2"
 }
 
