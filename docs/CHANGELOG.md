@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v0.13.0
+
+* Accept usernames without @ in .tuf-on-ci-sign.ini (#415)
+* Add workaround for Sigstore root-signing migration (#422)
+* Dependency updates
+
 ## v0.12.0
 
 In addition to dependency updates, this release contains one new (experimental) repository
