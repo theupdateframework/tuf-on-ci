@@ -228,6 +228,15 @@ class CIRepository(Repository):
         for key in self._get_keys(rolename):
             if rolename in ["timestamp", "snapshot"]:
                 uri = key.unrecognized_fields[TAG_ONLINE_URI]
+
+                # FIXME: workaround for issue #422, only needed while sigstore
+                # root-signing online key keyid is incorrect
+                if (
+                    uri
+                    == "gcpkms://projects/sigstore-root-signing/locations/global/keyRings/root/cryptoKeys/timestamp"
+                ):
+                    uri = "gcpkms:projects/sigstore-root-signing/locations/global/keyRings/root/cryptoKeys/timestamp/cryptoKeyVersions/1"  # noqa: E501
+
                 signer = Signer.from_priv_key_uri(uri, key)
                 md.sign(signer, True)
             else:
