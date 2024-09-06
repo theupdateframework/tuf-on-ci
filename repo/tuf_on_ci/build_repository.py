@@ -35,8 +35,8 @@ def build_description(repo: CIRepository) -> str:
     lines = [
         "## TUF Repository state",
         "",
-        "| Role | Next signing | Signers |",
-        "| - | - | - |",
+        "| Role | Signing starts | Expires | Signers |",
+        "| - | - | - | - |",
     ]
     root = repo.root()
     targets = repo.targets()
@@ -66,13 +66,13 @@ def build_description(repo: CIRepository) -> str:
         expiry = delegate.expires
         signing_days, _ = repo.signing_expiry_period(rolename)
         signing = expiry - timedelta(days=signing_days)
+        signing_date = signing.strftime("%Y-%m-%d")
 
         name_str = f'{rolename} (<a href="{json_link}">json</a>)'
-        date_str = f"[Starts {signing.strftime('%Y-%m-%d')}](## '{signing} - {expiry}')"
         threshold_str = f"{role.threshold} of {len(signers)}"
         signer_str = f"{', '.join(signers)} ({threshold_str} required)"
 
-        lines.append(f"| {name_str} | {date_str} | {signer_str} |")
+        lines.append(f"| {name_str} | {signing_date} | {expiry} UTC | {signer_str} |")
 
     now = datetime.now(UTC).isoformat(timespec="minutes")
     head = _git(["rev-parse", "HEAD"]).stdout.strip()
