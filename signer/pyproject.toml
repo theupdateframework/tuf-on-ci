@@ -13,7 +13,7 @@ dependencies = [
   "tuf ~= 3.1",
   "click ~= 8.1",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 dynamic = ["version"]
 
 [project.scripts]
