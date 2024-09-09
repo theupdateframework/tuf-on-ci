@@ -5,7 +5,7 @@
 import json
 import logging
 import os
-from glob import glob
+from typing import Optional, Union
 
 import click
 from tuf.api.metadata import Key, Role, Signed
@@ -27,7 +27,7 @@ ONLINE_URI_KEY = "x-tuf-on-ci-online-uri"
 KEYOWNER_KEY = "x-tuf-on-ci-keyowner"
 
 
-def _update_expiry(obj: Signed | Role, import_data: dict[str, int]):
+def _update_expiry(obj: Union[Signed, Role], import_data: dict[str, int]):
     if EXPIRY_KEY in import_data and import_data[EXPIRY_KEY] != -1:
         expiry = import_data[EXPIRY_KEY]
     elif EXPIRY_KEY in obj.unrecognized_fields:
@@ -47,7 +47,7 @@ def _update_expiry(obj: Signed | Role, import_data: dict[str, int]):
     return True
 
 
-def _update_signing(obj: Signed | Role, import_data: dict[str, int]):
+def _update_signing(obj: Union[Signed, Role], import_data: dict[str, int]):
     if SIGNING_KEY in import_data and import_data[SIGNING_KEY] != -1:
         signing = import_data[SIGNING_KEY]
     elif SIGNING_KEY in obj.unrecognized_fields:
@@ -106,7 +106,7 @@ def _update_keys(keys: dict[str, Key], import_data: dict[str, str]):
 @click.option("--push/--no-push", default=True)
 @click.argument("event-name", metavar="signing-event")
 @click.argument("import-file", required=False)
-def import_repo(verbose: int, push: bool, event_name: str, import_file: str | None):
+def import_repo(verbose: int, push: bool, event_name: str, import_file: Optional[str]):
     """Repository import tool for TUF-on-CI signing events.
 
     Works on both unmanaged repositories and legacy playground-repository managed
@@ -138,11 +138,14 @@ def import_repo(verbose: int, push: bool, event_name: str, import_file: str | No
         ok = True
         # handle root and all target files, in order of delegations
         roles = ["root", "targets"]
-        for filename in glob("*.json", root_dir=f"{toplevel}/metadata"):
-            rolename = filename[: -len(".json")]
-            if rolename in ["root", "timestamp", "snapshot", "targets"]:
-                continue
-            roles.append(rolename)
+        for _, _, filenames in os.walk(f"{toplevel}/metadata"):
+            for filename in filenames:
+                if not filename.endswith(".json"):
+                    continue
+                rolename = filename[: -len(".json")]
+                if rolename in ["root", "timestamp", "snapshot", "targets"]:
+                    continue
+                roles.append(rolename)
 
         for rolename in roles:
             if rolename not in import_data:

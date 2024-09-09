@@ -11,7 +11,7 @@ from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, unique
-from glob import glob
+from typing import Optional, Union
 
 import click
 from securesystemslib.exceptions import UnverifiedSignatureError
@@ -83,7 +83,13 @@ def blue(text: str) -> str:
 
 def _find_changed_roles(known_good_dir: str, signing_event_dir: str) -> list[str]:
     """Return list of roles that exist and have changed in this signing event"""
-    files = glob("*.json", root_dir=signing_event_dir)
+
+    files = []
+    for _, _, filenames in os.walk(signing_event_dir):
+        for filename in filenames:
+            if filename.endswith(".json"):
+                files.append(filename)
+
     changed_roles = []
     for fname in files:
         if not os.path.exists(f"{known_good_dir}/{fname}") or not filecmp.cmp(
@@ -245,7 +251,7 @@ class SignerRepository(Repository):
         """
         if role in ["root", "timestamp", "snapshot", "targets"]:
             if known_good:
-                delegator: Root | Targets = self._known_good_root()
+                delegator: Union[Root, Targets] = self._known_good_root()
             else:
                 delegator = self.root()
         else:
@@ -459,14 +465,14 @@ class SignerRepository(Repository):
                 online_config.snapshot_signing
             )
 
-    def get_role_config(self, rolename: str) -> OfflineConfig | None:
+    def get_role_config(self, rolename: str) -> Optional[OfflineConfig]:
         """Read configuration for delegation and role from metadata"""
         if rolename in ["timestamp", "snapshot"]:
             raise ValueError("online roles not supported")
 
         if rolename == "root":
-            delegator: Root | Targets = self.root()
-            delegated: Root | Targets = delegator
+            delegator: Union[Root, Targets] = self.root()
+            delegated: Union[Root, Targets] = delegator
         elif rolename == "targets":
             delegator = self.root()
             delegated = self.targets()
@@ -498,7 +504,7 @@ class SignerRepository(Repository):
         return OfflineConfig(signers, threshold, expiry, signing)
 
     def set_role_config(
-        self, rolename: str, config: OfflineConfig, signing_key: Key | None
+        self, rolename: str, config: OfflineConfig, signing_key: Optional[Key]
     ):
         """Store delegation & role configuration in metadata.
 
@@ -540,7 +546,9 @@ class SignerRepository(Repository):
                     self._invites[signer].append(rolename)
 
         if rolename in ["root", "targets"]:
-            delegator_cm: AbstractContextManager[Root | Targets] = self.edit_root()
+            delegator_cm: AbstractContextManager[Union[Root, Targets]] = (
+                self.edit_root()
+            )
         else:
             delegator_cm = self.edit_targets()
 
@@ -773,7 +781,7 @@ class SignerRepository(Repository):
 
         return "\n".join(output)
 
-    def _get_legacy_root_key(self, key: Key) -> Key | None:
+    def _get_legacy_root_key(self, key: Key) -> Optional[Key]:
         # calculate keyid _without custom metadata_, then lookup key from known good
         # root keys. This is useful in import situation where the legacy key does not
         # have the custom metadata but is otherwise the same key
