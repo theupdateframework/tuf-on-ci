@@ -38,7 +38,7 @@ class User:
         if not self._config:
             raise click.ClickException(f"Settings file {path} not found")
         try:
-            self.name = self._config["settings"]["user-name"]
+            self.name = self._config["settings"]["user-name"].lower()
             if not self.name.startswith("@"):
                 self.name = f"@{self.name}"
             self.push_remote = self._config["settings"]["push-remote"]
