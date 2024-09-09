@@ -30,10 +30,9 @@ The optimal use case is TUF repositories with a low to moderate frequency of cha
 
 ![logos](https://github.com/theupdateframework/tuf-on-ci/assets/31889/34eb2a5e-b9a2-41ad-b333-6a28590b17f3)
 
-* The [Sigstore project](https://www.sigstore.dev/) uses tuf-on-ci to manage their staging TUF repository in
-  [root-signing-staging](https://github.com/sigstore/root-signing-staging). This repository is
-  used to deliver the Sigstore root of trust to all sigstore clients. Production TUF repository
-  is likely to follow later this year
+* The [Sigstore project](https://www.sigstore.dev/) uses tuf-on-ci to manage their TUF repositories in
+  [root-signing](https://github.com/sigstore/root-signing) and [root-signing-staging](https://github.com/sigstore/root-signing-staging).
+  These repositories are used to deliver the Sigstore root of trust to all sigstore clients.
 * GitHub maintains a TUF repository for their
   [Artifact Attestations](https://github.blog/2024-05-02-introducing-artifact-attestations-now-in-public-beta/)
   with tuf-on-ci
