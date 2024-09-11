@@ -79,12 +79,11 @@ class User:
         """
 
         def get_secret(secret: str) -> str:
-            msg = f"Enter {secret} to sign"
+            msg = f"Enter {secret} to sign (provide touch/bio authentication if needed)"
 
             # special case for tests -- prompt() will lockup trying to hide STDIN:
             if not sys.stdin.isatty():
                 return sys.stdin.readline().rstrip()
-
             return click.prompt(bold(msg), hide_input=True)
 
         if key.keyid in self._signers:
