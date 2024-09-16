@@ -8,7 +8,7 @@ annotated-types==0.7.0
     # via pydantic
 appdirs==1.4.4
     # via sigstore
-azure-core==1.30.2
+azure-core==1.31.0
     # via
     #   azure-identity
     #   azure-keyvault-keys
@@ -18,9 +18,9 @@ azure-keyvault-keys==4.9.0
     # via securesystemslib
 betterproto==2.0.0b6
     # via sigstore-protobuf-specs
-boto3==1.35.14
+boto3==1.35.19
     # via securesystemslib
-botocore==1.35.14
+botocore==1.35.19
     # via
     #   boto3
     #   s3transfer
@@ -83,7 +83,7 @@ hyperframe==6.0.1
     # via h2
 id==1.4.0
     # via sigstore
-idna==3.8
+idna==3.10
     # via
     #   email-validator
     #   requests
@@ -103,7 +103,7 @@ msal==1.31.0
     #   msal-extensions
 msal-extensions==1.2.0
     # via azure-identity
-multidict==6.0.5
+multidict==6.1.0
     # via grpclib
 portalocker==2.10.1
     # via msal-extensions
@@ -111,7 +111,7 @@ proto-plus==1.24.0
     # via
     #   google-api-core
     #   google-cloud-kms
-protobuf==5.28.0
+protobuf==5.28.1
     # via
     #   google-api-core
     #   google-cloud-kms
@@ -119,11 +119,11 @@ protobuf==5.28.0
     #   grpc-google-iam-v1
     #   grpcio-status
     #   proto-plus
-pyasn1==0.6.0
+pyasn1==0.6.1
     # via
     #   pyasn1-modules
     #   rsa
-pyasn1-modules==0.4.0
+pyasn1-modules==0.4.1
     # via google-auth
 pycparser==2.22
     # via cffi
@@ -156,7 +156,7 @@ requests==2.32.3
     #   msal
     #   sigstore
     #   tuf
-rich==13.8.0
+rich==13.8.1
     # via sigstore
 rsa==4.9
     # via google-auth
@@ -189,7 +189,7 @@ typing-extensions==4.12.2
     #   azure-keyvault-keys
     #   pydantic
     #   pydantic-core
-urllib3==2.2.2
+urllib3==2.2.3
     # via
     #   botocore
     #   requests
