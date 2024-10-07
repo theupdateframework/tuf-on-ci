@@ -13,7 +13,7 @@ dependencies = [
   "tuf ~= 3.1",
   "click ~= 8.1",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 dynamic = ["version"]
 
 [project.scripts]
@@ -29,6 +29,9 @@ lint = [
 
 [tool.hatch.version]
 path = "tuf_on_ci_sign/__init__.py"
+
+[tool.mypy]
+python_version = "3.9"
 
 [[tool.mypy.overrides]]
 module = [

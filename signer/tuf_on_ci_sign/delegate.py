@@ -7,6 +7,7 @@ import logging
 import os
 import re
 from copy import deepcopy
+from typing import Optional
 
 import click
 from securesystemslib.signer import (
@@ -377,7 +378,7 @@ def delegate(
     push: bool,
     force_compliant_keyids: bool,
     event_name: str,
-    role: str | None,
+    role: Optional[str],
 ):
     """Tool for modifying TUF-on-CI delegations."""
     logging.basicConfig(level=logging.WARNING - verbose * 10)
