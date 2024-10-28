@@ -12,15 +12,15 @@ azure-core==1.31.0
     # via
     #   azure-identity
     #   azure-keyvault-keys
-azure-identity==1.18.0
+azure-identity==1.19.0
     # via securesystemslib
-azure-keyvault-keys==4.9.0
+azure-keyvault-keys==4.10.0
     # via securesystemslib
 betterproto==2.0.0b6
     # via sigstore-protobuf-specs
-boto3==1.35.34
+boto3==1.35.49
     # via securesystemslib
-botocore==1.35.34
+botocore==1.35.49
     # via
     #   boto3
     #   s3transfer
@@ -33,11 +33,11 @@ cffi==1.17.1
     # via
     #   cryptography
     #   pynacl
-charset-normalizer==3.3.2
+charset-normalizer==3.4.0
     # via requests
 click==8.1.7
     # via tuf-on-ci (repo/pyproject.toml)
-cryptography==43.0.1
+cryptography==43.0.3
     # via
     #   azure-identity
     #   azure-keyvault-keys
@@ -50,13 +50,13 @@ dnspython==2.7.0
     # via email-validator
 email-validator==2.2.0
     # via pydantic
-google-api-core==2.20.0
+google-api-core==2.21.0
     # via google-cloud-kms
 google-auth==2.35.0
     # via
     #   google-api-core
     #   google-cloud-kms
-google-cloud-kms==3.0.0
+google-cloud-kms==3.1.0
     # via securesystemslib
 googleapis-common-protos==1.65.0
     # via
@@ -65,13 +65,13 @@ googleapis-common-protos==1.65.0
     #   grpcio-status
 grpc-google-iam-v1==0.13.1
     # via google-cloud-kms
-grpcio==1.66.2
+grpcio==1.67.0
     # via
     #   google-api-core
     #   googleapis-common-protos
     #   grpc-google-iam-v1
     #   grpcio-status
-grpcio-status==1.66.2
+grpcio-status==1.67.0
     # via google-api-core
 grpclib==0.4.7
     # via betterproto
@@ -87,7 +87,7 @@ idna==3.10
     # via
     #   email-validator
     #   requests
-isodate==0.6.1
+isodate==0.7.2
     # via azure-keyvault-keys
 jmespath==1.0.1
     # via
@@ -107,11 +107,11 @@ multidict==6.1.0
     # via grpclib
 portalocker==2.10.1
     # via msal-extensions
-proto-plus==1.24.0
+proto-plus==1.25.0
     # via
     #   google-api-core
     #   google-cloud-kms
-protobuf==5.28.2
+protobuf==5.28.3
     # via
     #   google-api-core
     #   google-cloud-kms
@@ -156,11 +156,11 @@ requests==2.32.3
     #   msal
     #   sigstore
     #   tuf
-rich==13.9.2
+rich==13.9.3
     # via sigstore
 rsa==4.9
     # via google-auth
-s3transfer==0.10.2
+s3transfer==0.10.3
     # via boto3
 securesystemslib==0.31.0
     # via
@@ -176,7 +176,6 @@ sigstore-rekor-types==0.0.11
 six==1.16.0
     # via
     #   azure-core
-    #   isodate
     #   python-dateutil
 tuf==3.1.1
     # via
