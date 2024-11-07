@@ -74,14 +74,15 @@ runs:
         script: |
           const fs = require('fs')
           const title = `Signing event: ${process.env.GITHUB_REF_NAME}`
-          const repo = `${context.repo.owner}/${context.repo.repo}`
-          const prs = await github.rest.search.issuesAndPullRequests({
-            q: `in:title+"${title}"+state:open+type:pr+repo:${repo}`
+          const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: context.sha
           })
 
-          if (prs.data.total_count > 1) {
-            core.setFailed("Found more than one open pull request with same title")
-          } else if (prs.data.total_count == 0) {
+          if (prs.data.length > 1) {
+            core.setFailed("Found more than one open pull request the current commit")
+          } else if (prs.data.length == 0) {
             const response = await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -94,7 +95,7 @@ runs:
             pr = response.data.number
             console.log(`Created pull request #${pr}`)
           } else {
-            pr = prs.data.items[0].number
+            pr = prs.data[0].number
             console.log(`Found existing pull request #${pr}`)
           }
 
