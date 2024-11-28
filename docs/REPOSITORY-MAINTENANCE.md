@@ -5,8 +5,9 @@ ongoing maintenance.
 
 ## New Repository Setup
 
-1. Fork the [template](https://github.com/theupdateframework/tuf-on-ci-template).
-1. Configure the repository:
+1. [Create new repository](https://github.com/new?template_name=tuf-on-ci-template&template_owner=theupdateframework)
+   using the tuf-on-ci template: the created repository contains all the required workflows.
+1. Configure the new repository:
    * set _Settings->Pages->Source_ to `GitHub Actions`
    * Change _Settings->Environments->github-pages_ deployment branch from `main` to
      `publish`
