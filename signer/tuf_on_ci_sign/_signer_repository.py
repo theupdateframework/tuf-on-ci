@@ -2,6 +2,8 @@
 
 """Internal repository module for TUF-on-CI signer tools"""
 
+from __future__ import annotations
+
 import copy
 import filecmp
 import json
@@ -11,7 +13,6 @@ from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, unique
-from glob import glob
 
 import click
 from securesystemslib.exceptions import UnverifiedSignatureError
@@ -83,7 +84,13 @@ def blue(text: str) -> str:
 
 def _find_changed_roles(known_good_dir: str, signing_event_dir: str) -> list[str]:
     """Return list of roles that exist and have changed in this signing event"""
-    files = glob("*.json", root_dir=signing_event_dir)
+
+    files = []
+    for _, _, filenames in os.walk(signing_event_dir):
+        for filename in filenames:
+            if filename.endswith(".json"):
+                files.append(filename)
+
     changed_roles = []
     for fname in files:
         if not os.path.exists(f"{known_good_dir}/{fname}") or not filecmp.cmp(

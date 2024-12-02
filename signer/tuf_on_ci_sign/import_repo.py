@@ -2,10 +2,11 @@
 
 """tuf-on-ci-import: A command line import tool for TUF-on-CI signing events"""
 
+from __future__ import annotations
+
 import json
 import logging
 import os
-from glob import glob
 
 import click
 from tuf.api.metadata import Key, Role, Signed
@@ -138,11 +139,14 @@ def import_repo(verbose: int, push: bool, event_name: str, import_file: str | No
         ok = True
         # handle root and all target files, in order of delegations
         roles = ["root", "targets"]
-        for filename in glob("*.json", root_dir=f"{toplevel}/metadata"):
-            rolename = filename[: -len(".json")]
-            if rolename in ["root", "timestamp", "snapshot", "targets"]:
-                continue
-            roles.append(rolename)
+        for _, _, filenames in os.walk(f"{toplevel}/metadata"):
+            for filename in filenames:
+                if not filename.endswith(".json"):
+                    continue
+                rolename = filename[: -len(".json")]
+                if rolename in ["root", "timestamp", "snapshot", "targets"]:
+                    continue
+                roles.append(rolename)
 
         for rolename in roles:
             if rolename not in import_data:

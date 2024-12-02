@@ -2,6 +2,8 @@
 
 """tuf-on-ci-delegate: A command line tool to modify TUF-on-CI delegations"""
 
+from __future__ import annotations
+
 import copy
 import logging
 import os
