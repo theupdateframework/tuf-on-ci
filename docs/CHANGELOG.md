@@ -5,6 +5,7 @@
 ## v0.14.0
 
 * Updates the status page to include expiration time for metadata (#431)
+* Compatibility updates for `tuf-on-ci-sign`, now runs on Python 3.9 (#433)
 * Performance improvements to the signing-event action (#469)
 * Dependency updates
 
