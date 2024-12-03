@@ -6,8 +6,6 @@
 #
 annotated-types==0.7.0
     # via pydantic
-appdirs==1.4.4
-    # via sigstore
 azure-core==1.32.0
     # via
     #   azure-identity
@@ -30,9 +28,7 @@ cachetools==5.5.0
 certifi==2024.8.30
     # via requests
 cffi==1.17.1
-    # via
-    #   cryptography
-    #   pynacl
+    # via cryptography
 charset-normalizer==3.4.0
     # via requests
 click==8.1.7
@@ -105,6 +101,8 @@ msal-extensions==1.2.0
     # via azure-identity
 multidict==6.1.0
     # via grpclib
+platformdirs==4.3.6
+    # via sigstore
 portalocker==2.10.1
     # via msal-extensions
 proto-plus==1.25.0
@@ -123,11 +121,12 @@ pyasn1==0.6.1
     # via
     #   pyasn1-modules
     #   rsa
+    #   sigstore
 pyasn1-modules==0.4.1
     # via google-auth
 pycparser==2.22
     # via cffi
-pydantic==2.10.1
+pydantic==2.10.2
     # via
     #   id
     #   sigstore
@@ -136,13 +135,11 @@ pydantic-core==2.27.1
     # via pydantic
 pygments==2.18.0
     # via rich
-pyjwt==2.10.0
+pyjwt==2.10.1
     # via
     #   msal
     #   sigstore
-pynacl==1.5.0
-    # via securesystemslib
-pyopenssl==24.2.1
+pyopenssl==24.3.0
     # via sigstore
 python-dateutil==2.9.0.post0
     # via
@@ -156,28 +153,29 @@ requests==2.32.3
     #   msal
     #   sigstore
     #   tuf
+rfc8785==0.1.4
+    # via sigstore
 rich==13.9.4
     # via sigstore
 rsa==4.9
     # via google-auth
 s3transfer==0.10.4
     # via boto3
-securesystemslib==0.31.0
+securesystemslib==1.2.0
     # via
-    #   sigstore
     #   tuf
     #   tuf-on-ci (repo/pyproject.toml)
-sigstore==2.1.5
+sigstore==3.5.3
     # via securesystemslib
 sigstore-protobuf-specs==0.3.2
     # via sigstore
-sigstore-rekor-types==0.0.11
+sigstore-rekor-types==0.0.13
     # via sigstore
 six==1.16.0
     # via
     #   azure-core
     #   python-dateutil
-tuf==3.1.1
+tuf==5.1.0
     # via
     #   sigstore
     #   tuf-on-ci (repo/pyproject.toml)
