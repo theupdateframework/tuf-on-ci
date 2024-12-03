@@ -16,7 +16,6 @@
 # Python dependencies
 # * signer: pip install ./signer/
 # * repo: pip install ./repo/
-# * pynacl: pip install pynacl  # for the testing ed25519 key
 #
 #
 # Set DEBUG_TESTS=1 for more visibility. This will leave the temp directories in place.
@@ -519,7 +518,7 @@ repo_online_sign()
 
     cd $REPO_GIT
 
-    if LOCAL_TESTING_KEY=$ONLINE_KEY tuf-on-ci-online-sign --push >> $REPO_DIR/out 2>&1; then
+    if tuf-on-ci-online-sign --push >> $REPO_DIR/out 2>&1; then
         echo "generated=true" >> $REPO_DIR/out
     else
         echo "generated=false" >> $REPO_DIR/out
@@ -917,7 +916,9 @@ export TZ="UTC"
 WORK_DIR=$(mktemp -d)
 SCRIPT_DIR=$(dirname $(readlink -f "$0"))
 
-ONLINE_KEY="1d9a024348e413892aeeb8cc8449309c152f48177200ee61a02ae56f450c6480"
+# setup online signing workaround with file based key
+export TUF_ON_CI_TEST_KEY=online-test-key
+export CRYPTO_SIGNER_PATH_PREFIX=$SCRIPT_DIR
 
 # Run tests
 test_basic

@@ -24,7 +24,7 @@
      "public": "fa472895c9756c2b9bcd1440bf867d0fa5c4edee79e9792fa9822be3dd6fcbb3"
     },
     "scheme": "ed25519",
-    "x-tuf-on-ci-online-uri": "envvar:LOCAL_TESTING_KEY"
+    "x-tuf-on-ci-online-uri": "file2:online-test-key"
    }
   },
   "roles": {

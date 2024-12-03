@@ -260,7 +260,7 @@ def _collect_online_key(user_config: User) -> Key:
         if choice == 0:
             # This could be generic support, but for now it's a hidden test key.
             # key value 1d9a024348e413892aeeb8cc8449309c152f48177200ee61a02ae56f450c6480
-            uri = "envvar:LOCAL_TESTING_KEY"
+            uri = f"file2:{os.getenv('TUF_ON_CI_TEST_KEY')}"
             pub_key = "fa472895c9756c2b9bcd1440bf867d0fa5c4edee79e9792fa9822be3dd6fcbb3"
             return SSlibKey(
                 "fa47289",
