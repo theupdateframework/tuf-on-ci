@@ -3,7 +3,7 @@ import logging
 import os
 import shutil
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from enum import Enum, unique
 from glob import glob
 
@@ -222,7 +222,7 @@ class CIRepository(Repository):
 
         _, expiry_days = self.signing_expiry_period(rolename)
 
-        md.signed.expires = datetime.utcnow() + timedelta(days=expiry_days)
+        md.signed.expires = datetime.now(UTC) + timedelta(days=expiry_days)
 
         md.signatures.clear()
         for key in self._get_keys(rolename):
@@ -244,9 +244,8 @@ class CIRepository(Repository):
                 md.signatures[key.keyid] = Signature(key.keyid, "")
 
         if rolename in ["timestamp", "snapshot"]:
-            root_md: Metadata[Root] = self.open("root")
             # repository should never write unsigned online roles
-            root_md.verify_delegate(rolename, md)
+            self.root().verify_delegate(rolename, md.signed_bytes, md.signatures)
 
         self._write(rolename, md)
 
@@ -321,7 +320,7 @@ class CIRepository(Repository):
         return None
 
     def _validate_role(
-        self, delegator: Metadata, rolename: str
+        self, delegator: Root | Targets, rolename: str
     ) -> tuple[bool, str | None]:
         """Validate role compatibility with this repository
 
@@ -340,7 +339,7 @@ class CIRepository(Repository):
             return False, f"Version {md.signed.version} is not valid for {rolename}"
 
         days = md.signed.unrecognized_fields["x-tuf-on-ci-expiry-period"]
-        if md.signed.expires > datetime.utcnow() + timedelta(days=days):
+        if md.signed.expires > datetime.now(UTC) + timedelta(days=days):
             return False, f"Expiry date is further than expected {days} days ahead"
 
         if isinstance(md.signed, Root):
@@ -384,7 +383,7 @@ class CIRepository(Repository):
         # * check that target files in metadata match the files in targets/
 
         try:
-            delegator.verify_delegate(rolename, md)
+            delegator.verify_delegate(rolename, md.signed_bytes, md.signatures)
         except UnsignedMetadataError:
             return False, None
 
@@ -483,16 +482,18 @@ class CIRepository(Repository):
         # Find delegating metadata. For root handle the special case of known good
         # delegating metadata.
         if known_good:
-            delegator = None
+            delegator: Root | Targets | None = None
             if rolename == "root":
-                delegator = self.open_prev("root")
+                root_md = self.open_prev("root")
+                if root_md:
+                    delegator = root_md.signed
             if not delegator:
                 # Not root role or there is no known-good root metadata yet
                 return None
         elif rolename in ["root", "targets"]:
-            delegator = self.open("root")
+            delegator = self.root()
         else:
-            delegator = self.open("targets")
+            delegator = self.targets()
 
         # Build list of invites to all delegated roles of rolename
         delegation_names = []
@@ -503,7 +504,7 @@ class CIRepository(Repository):
         for delegation_name in delegation_names:
             invites.update(self.state.invited_signers_for_role(delegation_name))
 
-        role = delegator.signed.get_delegated_role(rolename)
+        role = delegator.get_delegated_role(rolename)
 
         # Build lists of signed signers and not signed signers
         for key in self._get_keys(rolename, known_good):
@@ -585,7 +586,6 @@ class CIRepository(Repository):
 
     def bump_expiring(self, rolename: str) -> int | None:
         """Create a new version of role if it is about to expire"""
-        now = datetime.utcnow()
         bumped = True
 
         with self.edit(rolename) as signed:
@@ -593,7 +593,7 @@ class CIRepository(Repository):
             delta = timedelta(days=signing_days)
 
             logger.debug(f"{rolename} signing period starts {signed.expires - delta}")
-            if now + delta < signed.expires:
+            if datetime.now(UTC) + delta < signed.expires:
                 # no need to bump version
                 bumped = False
                 raise AbortEdit
@@ -622,13 +622,13 @@ class CIRepository(Repository):
 
     def is_signed(self, rolename: str) -> bool:
         """Return True if role is correctly signed"""
-        role_md = self.open(rolename)
+        md = self.open(rolename)
         if rolename in ["root", "timestamp", "snapshot", "targets"]:
-            delegator = self.open("root")
+            delegator: Root | Targets = self.root()
         else:
-            delegator = self.open("targets")
+            delegator = self.targets()
         try:
-            delegator.verify_delegate(rolename, role_md)
+            delegator.verify_delegate(rolename, md.signed_bytes, md.signatures)
         except UnsignedMetadataError:
             return False
 
@@ -639,4 +639,4 @@ class CIRepository(Repository):
         role_md = self.open(rolename)
         signing_days, _ = self.signing_expiry_period(rolename)
         delta = timedelta(days=signing_days)
-        return datetime.utcnow() >= role_md.signed.expires - delta
+        return datetime.now(UTC) >= role_md.signed.expires - delta
