@@ -16,9 +16,9 @@ azure-keyvault-keys==4.10.0
     # via securesystemslib
 betterproto==2.0.0b6
     # via sigstore-protobuf-specs
-boto3==1.35.68
+boto3==1.35.76
     # via securesystemslib
-botocore==1.35.68
+botocore==1.35.76
     # via
     #   boto3
     #   s3transfer
@@ -61,13 +61,13 @@ googleapis-common-protos==1.66.0
     #   grpcio-status
 grpc-google-iam-v1==0.13.1
     # via google-cloud-kms
-grpcio==1.68.0
+grpcio==1.68.1
     # via
     #   google-api-core
     #   googleapis-common-protos
     #   grpc-google-iam-v1
     #   grpcio-status
-grpcio-status==1.68.0
+grpcio-status==1.68.1
     # via google-api-core
 grpclib==0.4.7
     # via betterproto
@@ -77,7 +77,7 @@ hpack==4.0.0
     # via h2
 hyperframe==6.0.1
     # via h2
-id==1.4.0
+id==1.5.0
     # via sigstore
 idna==3.10
     # via
@@ -109,7 +109,7 @@ proto-plus==1.25.0
     # via
     #   google-api-core
     #   google-cloud-kms
-protobuf==5.28.3
+protobuf==5.29.1
     # via
     #   google-api-core
     #   google-cloud-kms
@@ -126,9 +126,8 @@ pyasn1-modules==0.4.1
     # via google-auth
 pycparser==2.22
     # via cffi
-pydantic==2.10.2
+pydantic==2.10.3
     # via
-    #   id
     #   sigstore
     #   sigstore-rekor-types
 pydantic-core==2.27.1
@@ -171,7 +170,7 @@ sigstore-protobuf-specs==0.3.2
     # via sigstore
 sigstore-rekor-types==0.0.13
     # via sigstore
-six==1.16.0
+six==1.17.0
     # via
     #   azure-core
     #   python-dateutil
