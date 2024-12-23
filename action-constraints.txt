@@ -16,9 +16,9 @@ azure-keyvault-keys==4.10.0
     # via securesystemslib
 betterproto==2.0.0b6
     # via sigstore-protobuf-specs
-boto3==1.35.82
+boto3==1.35.86
     # via securesystemslib
-botocore==1.35.82
+botocore==1.35.86
     # via
     #   boto3
     #   s3transfer
@@ -31,9 +31,9 @@ cffi==1.17.1
     # via cryptography
 charset-normalizer==3.4.0
     # via requests
-click==8.1.7
+click==8.1.8
     # via tuf-on-ci (repo/pyproject.toml)
-cryptography==43.0.3
+cryptography==44.0.0
     # via
     #   azure-identity
     #   azure-keyvault-keys
@@ -53,7 +53,7 @@ google-auth==2.37.0
     # via
     #   google-api-core
     #   google-cloud-kms
-google-cloud-kms==3.2.0
+google-cloud-kms==3.2.1
     # via securesystemslib
 googleapis-common-protos==1.66.0
     # via
@@ -92,8 +92,6 @@ jmespath==1.0.1
     #   botocore
 markdown-it-py==3.0.0
     # via rich
-maturin==1.7.8
-    # via rfc3161-client
 mdurl==0.1.2
     # via markdown-it-py
 msal==1.31.1
@@ -112,7 +110,7 @@ proto-plus==1.25.0
     # via
     #   google-api-core
     #   google-cloud-kms
-protobuf==5.29.1
+protobuf==5.29.2
     # via
     #   google-api-core
     #   google-cloud-kms
@@ -129,11 +127,11 @@ pyasn1-modules==0.4.1
     # via google-auth
 pycparser==2.22
     # via cffi
-pydantic==2.10.3
+pydantic==2.10.4
     # via
     #   sigstore
     #   sigstore-rekor-types
-pydantic-core==2.27.1
+pydantic-core==2.27.2
     # via pydantic
 pygments==2.18.0
     # via rich
@@ -155,7 +153,7 @@ requests==2.32.3
     #   msal
     #   sigstore
     #   tuf
-rfc3161-client==0.0.4
+rfc3161-client==0.1.2
     # via sigstore
 rfc8785==0.1.4
     # via sigstore
@@ -169,7 +167,7 @@ securesystemslib==1.2.0
     # via
     #   tuf
     #   tuf-on-ci (repo/pyproject.toml)
-sigstore==3.6.0
+sigstore==3.6.1
     # via securesystemslib
 sigstore-protobuf-specs==0.3.2
     # via sigstore
@@ -190,7 +188,7 @@ typing-extensions==4.12.2
     #   azure-keyvault-keys
     #   pydantic
     #   pydantic-core
-urllib3==2.2.3
+urllib3==2.3.0
     # via
     #   botocore
     #   requests
