@@ -1,16 +1,24 @@
 import os
+import platform
 import unittest
 from tempfile import TemporaryDirectory
 
 import click
 from securesystemslib.signer import HSMSigner, SSlibKey
 
+from tuf_on_ci_sign import _user
 from tuf_on_ci_sign._user import User
 
 # Long lines are ok here
 # ruff: noqa: E501
-
 REQUIRED = """
+[settings]
+user-name = @signer
+push-remote = origin
+pull-remote = myremote
+"""
+
+WITH_PYKCS11LIB = """
 [settings]
 pykcs11lib = /usr/lib/x86_64-linux-gnu/libykcs11.so
 user-name = @signer
@@ -71,7 +79,7 @@ class TestUser(unittest.TestCase):
         with TemporaryDirectory() as tempdir:
             inifile = os.path.join(tempdir, ".tuf-on-ci-sign.ini")
             with open(inifile, "w") as f:
-                f.write(REQUIRED)
+                f.write(WITH_PYKCS11LIB)
 
             user = User(inifile)
             self.assertEqual(user.name, "@signer")
@@ -89,6 +97,29 @@ class TestUser(unittest.TestCase):
                 f.write(MISSING_NAME)
             with self.assertRaises(click.ClickException):
                 user = User(inifile)
+
+    def test_pkcs_prober(self):
+        with TemporaryDirectory() as tempdir:
+            inifile = os.path.join(tempdir, ".tuf-on-ci-sign.ini")
+            with open(inifile, "w") as f:
+                f.write(REQUIRED)
+
+            nonexistent_pkcs11lib = os.path.join(tempdir, "nonexistent-pkcs11lib")
+            mock_pkcs11lib = os.path.join(tempdir, "mock-pkcs11lib")
+            with open(mock_pkcs11lib, "w") as f:
+                f.write("")
+
+            # mock prober lookup locations so that a library is not found:
+            _user.LIBYKCS11_LOCATIONS = {platform.system(): [nonexistent_pkcs11lib]}
+            with self.assertRaises(click.ClickException):
+                User(inifile)
+
+            # mock prober lookup locations so that a library is found:
+            _user.LIBYKCS11_LOCATIONS = {
+                platform.system(): [nonexistent_pkcs11lib, mock_pkcs11lib]
+            }
+            user = User(inifile)
+            self.assertEqual(user.pykcs11lib, mock_pkcs11lib)
 
     def test_signing_keys(self):
         with TemporaryDirectory() as tempdir:
