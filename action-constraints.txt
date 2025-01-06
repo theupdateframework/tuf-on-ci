@@ -16,9 +16,9 @@ azure-keyvault-keys==4.10.0
     # via securesystemslib
 betterproto==2.0.0b6
     # via sigstore-protobuf-specs
-boto3==1.35.90
+boto3==1.35.92
     # via securesystemslib
-botocore==1.35.90
+botocore==1.35.92
     # via
     #   boto3
     #   s3transfer
@@ -60,15 +60,15 @@ googleapis-common-protos==1.66.0
     #   google-api-core
     #   grpc-google-iam-v1
     #   grpcio-status
-grpc-google-iam-v1==0.13.1
+grpc-google-iam-v1==0.14.0
     # via google-cloud-kms
-grpcio==1.68.1
+grpcio==1.69.0
     # via
     #   google-api-core
     #   googleapis-common-protos
     #   grpc-google-iam-v1
     #   grpcio-status
-grpcio-status==1.68.1
+grpcio-status==1.69.0
     # via google-api-core
 grpclib==0.4.7
     # via betterproto
@@ -133,7 +133,7 @@ pydantic==2.10.4
     #   sigstore-rekor-types
 pydantic-core==2.27.2
     # via pydantic
-pygments==2.18.0
+pygments==2.19.0
     # via rich
 pyjwt==2.10.1
     # via
