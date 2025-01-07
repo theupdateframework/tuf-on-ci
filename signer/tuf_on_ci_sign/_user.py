@@ -55,15 +55,16 @@ class User:
             self._signing_key_uris = {}
 
         # probe for pykcs11lib if it's not set
-        self.pykcs11lib = self._config["settings"].get("pykcs11lib")
-        if self.pykcs11lib is None:
+        try:
+            self.pykcs11lib = self._config["settings"]["pykcs11lib"]
+        except KeyError:
             for loc in LIBYKCS11_LOCATIONS.get(platform.system(), []):
                 if os.path.exists(loc):
                     self.pykcs11lib = loc
+                    logger.debug("Using probed YKCS11 location %s", self.pykcs11lib)
                     break
-            if self.pykcs11lib is None:
+            else:
                 raise click.ClickException("Failed to find libykcs11")
-            logger.debug("Using probed YKCS11 location %s", self.pykcs11lib)
 
         # signer cache gets populated as they are used the first time
         self._signers: dict[str, Signer] = {}
