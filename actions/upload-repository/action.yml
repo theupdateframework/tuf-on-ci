@@ -34,6 +34,7 @@ runs:
         echo "::group::Install tuf-on-ci"
         ROOT=$GITHUB_ACTION_PATH/../..
         pip install -c $ROOT/action-constraints.txt $ROOT/repo/
+        cp $GITHUB_ACTION_PATH/index.css .
         echo "::endgroup::"
       shell: bash
 
@@ -45,27 +46,34 @@ runs:
         find build -type f | xargs ls -lh
       shell: bash
 
-    - uses: actions/jekyll-build-pages@44a6e6beabd48582f863aeeb6cb2151cc1716697 # 1.0.13
+    - name: Render repository state in HTML
+      uses: docker://pandoc/core:3.5.0@sha256:771842ce6f661785e0e12931f82ea64046d70fa48ea5cff480492d79ab3b8ff1
       with:
-        source: build
-        destination: build-jekyll
+        args: >-
+          --metadata title="TUF Repository state"
+          --variable title=""
+          --standalone
+          --embed-resources
+          --css index.css
+          --output build/${{inputs.metadata_path}}/index.html
+          build/${{inputs.metadata_path}}/index.md
 
     - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
       if: inputs.gh_pages != 'true'
       with:
         name: metadata
-        path: build-jekyll/${{inputs.metadata_path}}/*
+        path: build/${{inputs.metadata_path}}/*
 
     - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
       if: inputs.gh_pages != 'true'
       with:
         name: artifacts
-        path: build-jekyll/${{inputs.artifacts_path}}/*
+        path: build/${{inputs.artifacts_path}}/*
 
     - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
       if: inputs.gh_pages == 'true'
       with:
-        path: build-jekyll/
+        path: build/
 
     - id: status-summary
       shell: bash
