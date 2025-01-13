@@ -16,9 +16,9 @@ azure-keyvault-keys==4.10.0
     # via securesystemslib
 betterproto==2.0.0b6
     # via sigstore-protobuf-specs
-boto3==1.35.93
+boto3==1.35.97
     # via securesystemslib
-botocore==1.35.93
+botocore==1.35.97
     # via
     #   boto3
     #   s3transfer
@@ -110,7 +110,7 @@ proto-plus==1.25.0
     # via
     #   google-api-core
     #   google-cloud-kms
-protobuf==5.29.2
+protobuf==5.29.3
     # via
     #   google-api-core
     #   google-cloud-kms
@@ -127,7 +127,7 @@ pyasn1-modules==0.4.1
     # via google-auth
 pycparser==2.22
     # via cffi
-pydantic==2.10.4
+pydantic==2.10.5
     # via
     #   sigstore
     #   sigstore-rekor-types
@@ -139,7 +139,7 @@ pyjwt==2.10.1
     # via
     #   msal
     #   sigstore
-pyopenssl==24.3.0
+pyopenssl==25.0.0
     # via sigstore
 python-dateutil==2.9.0.post0
     # via
@@ -188,6 +188,7 @@ typing-extensions==4.12.2
     #   azure-keyvault-keys
     #   pydantic
     #   pydantic-core
+    #   pyopenssl
 urllib3==2.3.0
     # via
     #   botocore
