@@ -47,7 +47,7 @@ runs:
       shell: bash
 
     - name: Render repository state in HTML
-      uses: docker://pandoc/core:3.5
+      uses: docker://pandoc/core:3.5.0@sha256:771842ce6f661785e0e12931f82ea64046d70fa48ea5cff480492d79ab3b8ff1
       with:
         args: >-
           --metadata title="TUF Repository state"
