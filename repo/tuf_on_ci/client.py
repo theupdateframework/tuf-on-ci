@@ -7,7 +7,7 @@ import logging
 import os
 import shutil
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
 from filecmp import cmp
 from tempfile import TemporaryDirectory
 from urllib import request
@@ -19,7 +19,7 @@ from tuf.ngclient import Updater, UpdaterConfig
 
 
 def expiry_check(dir: str, role: str, timestamp: int):
-    ref_time = datetime.fromtimestamp(timestamp)
+    ref_time = datetime.fromtimestamp(timestamp, UTC)
     md = Metadata.from_file(os.path.join(dir, f"{role}.json"))
     expiry = md.signed.expires
     if ref_time > expiry:
@@ -94,7 +94,7 @@ def client(
         if time is not None:
             # HACK: replace reference time with ours: initial root has been loaded
             # already but that is fine: the expiry check only happens during refresh
-            ref_time = datetime.fromtimestamp(time)
+            ref_time = datetime.fromtimestamp(time, UTC)
             updater._trusted_set.reference_time = ref_time
             ref_time_string = f" at reference time {ref_time}"
 
