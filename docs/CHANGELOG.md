@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## v0.15.0
+
+* Fixed repository status page HTML rendering (#430)
+* Dependency updates: Most importantly python-tuf and securesystemslib are now at
+  current versions.
+
+Updating from 0.14 does not require any changes to GitHub workflow files.
+
 ## v0.14.0
 
 * Updates the status page to include expiration time for metadata (#431)
