@@ -72,8 +72,8 @@ jobs:
             res = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              name: '${{ github.ref_name }}',
-              tag_name: '${{ github.ref }}',
+              name: process.env.GITHUB_REF_NAME,
+              tag_name: process.env.GITHUB_REF,
               body: fs.readFileSync('changelog', 'utf8'),
             })
             fs.readdirSync('dist/').forEach(file => {

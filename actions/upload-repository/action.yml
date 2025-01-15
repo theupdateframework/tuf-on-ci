@@ -39,9 +39,12 @@ runs:
       shell: bash
 
     - id: build-repository
+      env:
+        METADATA_PATH: ${{inputs.metadata_path}}
+        ARTIFACTS_PATH: ${{inputs.artifacts_path}}
       run: |
         mkdir build
-        tuf-on-ci-build-repository --metadata build/${{inputs.metadata_path}}  --artifacts build/${{inputs.artifacts_path}}
+        tuf-on-ci-build-repository --metadata "build/$METADATA_PATH"  --artifacts "build/$ARTIFACTS_PATH"
 
         find build -type f | xargs ls -lh
       shell: bash
@@ -77,8 +80,10 @@ runs:
 
     - id: status-summary
       shell: bash
+      env:
+        GH_PAGES: ${{inputs.gh_pages}}
       run: |
-        if [ "${{inputs.gh_pages }}" == "true" ]; then
+        if [ "$GH_PAGES" == "true" ]; then
             echo "Repository is uploaded and ready to be deployed to GitHub Pages" >> $GITHUB_STEP_SUMMARY
         else
             echo "Repository is uploaded to artifacts" >> $GITHUB_STEP_SUMMARY
