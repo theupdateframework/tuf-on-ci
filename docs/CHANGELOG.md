@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## v0.15.1
+
+This point release fixes a bug introduced in 0.15.
+
+* Fixed datetime handling in test-repository (#512): This
+  is fallout from python-tuf upgrade in 0.15.0 and resulted in
+  unexpected test-repository action failure
+
 ## v0.15.0
 
 * Fixed repository status page HTML rendering (#430)
