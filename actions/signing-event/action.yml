@@ -79,10 +79,11 @@ runs:
                 repo: context.repo.repo,
                 commit_sha: context.sha
           })
+          const open_prs = prs.data.filter(item => item.state === 'open')
 
-          if (prs.data.length > 1) {
-            core.setFailed("Found more than one open pull request the current commit")
-          } else if (prs.data.length == 0) {
+          if (open_prs.length > 1) {
+            core.setFailed("Found more than one open pull request with the current commit")
+          } else if (open_prs.length == 0) {
             const response = await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -95,7 +96,7 @@ runs:
             pr = response.data.number
             console.log(`Created pull request #${pr}`)
           } else {
-            pr = prs.data[0].number
+            pr = open_prs[0].number
             console.log(`Found existing pull request #${pr}`)
           }
 
