@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## v0.15.2
+
+This point release fixes a bug introduced in 0.14.
+
+* Only return open pull requests (PR) when searching for a signing
+  event (#518). In cases where the signers rely on a fork to sign and
+  then create a PR back to the main repository, both PRs will contain
+  the same git commit at tip, and so multiple PRs would be returned,
+  now only open PRs are considered.
+
+Updating from 0.14 does not require any changes GitHub workflow files.
+
 ## v0.15.1
 
 This point release fixes a bug introduced in 0.15.
