@@ -15,6 +15,7 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum, unique
 
 import click
+from PyKCS11 import CKR_USER_NOT_LOGGED_IN, PyKCS11Error
 from securesystemslib.exceptions import UnverifiedSignatureError
 from securesystemslib.formats import encode_canonical
 from securesystemslib.hash import digest
@@ -289,7 +290,14 @@ class SignerRepository(Repository):
                 self.user.set_signer(key, signer)
                 break
             except UnsignedMetadataError as e:
-                print(f"Failed to sign {role} with {self.user.name} key.\n    {e}")
+                # Very light error handling for specific PKCS11 errors
+                msg = str(e)
+                if isinstance(e.__context__, PyKCS11Error):
+                    pkcs_err = e.__context__
+                    if pkcs_err.value == CKR_USER_NOT_LOGGED_IN:
+                        msg = "Required authentication (e.g. touch) did not happpen"
+
+                print(f"Failed to sign {role} with {self.user.name} key:\n    {msg}")
                 logger.debug("Sign traceback", exc_info=True)
             except UnverifiedSignatureError as e:
                 print(
