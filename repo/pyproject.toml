@@ -2,13 +2,11 @@
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.hatch.metadata]
-# for git dependencies
-allow-direct-references = true
-
 [project]
 name = "tuf-on-ci"
 description = "TUF-on-CI repository tools, intended to be executed on a CI system"
+license = "MIT"
+license-files = [ "LICENSE" ]
 readme = "README.md"
 dependencies = [
   "securesystemslib[awskms, azurekms, gcpkms, sigstore] ~= 1.2",
@@ -17,6 +15,10 @@ dependencies = [
 ]
 requires-python = ">=3.10"
 dynamic = ["version"]
+
+[project.urls]
+issues = "https://github.com/theupdateframework/tuf-on-ci/issues"
+source = "https://github.com/theupdateframework/tuf-on-ci/"
 
 [project.scripts]
 tuf-on-ci-build-repository = "tuf_on_ci:build_repository"
