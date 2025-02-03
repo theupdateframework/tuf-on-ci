@@ -5,6 +5,8 @@ build-backend = "hatchling.build"
 [project]
 name = "tuf-on-ci-sign"
 description = "Signing tools for TUF-on-CI"
+license = "MIT"
+license-files = [ "LICENSE" ]
 readme = "README.md"
 dependencies = [
   "packaging ~= 24.0",
@@ -15,6 +17,10 @@ dependencies = [
 ]
 requires-python = ">=3.9"
 dynamic = ["version"]
+
+[project.urls]
+issues = "https://github.com/theupdateframework/tuf-on-ci/issues"
+source = "https://github.com/theupdateframework/tuf-on-ci/"
 
 [project.scripts]
 tuf-on-ci-delegate = "tuf_on_ci_sign:delegate"
