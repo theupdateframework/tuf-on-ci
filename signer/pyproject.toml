@@ -36,6 +36,7 @@ python_version = "3.9"
 [[tool.mypy.overrides]]
 module = [
   "securesystemslib.*",
+  "PyKCS11.*",
 ]
 ignore_missing_imports = "True"
 
