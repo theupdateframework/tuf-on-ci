@@ -263,7 +263,7 @@ def _collect_online_key(user_config: User) -> Key:
             uri = f"file2:{os.getenv('TUF_ON_CI_TEST_KEY')}"
             pub_key = "fa472895c9756c2b9bcd1440bf867d0fa5c4edee79e9792fa9822be3dd6fcbb3"
             return SSlibKey(
-                "fa47289",
+                "cda7a53138556e7c0d1737e4ba32868f3cf287e78ab9366c820115ce11383d34",
                 "ed25519",
                 "ed25519",
                 {"public": pub_key},
