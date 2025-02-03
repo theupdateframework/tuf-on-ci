@@ -8,6 +8,8 @@ from enum import Enum, unique
 from glob import glob
 
 from securesystemslib.exceptions import UnverifiedSignatureError
+from securesystemslib.formats import encode_canonical
+from securesystemslib.hash import digest
 from securesystemslib.signer import (
     KEY_FOR_TYPE_AND_SCHEME,
     SIGNER_FOR_URI_SCHEME,
@@ -370,6 +372,13 @@ class CIRepository(Repository):
                 signing_days = role.unrecognized_fields["x-tuf-on-ci-signing-period"]
                 if signing_days < 1 or expiry_days <= signing_days:
                     return False, "Online signing or expiry period failed sanity check"
+
+            for key in md.signed.keys.values():
+                data: bytes = encode_canonical(key.to_dict()).encode()
+                hasher = digest("sha256")
+                hasher.update(data)
+                if key.keyid != hasher.hexdigest():
+                    return False, f"Key {key.keyid} keyid does not match content hash"
 
         # TODO for root:
         # * check delegations are correct
