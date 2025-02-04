@@ -22,6 +22,14 @@
     "scheme": "ecdsa-sha2-nistp384",
     "x-tuf-on-ci-keyowner": "@tuf-on-ci-user2"
    },
+   "cda7a53138556e7c0d1737e4ba32868f3cf287e78ab9366c820115ce11383d34": {
+    "keytype": "ed25519",
+    "keyval": {
+     "public": "fa472895c9756c2b9bcd1440bf867d0fa5c4edee79e9792fa9822be3dd6fcbb3"
+    },
+    "scheme": "ed25519",
+    "x-tuf-on-ci-online-uri": "file2:online-test-key"
+   },
    "ddadf0c54d24c3429a36b7ad8434414fa35b80922497d2c99067261d38746460": {
     "keytype": "ecdsa",
     "keyval": {
@@ -29,14 +37,6 @@
     },
     "scheme": "ecdsa-sha2-nistp384",
     "x-tuf-on-ci-keyowner": "@tuf-on-ci-user1"
-   },
-   "fa47289": {
-    "keytype": "ed25519",
-    "keyval": {
-     "public": "fa472895c9756c2b9bcd1440bf867d0fa5c4edee79e9792fa9822be3dd6fcbb3"
-    },
-    "scheme": "ed25519",
-    "x-tuf-on-ci-online-uri": "file2:online-test-key"
    }
   },
   "roles": {
@@ -48,7 +48,7 @@
    },
    "snapshot": {
     "keyids": [
-     "fa47289"
+     "cda7a53138556e7c0d1737e4ba32868f3cf287e78ab9366c820115ce11383d34"
     ],
     "threshold": 1,
     "x-tuf-on-ci-expiry-period": 365,
@@ -62,7 +62,7 @@
    },
    "timestamp": {
     "keyids": [
-     "fa47289"
+     "cda7a53138556e7c0d1737e4ba32868f3cf287e78ab9366c820115ce11383d34"
     ],
     "threshold": 1,
     "x-tuf-on-ci-expiry-period": 2,

@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## v0.16.0
+
+This release contains minor improvements to both repository and signer.
+
+* Verify keyid calculation in signing event (#536)
+* Improve error message when Yubikey authentication fails (#528)
+* Improve python project metadata (#533)
+
+Updating a repository from 0.15 does not require changes in GitHub workflow files.
+
 ## v0.15.2
 
 This point release fixes a bug introduced in 0.14.
