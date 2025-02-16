@@ -10,15 +10,15 @@ azure-core==1.32.0
     # via
     #   azure-identity
     #   azure-keyvault-keys
-azure-identity==1.19.0
+azure-identity==1.20.0
     # via securesystemslib
 azure-keyvault-keys==4.10.0
     # via securesystemslib
 betterproto==2.0.0b6
     # via sigstore-protobuf-specs
-boto3==1.36.12
+boto3==1.36.21
     # via securesystemslib
-botocore==1.36.12
+botocore==1.36.21
     # via
     #   boto3
     #   s3transfer
@@ -33,7 +33,7 @@ charset-normalizer==3.4.1
     # via requests
 click==8.1.8
     # via tuf-on-ci (repo/pyproject.toml)
-cryptography==44.0.0
+cryptography==44.0.1
     # via
     #   azure-identity
     #   azure-keyvault-keys
@@ -53,9 +53,9 @@ google-auth==2.38.0
     # via
     #   google-api-core
     #   google-cloud-kms
-google-cloud-kms==3.2.2
+google-cloud-kms==3.3.0
     # via securesystemslib
-googleapis-common-protos==1.66.0
+googleapis-common-protos==1.67.0
     # via
     #   google-api-core
     #   grpc-google-iam-v1
