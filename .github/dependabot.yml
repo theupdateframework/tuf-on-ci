@@ -15,14 +15,16 @@ updates:
   directories:
     - "/signer"
     - "/repo"
+    - "/actions"
   schedule:
     interval: "weekly"
   groups:
     pinned-test-dependencies:
-      # Dependencies pinned in {signer,repo}/pyproject.toml to ensure test reproducibility
+      # Dependencies pinned to ensure test reproducibility
       patterns:
         - "mypy"
         - "ruff"
+        - "zizmor"
     minimum-runtime-dependencies:
       # Runtime dependency ranges set in {signer,repo}/pyproject.toml
       patterns:
