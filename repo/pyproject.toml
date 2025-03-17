@@ -10,7 +10,7 @@ license-files = [ "LICENSE" ]
 readme = "README.md"
 dependencies = [
   "securesystemslib[awskms, azurekms, gcpkms, sigstore] ~= 1.2",
-  "tuf ~= 5.1",
+  "tuf ~= 6.0",
   "click ~= 8.1",
 ]
 requires-python = ">=3.10"
