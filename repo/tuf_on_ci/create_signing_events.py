@@ -48,7 +48,7 @@ def create_signing_events(verbose: int, push: bool) -> None:
         rolename = filename[: -len(".json")]
         version = repo.bump_expiring(rolename)
         if version is None:
-            logging.debug("No version bump needed for %s", rolename)
+            logger.debug("No version bump needed for %s", rolename)
             continue
 
         msg = f"Periodic version bump: {rolename} v{version}"
@@ -62,7 +62,7 @@ def create_signing_events(verbose: int, push: bool) -> None:
         _git(["commit", "-m", msg, "--signoff"])
         try:
             _git(["show-ref", "--quiet", "--verify", ref])
-            logging.debug("Signing event branch %s already exists", event)
+            logger.debug("Signing event branch %s already exists", event)
         except subprocess.CalledProcessError:
             events.append(event)
             if push:
