@@ -16,9 +16,9 @@ azure-keyvault-keys==4.10.0
     # via securesystemslib
 betterproto==2.0.0b6
     # via sigstore-protobuf-specs
-boto3==1.37.18
+boto3==1.37.23
     # via securesystemslib
-botocore==1.37.18
+botocore==1.37.23
     # via
     #   boto3
     #   s3transfer
@@ -121,15 +121,15 @@ pyasn1==0.6.1
     #   pyasn1-modules
     #   rsa
     #   sigstore
-pyasn1-modules==0.4.1
+pyasn1-modules==0.4.2
     # via google-auth
 pycparser==2.22
     # via cffi
-pydantic==2.10.6
+pydantic==2.11.1
     # via
     #   sigstore
     #   sigstore-rekor-types
-pydantic-core==2.27.2
+pydantic-core==2.33.0
     # via pydantic
 pygments==2.19.1
     # via rich
@@ -179,14 +179,18 @@ tuf==5.1.0
     # via
     #   sigstore
     #   tuf-on-ci (repo/pyproject.toml)
-typing-extensions==4.12.2
+typing-extensions==4.13.0
     # via
     #   azure-core
     #   azure-identity
     #   azure-keyvault-keys
     #   pydantic
     #   pydantic-core
+    #   typing-inspection
+typing-inspection==0.4.0
+    # via pydantic
 urllib3==2.3.0
     # via
     #   botocore
     #   requests
+    #   tuf
