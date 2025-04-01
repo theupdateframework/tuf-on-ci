@@ -16,9 +16,9 @@ azure-keyvault-keys==4.10.0
     # via securesystemslib
 betterproto==2.0.0b6
     # via sigstore-protobuf-specs
-boto3==1.37.23
+boto3==1.37.24
     # via securesystemslib
-botocore==1.37.23
+botocore==1.37.24
     # via
     #   boto3
     #   s3transfer
@@ -100,7 +100,7 @@ msal==1.32.0
     #   msal-extensions
 msal-extensions==1.3.1
     # via azure-identity
-multidict==6.2.0
+multidict==6.3.0
     # via grpclib
 platformdirs==4.3.7
     # via sigstore
@@ -193,3 +193,4 @@ urllib3==2.3.0
     # via
     #   botocore
     #   requests
+    #   tuf
