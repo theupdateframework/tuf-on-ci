@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## v0.16.1
+
+This release contains dependency updates and minor improvements in repository
+side.
+
 ## v0.16.0
 
 This release contains minor improvements to both repository and signer.
