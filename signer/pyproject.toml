@@ -9,7 +9,7 @@ license = "MIT"
 license-files = [ "LICENSE" ]
 readme = "README.md"
 dependencies = [
-  "packaging ~= 24.0",
+  "packaging >= 24,< 26",
   "platformdirs ~= 4.2",
   "securesystemslib[awskms,azurekms,gcpkms,hsm,sigstore] ~= 1.2",
   "tuf >= 5.1,< 7.0",
@@ -30,7 +30,7 @@ tuf-on-ci-sign = "tuf_on_ci_sign:sign"
 [project.optional-dependencies]
 lint = [
   "mypy == 1.15.0",
-  "ruff == 0.11.5",
+  "ruff == 0.11.6",
 ]
 
 [tool.hatch.version]
