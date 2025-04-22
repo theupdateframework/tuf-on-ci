@@ -51,7 +51,7 @@ logger = logging.getLogger(__name__)
 def _get_offline_input(
     role: str,
     config: OfflineConfig,
-) -> tuple[OfflineConfig, Key]:
+) -> tuple[OfflineConfig, Key | None]:
     config = copy.deepcopy(config)
     click.echo(f"\nConfiguring role {role}")
     username_re = re.compile("^\\@[0-9a-zA-Z\\-]+$")
