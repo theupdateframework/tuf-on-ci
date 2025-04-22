@@ -69,6 +69,7 @@ def get_signing_key_input() -> Key:
         default=1,
     )
 
+    key: Key
     if choice == 1:
         click.echo(bold("Please authenticate with your Sigstore signing identity"))
         _, key = SigstoreSigner.import_via_auth()

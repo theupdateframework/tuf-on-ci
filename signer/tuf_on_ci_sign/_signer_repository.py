@@ -114,10 +114,7 @@ def _find_changed_roles(known_good_dir: str, signing_event_dir: str) -> list[str
 def set_key_field(key: Key, name: str, value: str) -> None:
     key.unrecognized_fields[f"x-tuf-on-ci-{name}"] = value
     # This is dumb but TUF spec requires the keyid to change at this point
-    data: bytes = encode_canonical(key.to_dict()).encode()
-    hasher = digest("sha256")
-    hasher.update(data)
-    key.keyid = hasher.hexdigest()
+    key.keyid = _calculate_keyid(key)
 
 
 def get_signer(key: Key) -> str:
@@ -792,12 +789,6 @@ class SignerRepository(Repository):
         # calculate keyid _without custom metadata_, then lookup key from known good
         # root keys. This is useful in import situation where the legacy key does not
         # have the custom metadata but is otherwise the same key
-        def _calculate_keyid(key: Key) -> str:
-            data: bytes = encode_canonical(key.to_dict()).encode()
-            hasher = digest("sha256")
-            hasher.update(data)
-            return hasher.hexdigest()
-
         test_key = copy.deepcopy(key)
         del test_key.unrecognized_fields[TAG_KEYOWNER]
         legacy_keyid = _calculate_keyid(test_key)
@@ -844,12 +835,6 @@ class SignerRepository(Repository):
 
         Requires resigning with care: Root signatures should be duplicated for new and
         old keyids."""
-
-        def _calculate_keyid(key: Key) -> str:
-            data: bytes = encode_canonical(key.to_dict()).encode()
-            hasher = digest("sha256")
-            hasher.update(data)
-            return hasher.hexdigest()
 
         changed = False
         delegates = set()
@@ -909,3 +894,12 @@ def build_paths(rolename: str, depth: int) -> list[str]:
         paths.append(pattern)
         pattern = f"{pattern}/*"
     return paths
+
+
+def _calculate_keyid(key: Key) -> str:
+    canonical_key = encode_canonical(key.to_dict())
+    assert canonical_key
+
+    hasher = digest("sha256")
+    hasher.update(canonical_key.encode())
+    return hasher.hexdigest()
