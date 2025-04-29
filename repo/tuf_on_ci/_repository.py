@@ -365,9 +365,10 @@ class CIRepository(Repository):
                     return False, "Online signing or expiry period failed sanity check"
 
             for key in md.signed.keys.values():
-                data: bytes = encode_canonical(key.to_dict()).encode()
+                canonical_key = encode_canonical(key.to_dict())
+                assert canonical_key
                 hasher = digest("sha256")
-                hasher.update(data)
+                hasher.update(canonical_key.encode())
                 if key.keyid != hasher.hexdigest():
                     return False, f"Key {key.keyid} keyid does not match content hash"
 
