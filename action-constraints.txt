@@ -6,7 +6,7 @@
 #
 annotated-types==0.7.0
     # via pydantic
-azure-core==1.34.0
+azure-core==1.35.0
     # via
     #   azure-identity
     #   azure-keyvault-keys
@@ -16,9 +16,9 @@ azure-keyvault-keys==4.11.0
     # via securesystemslib
 betterproto==2.0.0b6
     # via sigstore-protobuf-specs
-boto3==1.38.41
+boto3==1.39.3
     # via securesystemslib
-botocore==1.38.41
+botocore==1.39.3
     # via
     #   boto3
     #   s3transfer
@@ -62,13 +62,13 @@ googleapis-common-protos==1.70.0
     #   grpcio-status
 grpc-google-iam-v1==0.14.2
     # via google-cloud-kms
-grpcio==1.73.0
+grpcio==1.73.1
     # via
     #   google-api-core
     #   googleapis-common-protos
     #   grpc-google-iam-v1
     #   grpcio-status
-grpcio-status==1.73.0
+grpcio-status==1.73.1
     # via google-api-core
 grpclib==0.4.8
     # via betterproto
@@ -100,7 +100,7 @@ msal==1.32.3
     #   msal-extensions
 msal-extensions==1.3.1
     # via azure-identity
-multidict==6.5.0
+multidict==6.6.3
     # via grpclib
 platformdirs==4.3.8
     # via sigstore
@@ -178,7 +178,7 @@ tuf==6.0.0
     # via
     #   sigstore
     #   tuf-on-ci (repo/pyproject.toml)
-typing-extensions==4.14.0
+typing-extensions==4.14.1
     # via
     #   azure-core
     #   azure-identity
