@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## v0.17.0
+
+Dependency update release.
+
+* This fixes an ongoing issue with the upload-repository action:
+  https://github.com/theupdateframework/tuf-on-ci/issues/629
+
 ## v0.16.1
 
 This release contains dependency updates and minor improvements in repository
