@@ -45,3 +45,8 @@ updates:
     actions-dependencies:
       patterns:
         - "*"
+
+- package-ecosystem: "docker"
+  directory: "/"
+  schedule:
+    interval: "weekly"
