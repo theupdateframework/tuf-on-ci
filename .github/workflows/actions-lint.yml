@@ -10,6 +10,7 @@ permissions: {}
 
 jobs:
   lint-actions-and-workflows:
+    name: Lint actions & workflows
     permissions:
       security-events: write
       contents: read

@@ -12,6 +12,7 @@ permissions: {}
 
 jobs:
   update-dependencies:
+    name: Update pinned Python dependencies
     runs-on: ubuntu-latest
     permissions:
       contents: write # for pushing a branch

@@ -9,6 +9,7 @@ permissions: {}
 
 jobs:
   test:
+    name: Lint & test
     permissions:
       contents: read
     strategy:
