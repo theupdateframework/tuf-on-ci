@@ -50,6 +50,7 @@ runs:
       with:
         token: ${{ inputs.token }}
         fetch-depth: 0
+        persist-credentials: true
 
     - name: Authenticate to Google Cloud
       if: inputs.gcp_workload_identity_provider != ''
