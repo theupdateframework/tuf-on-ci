@@ -32,7 +32,7 @@ tuf-on-ci-update-targets = "tuf_on_ci:update_targets"
 [project.optional-dependencies]
 lint = [
   "mypy == 1.17.1",
-  "ruff == 0.12.7",
+  "ruff == 0.12.8",
 ]
 
 [tool.hatch.version]
