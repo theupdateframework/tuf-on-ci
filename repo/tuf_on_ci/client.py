@@ -17,6 +17,8 @@ from tuf.api.exceptions import ExpiredMetadataError
 from tuf.api.metadata import Metadata
 from tuf.ngclient import Updater, UpdaterConfig
 
+from tuf_on_ci import __version__
+
 
 def expiry_check(dir: str, role: str, timestamp: int):
     ref_time = datetime.fromtimestamp(timestamp, UTC)
@@ -63,7 +65,10 @@ def client(
 
         # Allow for a large number of root rotations, as metadata is
         # not cached during testing
-        config = UpdaterConfig(max_root_rotations=256)
+        config = UpdaterConfig(
+            max_root_rotations=256,
+            app_user_agent=f"tuf-on-ci-test-client/{__version__}",
+        )
 
         # initialize client with --initial-root or from metadata_url
         if initial_root is not None:
