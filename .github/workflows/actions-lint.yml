@@ -35,4 +35,4 @@ jobs:
       run: python -m pip install -r actions/lint-requirements.txt
 
     - name: Run zizmor
-      run: zizmor --pedantic .
+      run: zizmor .

@@ -574,7 +574,7 @@ class CIRepository(Repository):
             if artifact_path:
                 # copy artifacts
                 for target in role.targets.values():
-                    rdir, sep, name = target.path.rpartition("/")
+                    rdir, _, name = target.path.rpartition("/")
                     os.makedirs(os.path.join(artifact_path, rdir), exist_ok=True)
                     src_path = os.path.join(self._dir, "..", "targets", rdir, name)
                     for hash in target.hashes.values():
