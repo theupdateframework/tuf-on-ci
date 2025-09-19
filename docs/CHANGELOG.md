@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## v0.18.0
+
+* repo: tuf-on-ci-test-client now sets a user-agent header
+* Dependency updates
+
 ## v0.17.0
 
 Dependency update release.
