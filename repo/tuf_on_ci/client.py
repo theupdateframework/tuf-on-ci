@@ -14,7 +14,7 @@ from tempfile import TemporaryDirectory
 from urllib import request
 
 import click
-from tuf.api.exceptions import ExpiredMetadataError
+from tuf.api.exceptions import DownloadHTTPError, ExpiredMetadataError
 from tuf.api.metadata import Metadata
 from tuf.ngclient import Updater, UpdaterConfig
 from tuf.ngclient.fetcher import FetcherInterface
@@ -43,17 +43,20 @@ class AuthenticatedFetcher(FetcherInterface):
             Iterator of bytes chunks
 
         Raises:
-            OSError: If download fails
+            DownloadHTTPError: If an HTTP error occurs
         """
         req = request.Request(url)
         req.add_header("Authorization", f"Bearer {self.token}")
 
-        with request.urlopen(req) as response:  # noqa: S310
-            while True:
-                chunk = response.read(4096)
-                if not chunk:
-                    break
-                yield chunk
+        try:
+            with request.urlopen(req) as response:  # noqa: S310
+                while True:
+                    chunk = response.read(4096)
+                    if not chunk:
+                        break
+                    yield chunk
+        except request.HTTPError as e:
+            raise DownloadHTTPError(str(e), e.code) from e
 
 
 def expiry_check(dir: str, role: str, timestamp: int):
