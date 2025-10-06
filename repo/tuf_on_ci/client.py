@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 from filecmp import cmp
 from tempfile import TemporaryDirectory
 from urllib import request
+from urllib.error import HTTPError
 
 import click
 from tuf.api.exceptions import DownloadHTTPError, ExpiredMetadataError
@@ -20,6 +21,19 @@ from tuf.ngclient import Updater, UpdaterConfig
 from tuf.ngclient.fetcher import FetcherInterface
 
 from tuf_on_ci import __version__
+
+
+class _AuthRedirectHandler(request.HTTPRedirectHandler):
+    """Redirect handler that preserves Authorization headers."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        """Preserve Authorization header across redirects."""
+        new_req = request.HTTPRedirectHandler.redirect_request(
+            self, req, fp, code, msg, headers, newurl
+        )
+        if new_req is not None and req.has_header("Authorization"):
+            new_req.add_header("Authorization", req.get_header("Authorization"))
+        return new_req
 
 
 class AuthenticatedFetcher(FetcherInterface):
@@ -32,6 +46,8 @@ class AuthenticatedFetcher(FetcherInterface):
             token: GitHub token for authentication
         """
         self.token = token
+        # Create opener with custom redirect handler that preserves auth headers
+        self.opener = request.build_opener(_AuthRedirectHandler())
 
     def _fetch(self, url: str) -> Iterator[bytes]:
         """Fetch data from url with authentication.
@@ -49,13 +65,13 @@ class AuthenticatedFetcher(FetcherInterface):
         req.add_header("Authorization", f"Bearer {self.token}")
 
         try:
-            with request.urlopen(req) as response:  # noqa: S310
+            with self.opener.open(req) as response:  # noqa: S310
                 while True:
                     chunk = response.read(4096)
                     if not chunk:
                         break
                     yield chunk
-        except request.HTTPError as e:
+        except HTTPError as e:
             raise DownloadHTTPError(str(e), e.code) from e
 
 
@@ -118,10 +134,11 @@ def client(
             root_url = f"{metadata_url}/1.root.json"
             try:
                 if gh_token:
-                    # Download with authentication
+                    # Download with authentication and redirect support
+                    opener = request.build_opener(_AuthRedirectHandler())
                     req = request.Request(root_url)
                     req.add_header("Authorization", f"Bearer {gh_token}")
-                    with request.urlopen(req) as response:  # noqa: S310
+                    with opener.open(req) as response:  # noqa: S310
                         with open(f"{metadata_dir}/root.json", "wb") as f:
                             f.write(response.read())
                 else:
