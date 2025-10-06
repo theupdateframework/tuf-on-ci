@@ -7,6 +7,7 @@ import logging
 import os
 import shutil
 import sys
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from filecmp import cmp
 from tempfile import TemporaryDirectory
@@ -16,8 +17,43 @@ import click
 from tuf.api.exceptions import ExpiredMetadataError
 from tuf.api.metadata import Metadata
 from tuf.ngclient import Updater, UpdaterConfig
+from tuf.ngclient.fetcher import FetcherInterface
 
 from tuf_on_ci import __version__
+
+
+class AuthenticatedFetcher(FetcherInterface):
+    """Fetcher that adds GitHub token authentication to requests."""
+
+    def __init__(self, token: str):
+        """Initialize fetcher with authentication token.
+
+        Args:
+            token: GitHub token for authentication
+        """
+        self.token = token
+
+    def _fetch(self, url: str) -> Iterator[bytes]:
+        """Fetch data from url with authentication.
+
+        Args:
+            url: URL to fetch
+
+        Returns:
+            Iterator of bytes chunks
+
+        Raises:
+            OSError: If download fails
+        """
+        req = request.Request(url)
+        req.add_header("Authorization", f"Bearer {self.token}")
+
+        with request.urlopen(req) as response:  # noqa: S310
+            while True:
+                chunk = response.read(4096)
+                if not chunk:
+                    break
+                yield chunk
 
 
 def expiry_check(dir: str, role: str, timestamp: int):
@@ -40,6 +76,7 @@ def expiry_check(dir: str, role: str, timestamp: int):
 @click.option("-t", "--time", type=int)
 @click.option("-o", "--offline-time", type=int)
 @click.option("-d", "--metadata-dir", type=str)
+@click.option("-g", "--gh-token", type=str)
 def client(
     verbose: int,
     metadata_url: str,
@@ -51,6 +88,7 @@ def client(
     time: int | None,
     offline_time: int | None,
     metadata_dir: str | None,
+    gh_token: str | None,
 ) -> None:
     """Test client for tuf-on-ci"""
 
@@ -76,14 +114,31 @@ def client(
         else:
             root_url = f"{metadata_url}/1.root.json"
             try:
-                request.urlretrieve(root_url, f"{metadata_dir}/root.json")  # noqa: S310
+                if gh_token:
+                    # Download with authentication
+                    req = request.Request(root_url)
+                    req.add_header("Authorization", f"Bearer {gh_token}")
+                    with request.urlopen(req) as response:  # noqa: S310
+                        with open(f"{metadata_dir}/root.json", "wb") as f:
+                            f.write(response.read())
+                else:
+                    # Download without authentication
+                    request.urlretrieve(root_url, f"{metadata_dir}/root.json")  # noqa: S310
             except OSError as e:
                 sys.exit(f"Failed to download initial root {root_url}: {e}")
+
+        # Create custom fetcher if token is provided
+        fetcher = AuthenticatedFetcher(gh_token) if gh_token else None
 
         if update_base_url is not None:
             # Update client to update_base_url before doing the actual update
             updater = Updater(
-                metadata_dir, update_base_url, artifact_dir, artifact_url, config=config
+                metadata_dir,
+                update_base_url,
+                artifact_dir,
+                artifact_url,
+                config=config,
+                fetcher=fetcher,
             )
             try:
                 updater.refresh()
@@ -93,7 +148,12 @@ def client(
 
         # Update client to metadata_url
         updater = Updater(
-            metadata_dir, metadata_url, artifact_dir, artifact_url, config=config
+            metadata_dir,
+            metadata_url,
+            artifact_dir,
+            artifact_url,
+            config=config,
+            fetcher=fetcher,
         )
         ref_time_string = ""
         if time is not None:
