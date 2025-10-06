@@ -16,16 +16,16 @@ azure-keyvault-keys==4.11.0
     # via securesystemslib
 betterproto==2.0.0b6
     # via sigstore-protobuf-specs
-boto3==1.40.41
+boto3==1.40.45
     # via securesystemslib
-botocore==1.40.41
+botocore==1.40.45
     # via
     #   boto3
     #   s3transfer
     #   securesystemslib
 cachetools==6.2.0
     # via google-auth
-certifi==2025.8.3
+certifi==2025.10.5
     # via requests
 cffi==2.0.0
     # via cryptography
@@ -47,9 +47,9 @@ dnspython==2.8.0
     # via email-validator
 email-validator==2.3.0
     # via pydantic
-google-api-core==2.25.1
+google-api-core==2.25.2
     # via google-cloud-kms
-google-auth==2.41.0
+google-auth==2.41.1
     # via
     #   google-api-core
     #   google-cloud-kms
@@ -125,7 +125,7 @@ pyasn1-modules==0.4.2
     # via google-auth
 pycparser==2.23
     # via cffi
-pydantic==2.11.9
+pydantic==2.11.10
     # via
     #   sigstore
     #   sigstore-rekor-types
@@ -187,7 +187,7 @@ typing-extensions==4.15.0
     #   pydantic
     #   pydantic-core
     #   typing-inspection
-typing-inspection==0.4.1
+typing-inspection==0.4.2
     # via pydantic
 urllib3==2.5.0
     # via
