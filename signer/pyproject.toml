@@ -37,7 +37,7 @@ lint = [
 path = "tuf_on_ci_sign/__init__.py"
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.10"
 
 [[tool.mypy.overrides]]
 module = [
