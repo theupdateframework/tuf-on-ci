@@ -6,7 +6,7 @@
 #
 annotated-types==0.7.0
     # via pydantic
-azure-core==1.35.1
+azure-core==1.36.0
     # via
     #   azure-identity
     #   azure-keyvault-keys
@@ -16,9 +16,9 @@ azure-keyvault-keys==4.11.0
     # via securesystemslib
 betterproto==2.0.0b6
     # via sigstore-protobuf-specs
-boto3==1.40.51
+boto3==1.40.55
     # via securesystemslib
-botocore==1.40.51
+botocore==1.40.55
     # via
     #   boto3
     #   s3transfer
@@ -33,7 +33,7 @@ charset-normalizer==3.4.4
     # via requests
 click==8.3.0
     # via tuf-on-ci (repo/pyproject.toml)
-cryptography==46.0.2
+cryptography==46.0.3
     # via
     #   azure-identity
     #   azure-keyvault-keys
@@ -53,18 +53,19 @@ google-auth==2.41.1
     # via
     #   google-api-core
     #   google-cloud-kms
-google-cloud-kms==3.6.0
+google-cloud-kms==3.7.0
     # via securesystemslib
 googleapis-common-protos==1.70.0
     # via
     #   google-api-core
     #   grpc-google-iam-v1
     #   grpcio-status
-grpc-google-iam-v1==0.14.2
+grpc-google-iam-v1==0.14.3
     # via google-cloud-kms
 grpcio==1.75.1
     # via
     #   google-api-core
+    #   google-cloud-kms
     #   googleapis-common-protos
     #   grpc-google-iam-v1
     #   grpcio-status
@@ -108,7 +109,7 @@ proto-plus==1.26.1
     # via
     #   google-api-core
     #   google-cloud-kms
-protobuf==6.32.1
+protobuf==6.33.0
     # via
     #   google-api-core
     #   google-cloud-kms
@@ -125,11 +126,11 @@ pyasn1-modules==0.4.2
     # via google-auth
 pycparser==2.23
     # via cffi
-pydantic==2.12.1
+pydantic==2.12.3
     # via
     #   sigstore
     #   sigstore-rekor-types
-pydantic-core==2.41.3
+pydantic-core==2.41.4
     # via pydantic
 pygments==2.19.2
     # via rich
@@ -171,9 +172,7 @@ sigstore-protobuf-specs==0.3.2
 sigstore-rekor-types==0.0.18
     # via sigstore
 six==1.17.0
-    # via
-    #   azure-core
-    #   python-dateutil
+    # via python-dateutil
 tuf==6.0.0
     # via
     #   sigstore
