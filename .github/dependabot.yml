@@ -5,6 +5,8 @@ updates:
   directory: "/build"
   schedule:
     interval: "weekly"
+  cooldown:
+    default-days: 7
   groups:
     build-dependencies:
       # Critical build/release dependencies constrained in build/build-constraints.txt
@@ -18,6 +20,8 @@ updates:
     - "/actions"
   schedule:
     interval: "weekly"
+  cooldown:
+    default-days: 7
   groups:
     pinned-test-dependencies:
       # Dependencies pinned to ensure test reproducibility
@@ -41,6 +45,8 @@ updates:
     - "/actions/upload-repository/"
   schedule:
     interval: "weekly"
+  cooldown:
+    default-days: 7
   groups:
     actions-dependencies:
       patterns:
