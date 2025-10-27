@@ -16,18 +16,18 @@ jobs:
       fail-fast: false
       matrix:
         toxenv: [lint-signer, test-signer]
-        pyversion: ['3.9', '3.13']
+        pyversion: ['3.10', '3.14']
         os: [ubuntu-latest, macos-latest]
-        # Only run repository on 3.13 (dependency pinning is easier with single version)
+        # Only run repository on 3.14 (dependency pinning is easier with single version)
         include:
           - toxenv: lint-repo
-            pyversion: '3.13'
+            pyversion: '3.14'
             os: ubuntu-latest
           - toxenv: test-repo
-            pyversion: '3.13'
+            pyversion: '3.14'
             os: ubuntu-latest
           - toxenv: test-e2e
-            pyversion: '3.13'
+            pyversion: '3.14'
             os: ubuntu-latest
     runs-on: ${{ matrix.os }}
     env:
