@@ -80,8 +80,7 @@ runs:
 
     - id: online-sign
       run: |
-        # tuf-on-ci-online-sign --push
-
+        tuf-on-ci-online-sign --push
         # did we actually create a snapshot/timestamp commit?
         if [[ $GITHUB_SHA == $(git rev-parse HEAD) ]]; then
           echo "ONLINE_SIGNED=false"
@@ -92,31 +91,3 @@ runs:
           echo "ONLINE_SIGNED=true" >> "$GITHUB_ENV"
         fi
       shell: bash
-
-    - id: move-publish-branch
-      if: github.event_name != 'schedule' || env.ONLINE_SIGNED == 'true'
-      run: |
-        git show --oneline --no-patch HEAD
-        git push origin HEAD:publish
-        echo "rev=`git rev-parse HEAD`" >> $GITHUB_OUTPUT
-        echo "### Online signing finished, will now publish" >> $GITHUB_STEP_SUMMARY
-      shell: bash
-
-    - id: dispatch-publish-workflow
-      if: github.event_name != 'schedule' || env.ONLINE_SIGNED == 'true'
-      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
-      env:
-        REV: ${{ steps.move-publish-branch.outputs.rev }}
-      with:
-        github-token: ${{ inputs.token }}
-        script: |
-          console.log('Dispatching publish workflow')
-          github.rest.actions.createWorkflowDispatch({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            workflow_id: 'publish.yml',
-            ref: 'publish',
-            inputs: {
-              ref: process.env.REV,
-            },
-          })
