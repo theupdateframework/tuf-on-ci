@@ -80,7 +80,7 @@ runs:
 
     - id: online-sign
       run: |
-        tuf-on-ci-online-sign --push
+        # tuf-on-ci-online-sign --push
 
         # did we actually create a snapshot/timestamp commit?
         if [[ $GITHUB_SHA == $(git rev-parse HEAD) ]]; then
