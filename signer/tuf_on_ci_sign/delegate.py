@@ -148,12 +148,12 @@ def _get_offline_input(
     return (config, online_key)
 
 
-def _sigstore_import(pull_remote: str) -> Key:
+def _sigstore_import(pull_remote: str, base_branch: str) -> Key:
     # WORKAROUND: build sigstore key and uri here since there is no import yet
     issuer = "https://token.actions.githubusercontent.com"
     repo = get_repo_name(pull_remote)
 
-    id = f"https://github.com/{repo}/.github/workflows/online-sign.yml@refs/heads/main"
+    id = f"https://github.com/{repo}/.github/workflows/online-sign.yml@refs/heads/{base_branch}"
     key = SigstoreKey(
         "abcd", "sigstore-oidc", "Fulcio", {"issuer": issuer, "identity": id}
     )
@@ -226,7 +226,7 @@ def _collect_online_key(user_config: User) -> Key:
             show_default=True,
         )
         if choice == 1:
-            return _sigstore_import(user_config.pull_remote)
+            return _sigstore_import(user_config.pull_remote, user_config.base_branch)
         if choice == 2:
             key_id = _collect_string("Enter a Google Cloud KMS key id")
             try:
@@ -310,7 +310,7 @@ def _init_repository(repo: SignerRepository) -> bool:
     targets_config, _ = _get_offline_input("targets", deepcopy(root_config))
 
     # As default we offer sigstore online key(s)
-    keys = _sigstore_import(repo.user.pull_remote)
+    keys = _sigstore_import(repo.user.pull_remote, repo.user.base_branch)
     default_config = OnlineConfig(
         keys, 2, 1, root_config.expiry_period, root_config.signing_period
     )
