@@ -12,23 +12,10 @@ from tempfile import TemporaryDirectory
 
 import click
 
+from tuf_on_ci._git_utils import _get_base_branch, _git
 from tuf_on_ci._repository import CIRepository
 
 logger = logging.getLogger(__name__)
-
-
-def _git(cmd: list[str]) -> subprocess.CompletedProcess:
-    cmd = [
-        "git",
-        "-c",
-        "user.name=TUF-on-CI",
-        "-c",
-        "user.email=41898282+github-actions[bot]@users.noreply.github.com",
-        *cmd,
-    ]
-    proc = subprocess.run(cmd, check=True, capture_output=True, text=True)
-    logger.debug("%s:\n%s", cmd, proc.stdout)
-    return proc
 
 
 def _find_changed_roles(known_good_dir: str, signing_event_dir: str) -> set[str]:
@@ -173,7 +160,8 @@ def update_targets(verbose: int, push: bool) -> None:
         sys.exit(1)
 
     # Find the known-good commit
-    merge_base = _git(["merge-base", "origin/main", "HEAD"]).stdout.strip()
+    base_branch = _get_base_branch()
+    merge_base = _git(["merge-base", f"origin/{base_branch}", "HEAD"]).stdout.strip()
     if head == merge_base:
         click.echo("This signing event contains no changes yet")
         sys.exit(1)
@@ -306,7 +294,8 @@ def status(verbose: int) -> None:
         sys.exit(1)
 
     # Find the known-good commit
-    merge_base = _git(["merge-base", "origin/main", "HEAD"]).stdout.strip()
+    base_branch = _get_base_branch()
+    merge_base = _git(["merge-base", f"origin/{base_branch}", "HEAD"]).stdout.strip()
     if head == merge_base:
         click.echo("This signing event contains no changes yet")
         sys.exit(1)
