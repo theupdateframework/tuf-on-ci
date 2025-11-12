@@ -33,12 +33,17 @@ inputs:
     description: "Azure SPN subscription id (required to use Azure to sign target roles)"
     required: false
     default: ""
+  ref:
+    description: "The branch, tag or SHA to checkout"
+    required: false
+    default: ""
 
 runs:
   using: "composite"
   steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
+        ref: ${{ inputs.ref }}
         token: ${{ inputs.token }}
         fetch-depth: 0
         persist-credentials: true
