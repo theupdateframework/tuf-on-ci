@@ -48,4 +48,7 @@ user-name = @${GITHUB_HANDLE}
 # Git remotes
 pull-remote = origin
 push-remote = origin
+
+# Base branch name (optional, defaults to auto-detected default branch or 'main')
+# base-branch = main
 EOF

@@ -20,6 +20,10 @@ inputs:
   token:
     description: 'GitHub token'
     required: true
+  base-branch:
+    description: 'Base branch name (defaults to auto-detected default branch or "main")'
+    required: false
+    default: ''
 
 runs:
   using: "composite"
@@ -29,6 +33,20 @@ runs:
         token: ${{ inputs.token }}
         fetch-depth: 0
         persist-credentials: true
+
+    - id: detect-base-branch
+      env:
+        INPUT_BASE_BRANCH: ${{ inputs.base-branch }}
+      run: |
+        if [ -n "$INPUT_BASE_BRANCH" ]; then
+          echo "base-branch=$INPUT_BASE_BRANCH" >> $GITHUB_OUTPUT
+        else
+          # Try to auto-detect default branch
+          BASE_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo "main")
+          echo "base-branch=$BASE_BRANCH" >> $GITHUB_OUTPUT
+          echo "Auto-detected base branch: $BASE_BRANCH"
+        fi
+      shell: bash
 
     - uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
       with:
@@ -70,6 +88,7 @@ runs:
       uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
       env:
         STATUS: ${{ steps.status.outputs.status }}
+        BASE_BRANCH: ${{ steps.detect-base-branch.outputs.base-branch }}
       with:
         github-token: ${{ inputs.token }}
         script: |
@@ -92,7 +111,7 @@ runs:
               body: `Processing signing event ${process.env.GITHUB_REF_NAME}, please wait.`,
               draft: true,
               head: process.env.GITHUB_REF_NAME,
-              base: "main",
+              base: process.env.BASE_BRANCH,
             })
             pr = response.data.number
             console.log(`Created pull request #${pr}`)
