@@ -67,4 +67,8 @@ pull-remote = origin
 # push-remote: If you are allowed to push to the TUF repository, you can use the same value
 # as pull-remote. Otherwise use the remote name of your fork
 push-remote = origin
+
+# base-branch: The base branch name (optional)
+# If not provided, tuf-on-ci-sign will auto-detect the default branch or use 'main'
+# base-branch = main
 ```
