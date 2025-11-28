@@ -35,7 +35,6 @@ runs:
         echo "::group::Install tuf-on-ci"
         ROOT=$GITHUB_ACTION_PATH/../..
         pip install -c $ROOT/action-constraints.txt $ROOT/repo/
-        cp $GITHUB_ACTION_PATH/index.css .
         echo "::endgroup::"
       shell: bash
 
@@ -49,18 +48,6 @@ runs:
 
         find build -type f | xargs ls -lh
       shell: bash
-
-    - name: Render repository state in HTML
-      uses: docker://pandoc/core:3.5.0@sha256:befd63aa7c9b795bdf681415e3984aaa2fe20eeed3b5facca494f125f4171218
-      with:
-        args: >-
-          --metadata title="TUF Repository state"
-          --variable title=""
-          --standalone
-          --embed-resources
-          --css index.css
-          --output build/${{inputs.metadata_path}}/index.html
-          build/${{inputs.metadata_path}}/index.md
 
     - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       if: inputs.gh_pages != 'true'
