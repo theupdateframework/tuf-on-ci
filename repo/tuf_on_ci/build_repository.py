@@ -17,43 +17,44 @@ from tuf_on_ci._version import __version__
 logger = logging.getLogger(__name__)
 
 _css = """body {
-  color: #24292e;
-  line-height: 1.5;
-  font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol;
-  font-size: 16px;
-  line-height: 1.5;
-  word-wrap: break-word;
+    color: #24292e;
+    line-height: 1.5;
+    font-size: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+        sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    line-height: 1.5;
+    word-wrap: break-word;
 }
 a {
-  background-color: transparent;
-  color: #0366d6;
-  text-decoration: none;
+    background-color: transparent;
+    color: #0366d6;
+    text-decoration: none;
 }
 a:hover {
-  text-decoration: underline;
+    text-decoration: underline;
 }
 table {
-  margin-bottom: 16px;
-  border-collapse: collapse;
-  border-spacing: 0;
-  display: block;
-  overflow: auto;
-  width: 100%;
+    margin-bottom: 16px;
+    border-collapse: collapse;
+    border-spacing: 0;
+    display: block;
+    overflow: auto;
+    width: 100%;
 }
 table th {
-  font-weight: 600;
+    font-weight: 600;
 }
 table td,
 table th {
-  border: 1px solid #dfe2e5;
-  padding: 6px 13px;
+    border: 1px solid #dfe2e5;
+    padding: 6px 13px;
 }
 table tr {
-  background-color: #fff;
-  border-top: 1px solid #c6cbd1;
+    background-color: #fff;
+    border-top: 1px solid #c6cbd1;
 }
 table tr:nth-child(2n) {
-  background-color: #f6f8fa;
+    background-color: #f6f8fa;
 }
 """
 
@@ -73,7 +74,6 @@ def _git(cmd: list[str]) -> subprocess.CompletedProcess:
 
 
 def build_description(repo: CIRepository) -> str:
-
     lines = [
         "<!DOCTYPE html>",
         "<html>",
@@ -84,7 +84,7 @@ def build_description(repo: CIRepository) -> str:
         "<thead><tr>",
         "<th>Role</th><th>Signing starts</th><th>Expires</th><th>Signers</th>",
         "</tr></thead>",
-        "<tbody>"
+        "<tbody>",
     ]
     root = repo.root()
     targets = repo.targets()
@@ -103,7 +103,9 @@ def build_description(repo: CIRepository) -> str:
         keys = [delegator.get_key(keyid) for keyid in role.keyids]
         signers = []
         for key in keys:
-            owner = key.unrecognized_fields.get("x-tuf-on-ci-keyowner", "<i>online key</i>")
+            owner = key.unrecognized_fields.get(
+                "x-tuf-on-ci-keyowner", "<i>online key</i>"
+            )
             signers.append(owner)
 
         delegate: Signed = repo.open(rolename).signed
@@ -120,7 +122,14 @@ def build_description(repo: CIRepository) -> str:
         threshold_str = f"{role.threshold} of {len(signers)}"
         signer_str = f"{', '.join(signers)} ({threshold_str} required)"
 
-        lines.append(f"<tr><td>{name_str}</td><td>{signing_date}</td><td>{expiry} UTC</td><td>{signer_str}</td></tr>")
+        lines.append(
+            "<tr>"
+            f"<td>{name_str}</td>"
+            f"<td>{signing_date}</td>"
+            f"<td>{expiry} UTC</td>"
+            f"<td>{signer_str}</td>"
+            "</tr>"
+        )
 
     lines.append("</tbody></table>")
     now = datetime.now(UTC).isoformat(timespec="minutes")
