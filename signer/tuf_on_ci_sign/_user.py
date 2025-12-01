@@ -1,6 +1,7 @@
 import logging
 import os
 import platform
+import subprocess
 import sys
 from configparser import ConfigParser
 
@@ -23,6 +24,37 @@ LIBYKCS11_LOCATIONS = {
 
 def bold(text: str) -> str:
     return click.style(text, bold=True)
+
+
+def _get_base_branch_internal(remote: str = "origin") -> str:
+    """Get base branch by auto-detecting from git remote
+
+    Args:
+        remote: The git remote name (defaults to "origin")
+
+    Returns:
+        The name of the base branch
+    """
+    try:
+        # Try to auto-detect default branch from git remote
+        cmd = [
+            "git",
+            "-c",
+            "user.name=TUF-on-CI",
+            "-c",
+            "user.email=41898282+github-actions[bot]@users.noreply.github.com",
+            "symbolic-ref",
+            f"refs/remotes/{remote}/HEAD",
+        ]
+        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        # Output is like 'refs/remotes/origin/main'
+        ref = result.stdout.strip()
+        branch = ref.split("/")[-1]
+        logger.debug("Auto-detected base branch: %s", branch)
+        return branch
+    except (subprocess.CalledProcessError, IndexError):
+        logger.debug("Failed to auto-detect base branch, defaulting to 'main'")
+        return "main"
 
 
 class User:
@@ -68,6 +100,20 @@ class User:
 
         # signer cache gets populated as they are used the first time
         self._signers: dict[str, Signer] = {}
+
+        # detect or use configured base branch
+        self.base_branch = self._get_base_branch()
+
+    def _get_base_branch(self) -> str:
+        """Get base branch from config or auto-detect"""
+        try:
+            # First try to get from config
+            return self._config["settings"]["base-branch"]
+        except KeyError:
+            pass
+
+        # Auto-detect using shared utility
+        return _get_base_branch_internal(remote=self.pull_remote)
 
     def get_signer(self, key: Key) -> Signer:
         """Returns a Signer for the given public key
