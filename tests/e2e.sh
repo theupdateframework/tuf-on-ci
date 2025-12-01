@@ -574,8 +574,8 @@ test_basic()
     for t in ${PUBLISH_DIR}/metadata/*.json; do
         strip_signatures $t
     done
-    # Expected Markdown could be maintained but is currently not
-    rm ${PUBLISH_DIR}/metadata/index.md
+    # Expected HTML could be maintained but is currently not
+    rm ${PUBLISH_DIR}/metadata/index.html
 
     # the resulting metadata should match expected metadata exactly
     diff -r $SCRIPT_DIR/expected/basic/ $PUBLISH_DIR
@@ -630,8 +630,8 @@ test_signing_event_creation()
     for t in ${PUBLISH_DIR}/metadata/*.json; do
         strip_signatures $t
     done
-    # Expected Markdown could be maintained but is currently not
-    rm ${PUBLISH_DIR}/metadata/index.md
+    # Expected HTML could be maintained but is currently not
+    rm ${PUBLISH_DIR}/metadata/index.html
 
     # the resulting metadata should match expected metadata exactly
     diff -r $SCRIPT_DIR/expected/signing-event-creation/ $PUBLISH_DIR
@@ -665,8 +665,8 @@ test_delegated_role()
     for t in ${PUBLISH_DIR}/metadata/*.json; do
         strip_signatures $t
     done
-    # Expected Markdown could be maintained but is currently not
-    rm ${PUBLISH_DIR}/metadata/index.md
+    # Expected HTML could be maintained but is currently not
+    rm ${PUBLISH_DIR}/metadata/index.html
 
     # the resulting metadata should match expected metadata exactly
     diff -r $SCRIPT_DIR/expected/delegated/ $PUBLISH_DIR
@@ -700,8 +700,8 @@ test_online_bumps()
     for t in ${PUBLISH_DIR}/metadata/*.json; do
         strip_signatures $t
     done
-    # Expected Markdown could be maintained but is currently not
-    rm ${PUBLISH_DIR}/metadata/index.md
+    # Expected HTML could be maintained but is currently not
+    rm ${PUBLISH_DIR}/metadata/index.html
 
     # the resulting metadata should match expected metadata exactly
     diff -r $SCRIPT_DIR/expected/online-version-bump/ $PUBLISH_DIR
@@ -743,8 +743,8 @@ test_multi_user_signing()
     for t in ${PUBLISH_DIR}/metadata/*.json; do
         strip_signatures $t
     done
-    # Expected Markdown could be maintained but is currently not
-    rm ${PUBLISH_DIR}/metadata/index.md
+    # Expected HTML could be maintained but is currently not
+    rm ${PUBLISH_DIR}/metadata/index.html
 
     # the resulting metadata should match expected metadata exactly
     diff -r $SCRIPT_DIR/expected/multi-user-signing/ $PUBLISH_DIR
@@ -798,8 +798,8 @@ test_target_changes()
     for t in ${PUBLISH_DIR}/metadata/*.json; do
         strip_signatures $t
     done
-    # Expected Markdown could be maintained but is currently not
-    rm ${PUBLISH_DIR}/metadata/index.md
+    # Expected HTML could be maintained but is currently not
+    rm ${PUBLISH_DIR}/metadata/index.html
 
     # the resulting metadata should match expected metadata exactly
     diff -r $SCRIPT_DIR/expected/target-file-changes/ $PUBLISH_DIR
@@ -838,8 +838,8 @@ test_target_changes_in_delegations()
     for t in ${PUBLISH_DIR}/metadata/*.json; do
         strip_signatures $t
     done
-    # Expected Markdown could be maintained but is currently not
-    rm ${PUBLISH_DIR}/metadata/index.md
+    # Expected HTML could be maintained but is currently not
+    rm ${PUBLISH_DIR}/metadata/index.html
 
     # the resulting metadata should match expected metadata exactly
     diff -r $SCRIPT_DIR/expected/target-files-in-delegated-roles/ $PUBLISH_DIR
@@ -882,8 +882,8 @@ test_root_key_rotation()
     for t in ${PUBLISH_DIR}/metadata/*.json; do
         strip_signatures $t
     done
-    # Expected Markdown could be maintained but is currently not
-    rm ${PUBLISH_DIR}/metadata/index.md
+    # Expected HTML could be maintained but is currently not
+    rm ${PUBLISH_DIR}/metadata/index.html
 
     # the resulting metadata should match expected metadata exactly
     diff -r $SCRIPT_DIR/expected/root-key-rotation/ $PUBLISH_DIR

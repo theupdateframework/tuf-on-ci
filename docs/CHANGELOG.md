@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* actions: Removed a dependency on pandoc, making the HTML generation more reliable (#696)
+* Dependency updates
+
 ## v0.18.0
 
 * repo: tuf-on-ci-test-client now sets a user-agent header
