@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+
+## v0.19.0
+
 * actions: Removed a dependency on pandoc, making the HTML generation more reliable (#696)
 * Dependency updates
 
