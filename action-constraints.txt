@@ -16,9 +16,9 @@ azure-keyvault-keys==4.11.0
     # via securesystemslib
 betterproto==2.0.0b6
     # via sigstore-protobuf-specs
-boto3==1.42.0
+boto3==1.42.4
     # via securesystemslib
-botocore==1.41.6
+botocore==1.42.4
     # via
     #   boto3
     #   s3transfer
@@ -103,13 +103,13 @@ msal-extensions==1.3.1
     # via azure-identity
 multidict==6.7.0
     # via grpclib
-platformdirs==4.5.0
+platformdirs==4.5.1
     # via sigstore
 proto-plus==1.26.1
     # via
     #   google-api-core
     #   google-cloud-kms
-protobuf==6.33.1
+protobuf==6.33.2
     # via
     #   google-api-core
     #   google-cloud-kms
@@ -188,7 +188,7 @@ typing-extensions==4.15.0
     #   typing-inspection
 typing-inspection==0.4.2
     # via pydantic
-urllib3==2.5.0
+urllib3==2.6.0
     # via
     #   botocore
     #   requests
