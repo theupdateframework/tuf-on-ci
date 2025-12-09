@@ -16,9 +16,9 @@ azure-keyvault-keys==4.11.0
     # via securesystemslib
 betterproto==2.0.0b6
     # via sigstore-protobuf-specs
-boto3==1.42.4
+boto3==1.42.5
     # via securesystemslib
-botocore==1.42.4
+botocore==1.42.5
     # via
     #   boto3
     #   s3transfer
@@ -188,7 +188,7 @@ typing-extensions==4.15.0
     #   typing-inspection
 typing-inspection==0.4.2
     # via pydantic
-urllib3==2.6.0
+urllib3==2.6.1
     # via
     #   botocore
     #   requests
