@@ -6,7 +6,7 @@
 #
 annotated-types==0.7.0
     # via pydantic
-azure-core==1.36.0
+azure-core==1.37.0
     # via
     #   azure-identity
     #   azure-keyvault-keys
@@ -16,14 +16,14 @@ azure-keyvault-keys==4.11.0
     # via securesystemslib
 betterproto==2.0.0b6
     # via sigstore-protobuf-specs
-boto3==1.42.4
+boto3==1.42.9
     # via securesystemslib
-botocore==1.42.4
+botocore==1.42.9
     # via
     #   boto3
     #   s3transfer
     #   securesystemslib
-cachetools==6.2.2
+cachetools==6.2.3
     # via google-auth
 certifi==2025.11.12
     # via requests
@@ -71,7 +71,7 @@ grpcio==1.76.0
     #   grpcio-status
 grpcio-status==1.76.0
     # via google-api-core
-grpclib==0.4.8
+grpclib==0.4.9
     # via betterproto
 h2==4.3.0
     # via grpclib
@@ -188,7 +188,7 @@ typing-extensions==4.15.0
     #   typing-inspection
 typing-inspection==0.4.2
     # via pydantic
-urllib3==2.6.0
+urllib3==2.6.2
     # via
     #   botocore
     #   requests
