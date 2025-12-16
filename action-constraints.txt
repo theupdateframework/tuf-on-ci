@@ -16,14 +16,14 @@ azure-keyvault-keys==4.11.0
     # via securesystemslib
 betterproto==2.0.0b6
     # via sigstore-protobuf-specs
-boto3==1.42.9
+boto3==1.42.10
     # via securesystemslib
-botocore==1.42.9
+botocore==1.42.10
     # via
     #   boto3
     #   s3transfer
     #   securesystemslib
-cachetools==6.2.3
+cachetools==6.2.4
     # via google-auth
 certifi==2025.11.12
     # via requests
@@ -49,7 +49,7 @@ email-validator==2.3.0
     # via pydantic
 google-api-core==2.28.1
     # via google-cloud-kms
-google-auth==2.43.0
+google-auth==2.45.0
     # via
     #   google-api-core
     #   google-cloud-kms
