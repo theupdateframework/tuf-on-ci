@@ -29,8 +29,8 @@ tuf-on-ci-sign = "tuf_on_ci_sign:sign"
 
 [project.optional-dependencies]
 lint = [
-  "mypy == 1.19.0",
-  "ruff == 0.14.8",
+  "mypy == 1.19.1",
+  "ruff == 0.14.9",
 ]
 
 [tool.hatch.version]
