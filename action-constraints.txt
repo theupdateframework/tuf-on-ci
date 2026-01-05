@@ -16,16 +16,16 @@ azure-keyvault-keys==4.11.0
     # via securesystemslib
 betterproto==2.0.0b6
     # via sigstore-protobuf-specs
-boto3==1.42.18
+boto3==1.42.21
     # via securesystemslib
-botocore==1.42.18
+botocore==1.42.21
     # via
     #   boto3
     #   s3transfer
     #   securesystemslib
 cachetools==6.2.4
     # via google-auth
-certifi==2025.11.12
+certifi==2026.1.4
     # via requests
 cffi==2.0.0
     # via cryptography
