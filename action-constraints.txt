@@ -6,7 +6,7 @@
 #
 annotated-types==0.7.0
     # via pydantic
-azure-core==1.37.0
+azure-core==1.38.0
     # via
     #   azure-identity
     #   azure-keyvault-keys
@@ -16,9 +16,9 @@ azure-keyvault-keys==4.11.0
     # via securesystemslib
 betterproto==2.0.0b6
     # via sigstore-protobuf-specs
-boto3==1.42.25
+boto3==1.42.30
     # via securesystemslib
-botocore==1.42.25
+botocore==1.42.30
     # via
     #   boto3
     #   s3transfer
@@ -51,7 +51,7 @@ google-auth==2.47.0
     # via
     #   google-api-core
     #   google-cloud-kms
-google-cloud-kms==3.7.0
+google-cloud-kms==3.9.0
     # via securesystemslib
 googleapis-common-protos==1.72.0
     # via
@@ -107,7 +107,7 @@ proto-plus==1.27.0
     # via
     #   google-api-core
     #   google-cloud-kms
-protobuf==6.33.3
+protobuf==6.33.4
     # via
     #   google-api-core
     #   google-cloud-kms
@@ -115,7 +115,7 @@ protobuf==6.33.3
     #   grpc-google-iam-v1
     #   grpcio-status
     #   proto-plus
-pyasn1==0.6.1
+pyasn1==0.6.2
     # via
     #   pyasn1-modules
     #   rsa
