@@ -3,5 +3,5 @@ build==1.4.0
 hatchling==1.28.0
 
 # These packages are used used as constraints in workflows
-tox==4.34.1
-pip-tools==7.5.2
+tox==4.36.0
+pip-tools==7.5.3
