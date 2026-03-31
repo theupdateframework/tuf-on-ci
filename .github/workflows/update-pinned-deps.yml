@@ -61,18 +61,36 @@ jobs:
             echo "branch=$NAME" >> $GITHUB_OUTPUT
           fi
 
-      - name: Open pull request
+      - name: Open pull request (and close old ones)
         if: steps.push.outputs.pushed == 'true'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           BRANCH: ${{ steps.push.outputs.branch }}
         with:
           script: |
+            const title = "actions: Update pinned requirements";
+            const openPrs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+            });
+
             await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: "actions: Update pinned requirements",
+              title: title,
               body: "Note: close and reopen the PR to trigger CI.",
               head: process.env.BRANCH,
               base: "main",
-            })
+            });
+
+            for (const pr of openPrs.data) {
+              if (pr.title === title) {
+                await github.rest.pulls.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  state: "closed",
+                });
+              }
+            }
