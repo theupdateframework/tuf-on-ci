@@ -17,7 +17,7 @@ TUF-on-CI also needs access to a PKCS#11 module.
    ```shell
    $ apt install ykcs11
    ```
-   macOS users can install with
+   macOS users can install via the piv-tool package from https://developers.yubico.com/yubico-piv-tool/Releases/ (signed by Apple developer cert) or via Brew with
    ```shell
    $ brew install yubico-piv-tool
    ```
