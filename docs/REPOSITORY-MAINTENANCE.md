@@ -24,6 +24,43 @@ ongoing maintenance.
 1. When this initial signing event branch is merged, the repository generates the
    first snapshot and timestamp, and publishes the first repository version
 
+## Private Repository Setup
+
+When using TUF-on-CI with a private repository, GitHub Pages requires authentication
+to access published content. The `test-repository` action supports optional token
+authentication for this use case.
+
+### Configuring Workflows for Private Repositories
+
+The template repository workflows need to be updated to pass authentication tokens:
+
+In `.github/workflows/test.yml`, update the smoke-test step:
+```yaml
+- name: Smoke test TUF-on-CI repository with a TUF client
+  uses: theupdateframework/tuf-on-ci/actions/test-repository@VERSION
+  with:
+    gh_token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+The `GITHUB_TOKEN` is automatically provided by GitHub Actions and has permission
+to access private repositories in the same organization. No additional configuration
+is required.
+
+### Using the Test Action with Custom Tokens
+
+If you need to use a custom Personal Access Token (PAT) instead of `GITHUB_TOKEN`:
+
+1. Create a fine-grained PAT with `contents: read` permission for the repository
+2. Add it as a repository secret (e.g., `PRIVATE_REPO_TOKEN`)
+3. Use it in the workflow:
+   ```yaml
+   with:
+     gh_token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+   ```
+
+**Note**: For public repositories, the `gh_token` parameter can be omitted and
+the action will work without authentication.
+
 ## Modifying roles and creating new ones
 
 Modifying a role is needed when:

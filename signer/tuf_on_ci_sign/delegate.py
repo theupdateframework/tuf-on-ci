@@ -153,7 +153,7 @@ def _sigstore_import(pull_remote: str) -> Key:
     issuer = "https://token.actions.githubusercontent.com"
     repo = get_repo_name(pull_remote)
 
-    id = f"https://github.com/{repo}/.github/workflows/online-sign.yml@refs/heads/main"
+    id = f"https://github.com/{repo}/.github/workflows/online-sign.yml@refs/heads/not-main"
     key = SigstoreKey(
         "abcd", "sigstore-oidc", "Fulcio", {"issuer": issuer, "identity": id}
     )

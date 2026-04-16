@@ -173,7 +173,7 @@ def update_targets(verbose: int, push: bool) -> None:
         sys.exit(1)
 
     # Find the known-good commit
-    merge_base = _git(["merge-base", "origin/main", "HEAD"]).stdout.strip()
+    merge_base = _git(["merge-base", "origin/not-main", "HEAD"]).stdout.strip()
     if head == merge_base:
         click.echo("This signing event contains no changes yet")
         sys.exit(1)
@@ -306,7 +306,7 @@ def status(verbose: int) -> None:
         sys.exit(1)
 
     # Find the known-good commit
-    merge_base = _git(["merge-base", "origin/main", "HEAD"]).stdout.strip()
+    merge_base = _git(["merge-base", "origin/not-main", "HEAD"]).stdout.strip()
     if head == merge_base:
         click.echo("This signing event contains no changes yet")
         sys.exit(1)

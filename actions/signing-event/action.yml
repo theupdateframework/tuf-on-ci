@@ -92,7 +92,7 @@ runs:
               body: `Processing signing event ${process.env.GITHUB_REF_NAME}, please wait.`,
               draft: true,
               head: process.env.GITHUB_REF_NAME,
-              base: "main",
+              base: "not-main",
             })
             pr = response.data.number
             console.log(`Created pull request #${pr}`)
