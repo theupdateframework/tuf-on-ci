@@ -1,7 +1,7 @@
 # these packages are used as constraints during build
-build==1.4.2
+build==1.4.3
 hatchling==1.29.0
 
 # These packages are used used as constraints in workflows
-tox==4.52.0
+tox==4.52.1
 pip-tools==7.5.3
