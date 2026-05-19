@@ -20,16 +20,17 @@ currently experimental (and not supported by all TUF client libraries)
 ### Google Cloud KMS
 
 1. Make sure Google Cloud Workload Identity Federation allows your GitHub repositorys OIDC identity to sign
-   with a KMS key.
+   with a KMS key: the service account needs _roles/cloudkms.publicKeyViewer_ and _roles/cloudkms.SignerVerifier_ for the key
 1. Define your authentication details as repository variables in _Settings->Secrets and variables->Actions->Variables_:
    ```
    GCP_WORKLOAD_IDENTITY_PROVIDER: projects/843741030650/locations/global/workloadIdentityPools/git-repo-demo/providers/git-repo-demo
    GCP_SERVICE_ACCOUNT: git-repo-demo@python-tuf-kms.iam.gserviceaccount.com
    ```
 1. _(only needed for initial configuration)_ Prepare your local environment for accessing the cloud KMS:
-   Use [gcloud](https://cloud.google.com/sdk/docs/install) and authenticate in the
-   environment where you plan to run `tuf-on-ci-delegate` tool (you will need
-   _roles/cloudkms.publicKeyViewer_ permission on KMS)
+   * Make sure you have _roles/cloudkms.publicKeyViewer_ permission on the key, have the keyid (
+     `projects/<p>/locations/<l>/keyRings/<r>/cryptoKeys/<k>/cryptoKeyVersions/<v>`) available
+   * Use [gcloud](https://cloud.google.com/sdk/docs/install) and authenticate (`gcloud auth application-default`) in the
+     environment where you plan to run `tuf-on-ci-delegate` tool
 
 ### Azure Key Vault
 
