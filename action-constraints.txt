@@ -6,30 +6,30 @@
 #
 annotated-types==0.7.0
     # via pydantic
-azure-core==1.39.0
+azure-core==1.41.0
     # via
     #   azure-identity
     #   azure-keyvault-keys
 azure-identity==1.25.3
     # via securesystemslib
-azure-keyvault-keys==4.11.0
+azure-keyvault-keys==4.11.1
     # via securesystemslib
 betterproto==2.0.0b6
     # via sigstore-protobuf-specs
-boto3==1.42.92
+boto3==1.43.14
     # via securesystemslib
-botocore==1.42.92
+botocore==1.43.14
     # via
     #   boto3
     #   s3transfer
     #   securesystemslib
-certifi==2026.2.25
+certifi==2026.5.20
     # via requests
 cffi==2.0.0
     # via cryptography
 charset-normalizer==3.4.7
     # via requests
-click==8.3.2
+click==8.4.1
     # via tuf-on-ci (repo/pyproject.toml)
 cryptography==46.0.7
     # via
@@ -48,13 +48,13 @@ email-validator==2.3.0
     # via pydantic
 google-api-core==2.30.3
     # via google-cloud-kms
-google-auth==2.49.2
+google-auth==2.53.0
     # via
     #   google-api-core
     #   google-cloud-kms
-google-cloud-kms==3.12.0
+google-cloud-kms==3.13.0
     # via securesystemslib
-googleapis-common-protos==1.74.0
+googleapis-common-protos==1.75.0
     # via
     #   google-api-core
     #   grpc-google-iam-v1
@@ -80,7 +80,7 @@ hyperframe==6.1.0
     # via h2
 id==1.6.1
     # via sigstore
-idna==3.11
+idna==3.16
     # via
     #   email-validator
     #   requests
@@ -90,7 +90,7 @@ jmespath==1.1.0
     # via
     #   boto3
     #   botocore
-markdown-it-py==4.0.0
+markdown-it-py==4.2.0
     # via rich
 mdurl==0.1.2
     # via markdown-it-py
@@ -104,7 +104,7 @@ multidict==6.7.1
     # via grpclib
 platformdirs==4.9.6
     # via sigstore
-proto-plus==1.27.2
+proto-plus==1.28.0
     # via
     #   google-api-core
     #   google-cloud-kms
@@ -124,25 +124,25 @@ pyasn1-modules==0.4.2
     # via google-auth
 pycparser==3.0
     # via cffi
-pydantic==2.13.3
+pydantic==2.13.4
     # via
     #   sigstore
     #   sigstore-rekor-types
-pydantic-core==2.46.3
+pydantic-core==2.46.4
     # via pydantic
 pygments==2.20.0
     # via rich
-pyjwt==2.12.1
+pyjwt==2.13.0
     # via
     #   msal
     #   sigstore
-pyopenssl==26.0.0
+pyopenssl==26.2.0
     # via sigstore
 python-dateutil==2.9.0.post0
     # via
     #   betterproto
     #   botocore
-requests==2.33.1
+requests==2.34.2
     # via
     #   azure-core
     #   google-api-core
@@ -154,7 +154,7 @@ rfc8785==0.1.4
     # via sigstore
 rich==14.3.4
     # via sigstore
-s3transfer==0.16.0
+s3transfer==0.17.0
     # via boto3
 securesystemslib==1.3.1
     # via
@@ -183,7 +183,7 @@ typing-extensions==4.15.0
     #   typing-inspection
 typing-inspection==0.4.2
     # via pydantic
-urllib3==2.6.3
+urllib3==2.7.0
     # via
     #   botocore
     #   id
