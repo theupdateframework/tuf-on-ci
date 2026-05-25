@@ -52,6 +52,25 @@ def get_signer(key: Key) -> str:
     return key.unrecognized_fields[TAG_ONLINE_URI]
 
 
+def _keyid_matches_content(key: Key) -> bool:
+    """Return True if key.keyid equals sha256(canonical(key.to_dict())).
+
+    The check can be disabled by setting the TUF_ON_CI_NO_VERIFY_KID
+    environment variable (to any non-empty value), in which case this
+    function always returns True.
+    Previous releases didn't include the x-tuf-on-ci* fields when computing
+    the kid, by making this check optional there is an upgrade path for them
+    withouth a "key rotation" (re-adding the key but with a new key id).
+    """
+    if os.environ.get("TUF_ON_CI_NO_VERIFY_KID"):
+        return True
+    canonical_key = encode_canonical(key.to_dict())
+    assert canonical_key
+    hasher = digest("sha256")
+    hasher.update(canonical_key.encode())
+    return key.keyid == hasher.hexdigest()
+
+
 @unique
 class State(Enum):
     ADDED = (0,)
@@ -365,11 +384,7 @@ class CIRepository(Repository):
                     return False, "Online signing or expiry period failed sanity check"
 
             for key in md.signed.keys.values():
-                canonical_key = encode_canonical(key.to_dict())
-                assert canonical_key
-                hasher = digest("sha256")
-                hasher.update(canonical_key.encode())
-                if key.keyid != hasher.hexdigest():
+                if not _keyid_matches_content(key):
                     return False, f"Key {key.keyid} keyid does not match content hash"
 
         # TODO for root:

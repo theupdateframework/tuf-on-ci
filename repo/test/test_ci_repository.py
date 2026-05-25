@@ -1,10 +1,44 @@
 import os
 import shutil
 import unittest
+from copy import deepcopy
 from tempfile import TemporaryDirectory
+from unittest import mock
 
-from tuf_on_ci._repository import CIRepository
+from securesystemslib.formats import encode_canonical
+from securesystemslib.hash import digest
+from tuf.api.metadata import Metadata, Root
+
+from tuf_on_ci._repository import CIRepository, _keyid_matches_content
 from tuf_on_ci.signing_event import _find_changed_target_roles
+
+
+class TestKeyidMatchesContent(unittest.TestCase):
+    def setUp(self):
+        root = Metadata[Root].from_file("test/test_repo1/root.json")
+        # An existing key from the test repo. Its stored keyid does not
+        # match thecontent hash.
+        self.non_matching_key = next(iter(root.signed.keys.values()))
+
+        self.matching_key = deepcopy(self.non_matching_key)
+        hasher = digest("sha256")
+        hasher.update(encode_canonical(self.matching_key.to_dict()).encode())
+        self.matching_key.keyid = hasher.hexdigest()
+
+    def test_matching_keyid_matches(self):
+        self.assertTrue(_keyid_matches_content(self.matching_key))
+
+    def test_non_matching_keyid_does_not_match(self):
+        self.assertFalse(_keyid_matches_content(self.non_matching_key))
+
+    def test_env_var_bypasses_check(self):
+        with mock.patch.dict(os.environ, {"TUF_ON_CI_NO_VERIFY_KID": "1"}):
+            self.assertTrue(_keyid_matches_content(self.matching_key))
+            self.assertTrue(_keyid_matches_content(self.non_matching_key))
+
+    def test_empty_env_var_does_not_bypass(self):
+        with mock.patch.dict(os.environ, {"TUF_ON_CI_NO_VERIFY_KID": ""}):
+            self.assertFalse(_keyid_matches_content(self.non_matching_key))
 
 
 class TestCIRepository(unittest.TestCase):
