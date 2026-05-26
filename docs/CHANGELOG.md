@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v0.20.0
+
+* Option to disable key ID verifiation (#792)
+* Documentation updates (#790, #772, #769)
+* Workflow improvements (#760)
+* Dependency updates
 
 ## v0.19.0
 
