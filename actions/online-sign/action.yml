@@ -71,12 +71,12 @@ runs:
       with:
         python-version: "3.14"
 
-    - run: |
+    - run: | # zizmor: ignore[github-env]
         echo "::group::Install tuf-on-ci"
         ROOT=$GITHUB_ACTION_PATH/../..
         cd $ROOT/repo
         UV_PROJECT_ENVIRONMENT=$GITHUB_WORKSPACE/.venv uv sync --frozen
-        echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
+        echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
         echo "::endgroup::"
       shell: bash
 

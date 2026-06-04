@@ -34,7 +34,7 @@ runs:
       with:
         python-version: "3.14"
 
-    - run: |
+    - run: | # zizmor: ignore[github-env]
         echo "::group::Install tuf-on-ci"
         ROOT=$GITHUB_ACTION_PATH/../..
         cd $ROOT/repo
