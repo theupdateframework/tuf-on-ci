@@ -1,5 +1,4 @@
 # these packages are used as constraints during build
-build==1.5.0
 hatchling==1.29.0
 
 # These packages are used used as constraints in workflows

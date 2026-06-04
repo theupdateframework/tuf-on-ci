@@ -20,13 +20,11 @@ jobs:
       - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
         with:
           python-version: '3.14'
-
-      - name: Install build dependencies
-        run: uv pip install --system -c build/build-constraints.txt build
+          enable-cache: false
 
       - name: Build release changelog, signer wheel & source tarball
         run: |
-          PIP_CONSTRAINT=build/build-constraints.txt python3 -m build --sdist --wheel --outdir dist/ signer/
+          uv build --sdist --wheel --out-dir dist/ signer/ -b build/build-constraints.txt
           awk "/## $GITHUB_REF_NAME/{flag=1; next} /## v/{flag=0} flag" docs/CHANGELOG.md > changelog
 
       - name: Store build artifacts
