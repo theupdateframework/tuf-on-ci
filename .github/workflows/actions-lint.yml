@@ -32,7 +32,7 @@ jobs:
           actions/lint-requirements.txt
 
     - name: Install zizmor
-      run: uv pip install --system -r actions/lint-requirements.txt
+      run: uv tool install zizmor -c actions/lint-requirements.txt
 
     - name: Run zizmor
       run: zizmor .
