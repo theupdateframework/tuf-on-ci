@@ -29,8 +29,10 @@ tuf-on-ci-online-sign-targets = "tuf_on_ci:online_sign_targets"
 tuf-on-ci-status = "tuf_on_ci:status"
 tuf-on-ci-update-targets = "tuf_on_ci:update_targets"
 
-[dependency-groups]
+[project.optional-dependencies]
 lint = ["mypy", "ruff"]
+
+[dependency-groups]
 uv = ["uv==0.11.19"] # for setup-uv version pinning
 
 [tool.hatch.version]

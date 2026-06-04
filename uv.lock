@@ -1408,11 +1408,13 @@ dependencies = [
     { name = "tuf" },
 ]
 
-[package.dev-dependencies]
+[package.optional-dependencies]
 lint = [
     { name = "mypy" },
     { name = "ruff" },
 ]
+
+[package.dev-dependencies]
 uv = [
     { name = "uv" },
 ]
@@ -1420,15 +1422,14 @@ uv = [
 [package.metadata]
 requires-dist = [
     { name = "click", specifier = "~=8.1" },
+    { name = "mypy", marker = "extra == 'lint'" },
+    { name = "ruff", marker = "extra == 'lint'" },
     { name = "securesystemslib", extras = ["awskms", "azurekms", "gcpkms", "sigstore"], specifier = "~=1.2" },
     { name = "tuf", specifier = ">=5.1,<8.0" },
 ]
+provides-extras = ["lint"]
 
 [package.metadata.requires-dev]
-lint = [
-    { name = "mypy" },
-    { name = "ruff" },
-]
 uv = [{ name = "uv", specifier = "==0.11.19" }]
 
 [[package]]
@@ -1442,7 +1443,7 @@ dependencies = [
     { name = "tuf" },
 ]
 
-[package.dev-dependencies]
+[package.optional-dependencies]
 lint = [
     { name = "mypy" },
     { name = "ruff" },
@@ -1451,17 +1452,14 @@ lint = [
 [package.metadata]
 requires-dist = [
     { name = "click", specifier = "~=8.1" },
+    { name = "mypy", marker = "extra == 'lint'" },
     { name = "packaging", specifier = ">=24,<27" },
     { name = "platformdirs", specifier = "~=4.2" },
+    { name = "ruff", marker = "extra == 'lint'" },
     { name = "securesystemslib", extras = ["awskms", "azurekms", "gcpkms", "hsm", "sigstore"], specifier = "~=1.2" },
     { name = "tuf", specifier = ">=5.1,<8.0" },
 ]
-
-[package.metadata.requires-dev]
-lint = [
-    { name = "mypy" },
-    { name = "ruff" },
-]
+provides-extras = ["lint"]
 
 [[package]]
 name = "typing-extensions"
