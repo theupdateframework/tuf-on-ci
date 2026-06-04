@@ -83,7 +83,12 @@ def client(
         if update_base_url is not None:
             # Update client to update_base_url before doing the actual update
             updater = Updater(
-                metadata_dir, update_base_url, artifact_dir, artifact_url, config=config
+                metadata_dir,
+                update_base_url,
+                artifact_dir,
+                artifact_url,
+                config=config,
+                bootstrap=None,
             )
             try:
                 updater.refresh()
@@ -93,7 +98,12 @@ def client(
 
         # Update client to metadata_url
         updater = Updater(
-            metadata_dir, metadata_url, artifact_dir, artifact_url, config=config
+            metadata_dir,
+            metadata_url,
+            artifact_dir,
+            artifact_url,
+            config=config,
+            bootstrap=None,
         )
         ref_time_string = ""
         if time is not None:
