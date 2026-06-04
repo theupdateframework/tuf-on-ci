@@ -35,10 +35,11 @@ updates:
         - "*"
 
 - package-ecosystem: "github-actions"
-  directories:  
+  directories:
     - "/"
     - "/actions/create-signing-events/"
     - "/actions/online-sign/"
+    - "/actions/online-sign-targets/"
     - "/actions/signing-event/"
     - "/actions/test-repository/"
     - "/actions/update-issue/"
