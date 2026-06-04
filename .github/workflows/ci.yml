@@ -58,4 +58,4 @@ jobs:
       run: uv tool install tox -c build/build-constraints.txt
 
     - name: ${{ matrix.toxenv }}
-      run: make tox
+      run: make $TOXENV
