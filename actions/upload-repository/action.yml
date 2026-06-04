@@ -27,14 +27,16 @@ runs:
         ref: ${{ inputs.ref }}
         persist-credentials: false
 
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+    - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
       with:
         python-version: "3.14"
 
     - run: |
         echo "::group::Install tuf-on-ci"
         ROOT=$GITHUB_ACTION_PATH/../..
-        pip install -c $ROOT/action-constraints.txt $ROOT/repo/
+        cd $ROOT/repo
+        UV_PROJECT_ENVIRONMENT=$GITHUB_WORKSPACE/.venv uv sync --frozen
+        echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
         echo "::endgroup::"
       shell: bash
 

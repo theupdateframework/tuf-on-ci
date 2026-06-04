@@ -17,12 +17,12 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
         with:
           python-version: '3.14'
 
       - name: Install build dependencies
-        run: python3 -m pip install -c build/build-constraints.txt build
+        run: uv pip install --system -c build/build-constraints.txt build
 
       - name: Build release changelog, signer wheel & source tarball
         run: |

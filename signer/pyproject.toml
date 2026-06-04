@@ -29,7 +29,7 @@ tuf-on-ci-sign = "tuf_on_ci_sign:sign"
 
 [project.optional-dependencies]
 lint = [
-  "mypy == 1.19.1",
+  "mypy == 2.1.0",
   "ruff == 0.15.14",
 ]
 
@@ -44,7 +44,7 @@ module = [
   "securesystemslib.*",
   "PyKCS11.*",
 ]
-ignore_missing_imports = "True"
+ignore_missing_imports = true
 
 [tool.ruff.lint]
 select = [

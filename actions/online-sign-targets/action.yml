@@ -75,14 +75,16 @@ runs:
         tenant-id: ${{ inputs.azure_tenant_id }}
         subscription-id: ${{ inputs.azure_subscription_id }}
 
-    - uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5.1.1
+    - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
       with:
         python-version: "3.14"
 
     - run: |
         echo "::group::Install tuf-on-ci"
         ROOT=$GITHUB_ACTION_PATH/../..
-        pip install -c $ROOT/action-constraints.txt $ROOT/repo/
+        cd $ROOT/repo
+        UV_PROJECT_ENVIRONMENT=$GITHUB_WORKSPACE/.venv uv sync --frozen
+        echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
         echo "::endgroup::"
       shell: bash
 

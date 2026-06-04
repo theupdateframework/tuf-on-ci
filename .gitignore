@@ -5,3 +5,4 @@ __pycache__
 env
 **/.vscode
 dist/
+action-constraints.txt

@@ -43,7 +43,7 @@ module = [
   "securesystemslib.*",
   "sigstore.*",
 ]
-ignore_missing_imports = "True"
+ignore_missing_imports = true
 
 [tool.ruff.lint]
 select = [
