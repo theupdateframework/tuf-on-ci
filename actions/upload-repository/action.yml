@@ -36,7 +36,7 @@ runs:
     - run: | # zizmor: ignore[github-env]
         echo "::group::Install tuf-on-ci"
         cd $GITHUB_ACTION_PATH/../../repo
-        UV_PROJECT_ENVIRONMENT=$GITHUB_WORKSPACE/.venv uv sync --frozen
+        UV_PROJECT_ENVIRONMENT=$GITHUB_WORKSPACE/.venv uv sync --frozen --no-dev
         echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
         echo "::endgroup::"
       shell: bash
