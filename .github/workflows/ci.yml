@@ -45,6 +45,7 @@ jobs:
       with:
         python-version: ${{ matrix.pyversion }}
         enable-cache: true
+        version-file: repo/pyproject.toml
         cache-dependency-glob: |
           signer/pyproject.toml
           repo/pyproject.toml
