@@ -29,6 +29,9 @@ jobs:
           - toxenv: test-e2e
             pyversion: '3.14'
             os: ubuntu-latest
+          - toxenv: lint-actions
+            pyversion: '3.14'
+            os: ubuntu-latest
     runs-on: ${{ matrix.os }}
     env:
       TOXENV: ${{ matrix.toxenv }}
