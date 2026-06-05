@@ -46,16 +46,12 @@ jobs:
           signer/pyproject.toml
           repo/pyproject.toml
           repo/uv.lock
-          build/build-constraints.txt
 
     - name: Install system dependencies for e2e test
       if: matrix.toxenv == 'test-e2e'
       run: |
         sudo apt-get install libfaketime softhsm2
         echo "PYKCS11LIB=/usr/lib/softhsm/libsofthsm2.so" >> $GITHUB_ENV
-
-    - name: Install tox
-      run: uv tool install tox -c build/build-constraints.txt
 
     - name: ${{ matrix.toxenv }}
       run: make $TOXENV
