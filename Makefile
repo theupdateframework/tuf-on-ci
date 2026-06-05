@@ -5,21 +5,21 @@ all: lint test
 lint: lint-signer lint-repo
 
 lint-signer:
-	tox -e lint-signer
+	uv run --frozen tox -e lint-signer
 
 lint-repo: action-constraints.txt
-	tox -e lint-repo
+	uv run --frozen  tox -e lint-repo
 
 test: test-signer test-repo test-e2e
 
 test-signer:
-	tox -e test-signer
+	uv run --frozen tox -e test-signer
 
 test-repo: action-constraints.txt
-	tox -e test-repo
+	uv run --frozen  tox -e test-repo
 
 test-e2e: action-constraints.txt
-	tox -e test-e2e
+	uv run --frozen  tox -e test-e2e
 
 action-constraints.txt: uv.lock
-	cd repo && uv export --quiet --no-emit-workspace --no-hashes -o ../action-constraints.txt
+	cd repo && uv export --quiet --frozen --no-emit-workspace --no-hashes -o ../action-constraints.txt

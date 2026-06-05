@@ -8,11 +8,9 @@ git clone https://github.com/theupdateframework/tuf-on-ci.git
 cd tuf-on-ci
 # Create virtual environment and install the signing and repository tools as well as dev tools
 uv sync --frozen
-# Enter environment 
-source .venv/bin/activate
 ```
 
-At this point `tuf-on-ci-sign` and other commands are available from the editable install (source code).
+At this point `tuf-on-ci-sign` and other commands are available in the virtual environment that can be accessed with `source .venv/bin/activate`.
 
 ### Running tests and linters
 
