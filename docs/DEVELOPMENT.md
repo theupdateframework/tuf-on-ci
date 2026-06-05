@@ -6,12 +6,10 @@ The project uses [`uv`](https://github.com/astral-sh/uv) for environment managem
 # Clone the project
 git clone https://github.com/theupdateframework/tuf-on-ci.git
 cd tuf-on-ci
-# Create virtual environment and install the signing and repository tools
-uv sync
+# Create virtual environment and install the signing and repository tools as well as dev tools
+uv sync --frozen
 # Enter environment 
 source .venv/bin/activate
-# Install tox for the test runner
-uv pip install tox
 ```
 
 At this point `tuf-on-ci-sign` and other commands are available from the editable install (source code).

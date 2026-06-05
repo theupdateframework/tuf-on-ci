@@ -28,7 +28,10 @@ tuf-on-ci-import-repo = "tuf_on_ci_sign:import_repo"
 tuf-on-ci-sign = "tuf_on_ci_sign:sign"
 
 [project.optional-dependencies]
-lint = ["mypy", "ruff"]
+lint = ["mypy", "ruff"] # tox needs these here
+
+[dependency-groups]
+dev = ["mypy", "ruff", "tox"]
 
 [tool.hatch.version]
 path = "tuf_on_ci_sign/__init__.py"
