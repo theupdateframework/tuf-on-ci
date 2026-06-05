@@ -2,13 +2,16 @@
 
 all: lint test
 
-lint: lint-signer lint-repo
+lint: lint-signer lint-repo lint-actions
 
 lint-signer:
 	uv run --frozen tox -e lint-signer
 
 lint-repo: action-constraints.txt
 	uv run --frozen  tox -e lint-repo
+
+lint-actions:
+	uv run --frozen tox -e lint-actions
 
 test: test-signer test-repo test-e2e
 
