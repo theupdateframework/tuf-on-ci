@@ -1,7 +1,7 @@
 version: 2
 updates:
 
-- package-ecosystem: "pip"
+- package-ecosystem: "uv"
   directory: "/build"
   schedule:
     interval: "weekly"
@@ -13,7 +13,7 @@ updates:
       patterns:
         - "*"
 
-- package-ecosystem: "pip"
+- package-ecosystem: "uv"
   directories:
     - "/signer"
     - "/repo"
