@@ -14,8 +14,7 @@
 # $ brew install softhsm swig libfaketime
 #
 # Python dependencies
-# * signer: pip install ./signer/
-# * repo: pip install ./repo/
+# $ source .venv/bin/activate
 #
 #
 # Set DEBUG_TESTS=1 for more visibility. This will leave the temp directories in place.
