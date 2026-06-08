@@ -19,7 +19,7 @@ runs:
       with:
         enable-cache: false
         python-version: "3.14"
-        version-file: ${{ github.action_path }}/../../repo/pyproject.toml
+        version-file: ${{ github.action_path }}/../../pyproject.toml
 
     - run: | # zizmor: ignore[github-env]
         echo "::group::Install tuf-on-ci"

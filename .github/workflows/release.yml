@@ -21,7 +21,7 @@ jobs:
         with:
           enable-cache: false
           python-version: '3.14'
-          version-file: repo/pyproject.toml
+          version-file: pyproject.toml
 
       - name: Build release changelog, signer wheel & source tarball
         run: |
