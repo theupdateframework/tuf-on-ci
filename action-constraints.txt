@@ -14,9 +14,9 @@ azure-identity==1.25.3
     # via securesystemslib
 azure-keyvault-keys==4.11.1
     # via securesystemslib
-boto3==1.43.22
+boto3==1.43.24
     # via securesystemslib
-botocore==1.43.22
+botocore==1.43.24
     # via
     #   boto3
     #   s3transfer
