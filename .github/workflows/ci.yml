@@ -59,3 +59,8 @@ jobs:
 
     - name: ${{ matrix.toxenv }}
       run: make $TOXENV
+
+    - name: Print tox env contents
+      run: uv pip tree --python .tox/$TOXENV
+
+
