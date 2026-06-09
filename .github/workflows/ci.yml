@@ -49,7 +49,7 @@ jobs:
         cache-dependency-glob: |
           signer/pyproject.toml
           repo/pyproject.toml
-          repo/uv.lock
+          uv.lock
 
     - name: Install system dependencies for e2e test
       if: matrix.toxenv == 'test-e2e'
