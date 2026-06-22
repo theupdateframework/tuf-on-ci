@@ -14,14 +14,14 @@ azure-identity==1.25.3
     # via securesystemslib
 azure-keyvault-keys==4.11.1
     # via securesystemslib
-boto3==1.43.24
+boto3==1.43.34
     # via securesystemslib
-botocore==1.43.24
+botocore==1.43.34
     # via
     #   boto3
     #   s3transfer
     #   securesystemslib
-certifi==2026.5.20
+certifi==2026.6.17
     # via requests
 cffi==2.0.0
     # via cryptography
@@ -29,7 +29,7 @@ charset-normalizer==3.4.7
     # via requests
 click==8.4.1
     # via tuf-on-ci (repo/pyproject.toml)
-cryptography==48.0.0
+cryptography==48.0.1
     # via
     #   azure-identity
     #   azure-keyvault-keys
@@ -46,7 +46,7 @@ email-validator==2.3.0
     # via pydantic
 google-api-core==2.31.0
     # via google-cloud-kms
-google-auth==2.53.0
+google-auth==2.55.0
     # via
     #   google-api-core
     #   google-cloud-kms
@@ -59,14 +59,14 @@ googleapis-common-protos==1.75.0
     #   grpcio-status
 grpc-google-iam-v1==0.14.4
     # via google-cloud-kms
-grpcio==1.81.0
+grpcio==1.81.1
     # via
     #   google-api-core
     #   google-cloud-kms
     #   googleapis-common-protos
     #   grpc-google-iam-v1
     #   grpcio-status
-grpcio-status==1.81.0
+grpcio-status==1.81.1
     # via google-api-core
 id==1.6.1
     # via sigstore
@@ -96,7 +96,7 @@ proto-plus==1.28.0
     # via
     #   google-api-core
     #   google-cloud-kms
-protobuf==7.35.0
+protobuf==7.35.1
     # via
     #   google-api-core
     #   google-cloud-kms
@@ -141,7 +141,7 @@ rfc8785==0.1.4
     # via sigstore
 rich==15.0.0
     # via sigstore
-s3transfer==0.18.0
+s3transfer==0.19.0
     # via boto3
 securesystemslib==1.4.0
     # via
