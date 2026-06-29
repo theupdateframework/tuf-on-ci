@@ -1,6 +1,7 @@
 import os
 import platform
 import unittest
+import unittest.mock
 from tempfile import TemporaryDirectory
 
 import click
@@ -68,6 +69,15 @@ NONCONFIGURED_KEY = SSlibKey(
     "ecdsa-sha2-nistp256",
     {
         "public": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEu+ebm3VUg6U2b0IIeR6NFZU7uxkL\nR1sVLxV8SEW7G+AMXMasEQf5daxfwVMP1kuEkhGs3mBYLkYXlWDh9BNSxg==\n-----END PUBLIC KEY-----\n"
+    },
+)
+
+ML_DSA_KEY = SSlibKey(
+    "mldsa_key_id",
+    "ml-dsa",
+    "ml-dsa-44/1",
+    {
+        "public": "-----BEGIN PUBLIC KEY-----\nMBkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEu+ebm3VUg6U2b0IIeR6NFZU7uxkL\nR1sVLxV8SEW7G+AMXMasEQf5daxfwVMP1kuEkhGs3mBYLkYXlWDh9BNSxg==\n-----END PUBLIC KEY-----\n"
     },
 )
 
@@ -145,15 +155,62 @@ class TestUser(unittest.TestCase):
             # If the signing key is not configured, we expect a generic HSM signer
             other_signer = user.get_signer(NONCONFIGURED_KEY)
             self.assertIsInstance(other_signer, HSMSigner)
-            self.assertEqual(other_signer.token_filter, {})
-            self.assertEqual(
-                other_signer.public_key.keyid,
-                "64eeece964e09c058ef8f9805daca546b01ba4719c80b6fe911b091a7c05124b",
-            )
+            self.assertEqual(user._signing_key_uris[NONCONFIGURED_KEY.keyid], "hsm:")
+
+            # verify it was written to file by reloading
+            user3 = User(inifile)
+            self.assertEqual(user3._signing_key_uris[NONCONFIGURED_KEY.keyid], "hsm:")
 
             # another lookup should return same instance
             second_hsm_signer = user.get_signer(HSM_KEY)
             self.assertIs(hsm_signer, second_hsm_signer)
+
+    @unittest.mock.patch("securesystemslib.signer.TKeySigner.from_priv_key_uri")
+    def test_tkey_key(self, mock_from_uri):
+        with TemporaryDirectory() as tempdir:
+            inifile = os.path.join(tempdir, ".tuf-on-ci-sign.ini")
+
+            # 1. Test with configured URI
+            config_with_tkey = (
+                REQUIRED_AND_SIGNING_KEYS + "\nmldsa_key_id = tkey:?digest=7c75714\n"
+            )
+            with open(inifile, "w") as f:
+                f.write(config_with_tkey)
+
+            user = User(inifile)
+            mock_signer = unittest.mock.MagicMock()
+            mock_from_uri.return_value = mock_signer
+
+            signer = user.get_signer(ML_DSA_KEY)
+            self.assertIs(signer, mock_signer)
+            mock_from_uri.assert_called_once()
+
+            # 2. Test without configured URI -> should raise ClickException
+            mock_from_uri.reset_mock()
+            with open(inifile, "w") as f:
+                f.write(REQUIRED_AND_SIGNING_KEYS)  # No ML-DSA key configured
+
+            user_no_tkey = User(inifile)
+            with self.assertRaises(click.ClickException) as ctx:
+                user_no_tkey.get_signer(ML_DSA_KEY)
+            self.assertIn("No URI configured for ML-DSA key", str(ctx.exception))
+            mock_from_uri.assert_not_called()
+
+    def test_save_signing_key_uri(self):
+        with TemporaryDirectory() as tempdir:
+            inifile = os.path.join(tempdir, ".tuf-on-ci-sign.ini")
+            with open(inifile, "w") as f:
+                f.write(WITH_PYKCS11LIB)
+
+            user = User(inifile)
+            self.assertEqual(user._signing_key_uris, {})
+
+            user.save_signing_key_uri("some_key_id", "some_uri")
+            self.assertEqual(user._signing_key_uris["some_key_id"], "some_uri")
+
+            # reload user to verify it was written to file
+            user2 = User(inifile)
+            self.assertEqual(user2._signing_key_uris["some_key_id"], "some_uri")
 
 
 if __name__ == "__main__":

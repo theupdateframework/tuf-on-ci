@@ -11,7 +11,7 @@ readme = "README.md"
 dependencies = [
   "packaging >= 24,< 27",
   "platformdirs ~= 4.2",
-  "securesystemslib[awskms,azurekms,gcpkms,hsm,sigstore] ~= 1.2",
+  "securesystemslib[awskms,azurekms,gcpkms,hsm,sigstore,tkey] @ git+https://github.com/jku/securesystemslib.git@tkey",
   "tuf >= 5.1,< 8.0",
   "click ~= 8.1",
 ]
@@ -35,6 +35,10 @@ lint = [
 
 [tool.hatch.version]
 path = "tuf_on_ci_sign/__init__.py"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
 
 [tool.mypy]
 python_version = "3.10"

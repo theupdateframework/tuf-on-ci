@@ -93,11 +93,20 @@ class User:
             # signer is not cached yet, but config exists
             uri = self._signing_key_uris[key.keyid]
             return Signer.from_priv_key_uri(uri, key, get_secret)
-        if key.keytype == "sigstore-oidc":
-            # signer is not cached, no configuration was found, type is sigstore
-            return Signer.from_priv_key_uri("sigstore:?ambient=false", key, get_secret)
-        # signer is not cached, no configuration was found: assume Yubikey
-        return Signer.from_priv_key_uri("hsm:", key, get_secret)
+
+        if key.keytype == "ml-dsa":
+            # Should not happen but just in case...
+            raise click.ClickException(
+                f"No URI configured for ML-DSA key {key.keyid} in {self._config_path}."
+            )
+
+        # backwards compatibility for users without keys in config file:
+        # assume anything that is not signed with sigstore is signed with HSM
+        uri = "sigstore:?ambient=false" if key.keytype == "sigstore-oidc" else "hsm:"
+        signer = Signer.from_priv_key_uri(uri, key, get_secret)
+
+        self.save_signing_key_uri(key.keyid, uri)
+        return signer
 
     def set_signer(self, key: Key, signer: Signer) -> None:
         """Cache a signer for a keyid
@@ -105,3 +114,15 @@ class User:
         This should be called after a successful signing operation
         """
         self._signers[key.keyid] = signer
+
+    def save_signing_key_uri(self, keyid: str, uri: str) -> None:
+        """Save a signing key URI to the user configuration file."""
+        if "signing-keys" not in self._config:
+            self._config["signing-keys"] = {}
+        self._config["signing-keys"][keyid] = uri
+
+        with open(self._config_path, "w") as f:
+            self._config.write(f)
+
+        # Update in-memory cache
+        self._signing_key_uris[keyid] = uri

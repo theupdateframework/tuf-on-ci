@@ -17,7 +17,7 @@ from urllib.request import Request, urlopen
 import click
 from packaging.version import Version
 from platformdirs import user_cache_dir
-from securesystemslib.signer import HSMSigner, Key, SigstoreSigner
+from securesystemslib.signer import HSMSigner, Key, SigstoreSigner, TKeySigner
 
 from tuf_on_ci_sign._signer_repository import SignerRepository
 from tuf_on_ci_sign._user import User
@@ -59,32 +59,52 @@ def signing_event(name: str, config: User) -> Generator[SignerRepository, None, 
         git_expect(["checkout", "-"])
 
 
-def get_signing_key_input() -> Key:
+def get_signing_key_input() -> tuple[Key, str]:
     click.echo("\nConfiguring signing key")
     click.echo(" 1. Sigstore (OpenID Connect)")
     click.echo(" 2. Yubikey")
+    click.echo(" 3. Tillitis TKey")
     choice = click.prompt(
         bold("Please choose the type of signing key you would like to use"),
-        type=click.IntRange(1, 2),
+        type=click.IntRange(1, 3),
         default=1,
     )
 
+    uri: str
     key: Key
     if choice == 1:
         click.echo(bold("Please authenticate with your Sigstore signing identity"))
-        _, key = SigstoreSigner.import_via_auth()
-    else:
+        uri, key = SigstoreSigner.import_via_auth()
+    elif choice == 2:
         click.prompt(
             bold("Please insert your Yubikey and press enter"),
             default=True,
             show_default=False,
         )
         try:
-            _, key = HSMSigner.import_()
+            uri, key = HSMSigner.import_()
         except Exception as e:
             raise click.ClickException(f"Failed to read HW key: {e}") from e
+    else:
+        click.prompt(
+            bold("Please insert your Tillitis TKey and press enter"),
+            default=True,
+            show_default=False,
+        )
+        passphrase = click.prompt(
+            bold("Enter TKey passphrase (press Enter for none)"),
+            hide_input=True,
+            default="",
+            show_default=False,
+        )
+        if passphrase == "":
+            passphrase = None
+        try:
+            uri, key = TKeySigner.import_(passphrase=passphrase)
+        except Exception as e:
+            raise click.ClickException(f"Failed to read TKey: {e}") from e
 
-    return key
+    return key, uri
 
 
 def git(cmd: list[str]) -> str:
