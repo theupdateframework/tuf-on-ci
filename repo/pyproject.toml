@@ -9,7 +9,7 @@ license = "MIT"
 license-files = [ "LICENSE" ]
 readme = "README.md"
 dependencies = [
-  "securesystemslib[awskms, azurekms, gcpkms, sigstore] ~= 1.2",
+  "securesystemslib[awskms, azurekms, gcpkms, sigstore, tkey] @ git+https://github.com/jku/securesystemslib.git@tkey",
   "tuf >= 5.1,< 8.0",
   "click ~= 8.1",
 ]
@@ -37,6 +37,10 @@ lint = [
 
 [tool.hatch.version]
 path = "tuf_on_ci/_version.py"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
 
 [[tool.mypy.overrides]]
 module = [
