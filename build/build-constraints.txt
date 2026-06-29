@@ -1,2 +1,2 @@
 # these packages are used as constraints during build
-hatchling==1.29.0
+hatchling==1.30.1
