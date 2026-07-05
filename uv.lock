@@ -20,7 +20,7 @@ dev = [
     { name = "tox" },
     { name = "tox-uv" },
 ]
-uv = [{ name = "uv", specifier = "==0.11.19" }]
+uv = [{ name = "uv" }]
 
 [[package]]
 name = "annotated-types"

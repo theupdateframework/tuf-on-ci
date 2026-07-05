@@ -6,6 +6,4 @@ dev = [
   "tox",
   "tox-uv",
 ]
-uv = [
-  "uv==0.11.19", # this is here for setup-uv to find
-]
+uv = ["uv"] # setup-uv uses uv.lock to pin uv
