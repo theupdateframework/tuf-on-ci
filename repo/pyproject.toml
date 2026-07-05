@@ -1,20 +1,20 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build<0.12.0"]
+build-backend = "uv_build"
 
 [project]
 name = "tuf-on-ci"
+version = "0.20.0"
 description = "TUF-on-CI repository tools, intended to be executed on a CI system"
 license = "MIT"
 license-files = [ "LICENSE" ]
 readme = "README.md"
 dependencies = [
-  "securesystemslib[awskms, azurekms, gcpkms, sigstore] ~= 1.2",
-  "tuf >= 5.1,< 8.0",
+  "securesystemslib[awskms, azurekms, gcpkms, sigstore] >= 1.2",
+  "tuf >= 5.1",
   "click ~= 8.1",
 ]
 requires-python = ">=3.10"
-dynamic = ["version"]
 
 [project.urls]
 issues = "https://github.com/theupdateframework/tuf-on-ci/issues"
@@ -35,9 +35,6 @@ dev = [
   "ruff",
   "zizmor",
 ]
-
-[tool.hatch.version]
-path = "tuf_on_ci/_version.py"
 
 [[tool.mypy.overrides]]
 module = [

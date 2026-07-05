@@ -32,9 +32,6 @@ jobs:
             repo/pyproject.toml
             uv.lock
 
-      - name: Install pip-tools
-        run: pip install -c build/build-constraints.txt pip-tools
-
       - name: Update uv.lock
         id: update
         run: |

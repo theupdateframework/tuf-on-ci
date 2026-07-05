@@ -2,26 +2,12 @@ version: 2
 updates:
 
 - package-ecosystem: "uv"
-  directory: "/build"
+  directory: "/"
   schedule:
     interval: "weekly"
   cooldown:
     default-days: 7
-  groups:
-    build-dependencies:
-      # Critical build/release dependencies constrained in build/build-constraints.txt
-      patterns:
-        - "*"
-
-- package-ecosystem: "uv"
-  directories:
-    - "/signer"
-    - "/repo"
-    - "/actions"
-  schedule:
-    interval: "weekly"
-  cooldown:
-    default-days: 7
+  versioning-strategy: "lockfile-only"
   groups:
     pinned-test-dependencies:
       # Dependencies pinned to ensure test reproducibility
@@ -29,8 +15,7 @@ updates:
         - "mypy"
         - "ruff"
         - "zizmor"
-    minimum-runtime-dependencies:
-      # Runtime dependency ranges set in {signer,repo}/pyproject.toml
+    pinned-runtime-dependencies:
       patterns:
         - "*"
 

@@ -25,7 +25,7 @@ jobs:
 
       - name: Build release changelog, signer wheel & source tarball
         run: |
-          uv build --sdist --wheel --out-dir dist/ signer/ -b build/build-constraints.txt
+          uv build --sdist --wheel --out-dir dist/ signer/
           awk "/## $GITHUB_REF_NAME/{flag=1; next} /## v/{flag=0} flag" docs/CHANGELOG.md > changelog
 
       - name: Store build artifacts
