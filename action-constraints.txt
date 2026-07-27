@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=action-constraints.txt --strip-extras repo/pyproject.toml
 #
-annotated-types==0.7.0
+annotated-types==0.8.0
     # via pydantic
 azure-core==1.41.0
     # via
@@ -14,22 +14,22 @@ azure-identity==1.25.3
     # via securesystemslib
 azure-keyvault-keys==4.11.1
     # via securesystemslib
-boto3==1.43.36
+boto3==1.43.56
     # via securesystemslib
-botocore==1.43.36
+botocore==1.43.56
     # via
     #   boto3
     #   s3transfer
     #   securesystemslib
-certifi==2026.6.17
+certifi==2026.7.22
     # via requests
-cffi==2.0.0
+cffi==2.1.0
     # via cryptography
-charset-normalizer==3.4.7
+charset-normalizer==3.4.9
     # via requests
 click==8.4.2
     # via tuf-on-ci (repo/pyproject.toml)
-cryptography==48.0.1
+cryptography==49.0.0
     # via
     #   azure-identity
     #   azure-keyvault-keys
@@ -44,13 +44,13 @@ dnspython==2.8.0
     # via email-validator
 email-validator==2.3.0
     # via pydantic
-google-api-core==2.31.0
+google-api-core==2.33.0
     # via google-cloud-kms
-google-auth==2.55.1
+google-auth==2.56.2
     # via
     #   google-api-core
     #   google-cloud-kms
-google-cloud-kms==3.14.0
+google-cloud-kms==3.16.0
     # via securesystemslib
 googleapis-common-protos==1.75.0
     # via
@@ -59,14 +59,14 @@ googleapis-common-protos==1.75.0
     #   grpcio-status
 grpc-google-iam-v1==0.14.4
     # via google-cloud-kms
-grpcio==1.81.1
+grpcio==1.83.0
     # via
     #   google-api-core
     #   google-cloud-kms
     #   googleapis-common-protos
     #   grpc-google-iam-v1
     #   grpcio-status
-grpcio-status==1.81.1
+grpcio-status==1.83.0
     # via google-api-core
 id==1.6.1
     # via sigstore
@@ -90,9 +90,9 @@ msal==1.37.0
     #   msal-extensions
 msal-extensions==1.3.1
     # via azure-identity
-platformdirs==4.10.0
+platformdirs==4.11.0
     # via sigstore
-proto-plus==1.28.0
+proto-plus==1.28.2
     # via
     #   google-api-core
     #   google-cloud-kms
@@ -104,7 +104,7 @@ protobuf==7.35.1
     #   grpc-google-iam-v1
     #   grpcio-status
     #   proto-plus
-pyasn1==0.6.3
+pyasn1==0.6.4
     # via
     #   pyasn1-modules
     #   sigstore
@@ -125,7 +125,7 @@ pyjwt==2.13.0
     # via
     #   msal
     #   sigstore
-pyopenssl==26.2.0
+pyopenssl==26.3.0
     # via sigstore
 python-dateutil==2.9.0.post0
     # via botocore
@@ -135,19 +135,19 @@ requests==2.34.2
     #   google-api-core
     #   msal
     #   sigstore
-rfc3161-client==1.0.6
+rfc3161-client==1.0.7
     # via sigstore
 rfc8785==0.1.4
     # via sigstore
 rich==15.0.0
     # via sigstore
-s3transfer==0.19.0
+s3transfer==0.19.2
     # via boto3
 securesystemslib==1.4.0
     # via
     #   tuf
     #   tuf-on-ci (repo/pyproject.toml)
-sigstore==4.3.0
+sigstore==4.4.0
     # via securesystemslib
 sigstore-models==0.0.6
     # via sigstore
@@ -159,7 +159,7 @@ tuf==7.0.0
     # via
     #   sigstore
     #   tuf-on-ci (repo/pyproject.toml)
-typing-extensions==4.15.0
+typing-extensions==4.16.0
     # via
     #   azure-core
     #   azure-identity
