@@ -1,9 +1,6 @@
 [tool.uv.workspace]
 members = ["repo", "signer"]
 
-[tool.uv.sources]
-securesystemslib = { git = "https://github.com/jku/securesystemslib.git", branch = "pkcs-switcheroo" }
-
 [dependency-groups]
 dev = [
   "tox",
