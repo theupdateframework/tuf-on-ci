@@ -4,7 +4,7 @@
    prior release. Check that all required changes to workflows that
    call our actions are clearly documented.
 2. Update version numbers in
-  * `signer/tuf_on_ci_sign/__init__.py` and `repo/tuf_on_ci/_version.py`
+  * `signer/src/tuf_on_ci_sign/__init__.py` and `repo/src/tuf_on_ci/_version.py`
   * `signer/pyproject.toml` and `repo/pyproject.toml` (these are needed until uv_build supports dynamic versions)
 3. Create a PR with the updated CHANGELOG and version bumps.
 4. Once the PR is merged, create a signed tag for the version number on the merge commit
