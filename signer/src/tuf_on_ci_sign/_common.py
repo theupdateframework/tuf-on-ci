@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 def signing_event(name: str, config: User) -> Generator[SignerRepository, None, None]:
     toplevel = git(["rev-parse", "--show-toplevel"])
 
-    # PyKCS11 (Yubikey support) needs the module path
+    # PKCS#11 (Yubikey support) needs the module path
     # TODO: if config is not set, complain/ask the user?
     if "PYKCS11LIB" not in os.environ:
         os.environ["PYKCS11LIB"] = config.pykcs11lib

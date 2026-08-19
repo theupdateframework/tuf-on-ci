@@ -141,9 +141,7 @@ class TestUser(unittest.TestCase):
             # We should get a signer for the configured HSM
             hsm_signer = user.get_signer(HSM_KEY)
             self.assertIsInstance(hsm_signer, HSMSigner)
-            self.assertEqual(
-                hsm_signer.token_filter, {"label": "YubiKey PIV #15835999"}
-            )
+            self.assertEqual(hsm_signer.token_label, "YubiKey PIV #15835999")
             self.assertEqual(
                 hsm_signer.public_key.keyid,
                 "762cb22caca65de5e9b7b6baecb84ca989d337280ce6914b6440aea95769ad93",
