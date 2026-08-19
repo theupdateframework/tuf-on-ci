@@ -63,7 +63,4 @@ jobs:
     - name: ${{ matrix.target }}
       run: make $TARGET
 
-    - name: Print installed packages
-      run: uv pip tree --python .venvs/$TARGET
-
 
