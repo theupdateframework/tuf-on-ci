@@ -64,6 +64,6 @@ jobs:
       run: make $TARGET
 
     - name: Print installed packages
-      run: uv pip tree --python .venv/$TARGET
+      run: uv pip tree --python .venvs/$TARGET
 
 
