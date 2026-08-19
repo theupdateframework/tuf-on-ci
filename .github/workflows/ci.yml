@@ -15,11 +15,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        toxenv: [lint-signer, test-signer]
+        toxenv: [test-signer]
         pyversion: ['3.10', '3.14']
         os: [ubuntu-latest, macos-latest]
         # Only run repository on 3.14 (dependency pinning is easier with single version)
         include:
+          - toxenv: lint-signer
+            pyversion: '3.14'
+            os: ubuntu-latest
           - toxenv: lint-repo
             pyversion: '3.14'
             os: ubuntu-latest
