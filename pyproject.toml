@@ -5,5 +5,45 @@ members = ["repo", "signer"]
 dev = [
   "tox",
   "tox-uv",
+  "mypy",
+  "ruff",
+  "zizmor",
 ]
 uv = ["uv"] # setup-uv uses uv.lock to pin uv
+
+[tool.mypy]
+python_version = "3.10"
+
+[[tool.mypy.overrides]]
+module = [
+  "securesystemslib.*",
+  "sigstore.*",
+  "PyKCS11.*",
+]
+ignore_missing_imports = true
+
+[tool.ruff]
+src = ["repo/src", "signer/src"]
+
+[tool.ruff.lint]
+select = [
+  "ARG", # flake8-unused-arguments
+  "B",   # flake8-bugbear
+  "BLE", # flake8-blind-except
+  "C4",  # flake8-comprehensions
+  "E",   # pycodestyle errors
+  "F",   # pyflakes
+  "I",   # isort
+  "LOG", # flake8-logging
+  "N",   # pep8-naming
+  "RET", # flake8-return
+  "RUF", # ruff-specific rules
+  "S",   # flake8-bandit
+  "SIM", # flake8-simplify
+  "UP",  # pyupgrade
+  "W",   # pycodestyle warnings
+]
+ignore = [
+  "S101", # Use of `assert` detected
+  "S603", # `subprocess` call: check for execution of untrusted input
+]

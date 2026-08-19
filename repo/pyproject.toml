@@ -29,13 +29,6 @@ tuf-on-ci-online-sign-targets = "tuf_on_ci:online_sign_targets"
 tuf-on-ci-status = "tuf_on_ci:status"
 tuf-on-ci-update-targets = "tuf_on_ci:update_targets"
 
-[dependency-groups]
-dev = [
-  "mypy",
-  "ruff",
-  "zizmor",
-]
-
 [[tool.mypy.overrides]]
 module = [
   "securesystemslib.*",
