@@ -15,29 +15,29 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        toxenv: [test-signer]
+        target: [test-signer]
         pyversion: ['3.10', '3.14']
         os: [ubuntu-latest, macos-latest]
         # Only run repository on 3.14 (dependency pinning is easier with single version)
         include:
-          - toxenv: lint-signer
+          - target: lint-signer
             pyversion: '3.14'
             os: ubuntu-latest
-          - toxenv: lint-repo
+          - target: lint-repo
             pyversion: '3.14'
             os: ubuntu-latest
-          - toxenv: test-repo
+          - target: test-repo
             pyversion: '3.14'
             os: ubuntu-latest
-          - toxenv: test-e2e
+          - target: test-e2e
             pyversion: '3.14'
             os: ubuntu-latest
-          - toxenv: lint-actions
+          - target: lint-actions
             pyversion: '3.14'
             os: ubuntu-latest
     runs-on: ${{ matrix.os }}
     env:
-      TOXENV: ${{ matrix.toxenv }}
+      TARGET: ${{ matrix.target }}
 
     steps:
     - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -55,15 +55,15 @@ jobs:
           uv.lock
 
     - name: Install system dependencies for e2e test
-      if: matrix.toxenv == 'test-e2e'
+      if: matrix.target == 'test-e2e'
       run: |
         sudo apt-get install libfaketime softhsm2
         echo "PYKCS11LIB=/usr/lib/softhsm/libsofthsm2.so" >> $GITHUB_ENV
 
-    - name: ${{ matrix.toxenv }}
-      run: make $TOXENV
+    - name: ${{ matrix.target }}
+      run: make $TARGET
 
-    - name: Print tox env contents
-      run: uv pip tree --python .tox/$TOXENV
+    - name: Print installed packages
+      run: uv pip tree --python .venv/$TARGET
 
 

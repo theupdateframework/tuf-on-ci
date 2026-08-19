@@ -14,7 +14,7 @@ At this point `tuf-on-ci-sign` and other commands are available in the virtual e
 
 ### Running tests and linters
 
-Tests and lints can be run directly with make (which will use tox to run different lints/tests in their own environments):
+Tests and lints can be run directly with make (which will run different lints/tests in their own isolated virtual environments):
 
 ```shell
 # Run all lints
