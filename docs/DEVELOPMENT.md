@@ -1,33 +1,27 @@
 ## Developer notes
 
-A development install can be made in any environment but venv is recommended:
+The project uses [`uv`](https://github.com/astral-sh/uv) for environment management. Make sure you have `uv` installed, then set up the development environment:
 
 ```shell
 # Clone the project
 git clone https://github.com/theupdateframework/tuf-on-ci.git
 cd tuf-on-ci
-# Create virtual environment
-python3 -m venv .venv
-# Enter environment
-source .venv/bin/activate
-# install the signing and repository tools as editable
-pip install -e ./signer -e ./repo
-# install tox for a reproducible testing environment
-pip install tox
+# Create virtual environment and install the signing and repository tools as well as dev tools
+uv sync --frozen
 ```
 
-At this point `tuf-on-ci-sign` and other commands are available from the editable install (source code).
+At this point `tuf-on-ci-sign` and other commands are available in the virtual environment that can be accessed with `source .venv/bin/activate`.
 
 ### Running tests and linters
 
-Tests and lints can be run with tox:
+Tests and lints can be run directly with make (which will run different lints/tests in their own isolated virtual environments):
 
 ```shell
 # Run all lints
-tox -m lint
+make lint
 
 # run all tests
-tox -m test
+make test
 ```
 
 ### Trying things out without pushing changes to remote

@@ -4,7 +4,9 @@ These commands are used by the GitHub actions in the [actions directory](../acti
 
 ### Installation
 
-Development install: `pip install -e .`
+For development the project wide env is usually fine `source .venv/bin/activate`.
+
+The actions use an equivalent of `cd repo && uv sync --frozen --no-dev` to install only the repo dependencies without any development tools.
 
 ### Usage
 

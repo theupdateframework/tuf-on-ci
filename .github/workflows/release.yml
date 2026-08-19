@@ -13,20 +13,19 @@ jobs:
     name: Build tuf-on-ci signer
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      - uses: astral-sh/setup-uv@d31148d669074a8d0a63714ba94f3201e7020bc3 # v8.3.0
         with:
+          enable-cache: false
           python-version: '3.14'
-
-      - name: Install build dependencies
-        run: python3 -m pip install -c build/build-constraints.txt build
+          version-file: uv.lock
 
       - name: Build release changelog, signer wheel & source tarball
         run: |
-          PIP_CONSTRAINT=build/build-constraints.txt python3 -m build --sdist --wheel --outdir dist/ signer/
+          uv build --sdist --wheel --out-dir dist/ signer/
           awk "/## $GITHUB_REF_NAME/{flag=1; next} /## v/{flag=0} flag" docs/CHANGELOG.md > changelog
 
       - name: Store build artifacts

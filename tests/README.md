@@ -36,7 +36,7 @@ structure would be nice to verify as well but unfortunately the nondeterministic
 * libsofthsm2 (currently hardcoded "/usr/lib/softhsm/libsofthsm2.so")
 * libfaketime (currently hardcoded "/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1")
 * Both signer and repo must be installed
-  (`pip install -e ../signer/ && pip install -e ../repo/`)
+  (the dev env works fine: `source .venv/bin/activate`)
 
 ## Issues
 

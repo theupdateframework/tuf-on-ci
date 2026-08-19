@@ -1,20 +1,20 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.12.0,<0.13.0"]
+build-backend = "uv_build"
 
 [project]
 name = "tuf-on-ci"
+version = "0.20.0"
 description = "TUF-on-CI repository tools, intended to be executed on a CI system"
 license = "MIT"
 license-files = [ "LICENSE" ]
 readme = "README.md"
 dependencies = [
-  "securesystemslib[awskms, azurekms, gcpkms, sigstore, tkey] @ git+https://github.com/jku/securesystemslib.git@tkey",
-  "tuf >= 5.1,< 8.0",
+  "securesystemslib[awskms, azurekms, gcpkms, sigstore, tkey] @ git+https://github.com/secure-systems-lab/securesystemslib.git@main",
+  "tuf >= 5.1",
   "click ~= 8.1",
 ]
 requires-python = ">=3.10"
-dynamic = ["version"]
 
 [project.urls]
 issues = "https://github.com/theupdateframework/tuf-on-ci/issues"
@@ -28,46 +28,3 @@ tuf-on-ci-online-sign = "tuf_on_ci:online_sign"
 tuf-on-ci-online-sign-targets = "tuf_on_ci:online_sign_targets"
 tuf-on-ci-status = "tuf_on_ci:status"
 tuf-on-ci-update-targets = "tuf_on_ci:update_targets"
-
-[project.optional-dependencies]
-lint = [
-  "mypy == 2.1.0",
-  "ruff == 0.15.17",
-]
-
-[tool.hatch.version]
-path = "tuf_on_ci/_version.py"
-
-[tool.hatch.metadata]
-allow-direct-references = true
-
-
-[[tool.mypy.overrides]]
-module = [
-  "securesystemslib.*",
-  "sigstore.*",
-]
-ignore_missing_imports = "True"
-
-[tool.ruff.lint]
-select = [
-  "ARG", # flake8-unused-arguments
-  "B",   # flake8-bugbear
-  "BLE", # flake8-blind-except
-  "C4",  # flake8-comprehensions
-  "E",   # pycodestyle errors
-  "F",   # pyflakes
-  "I",   # isort
-  "LOG", # flake8-logging
-  "N",   # pep8-naming
-  "RET", # flake8-return
-  "RUF", # ruff-specific rules
-  "S",   # flake8-bandit
-  "SIM", # flake8-simplify
-  "UP",  # pyupgrade
-  "W",   # pycodestyle warnings
-]
-ignore = [
-  "S101", # Use of `assert` detected
-  "S603", # `subprocess` call: check for execution of untrusted input
-]
