@@ -9,15 +9,6 @@ dev = [
 ]
 uv = ["uv"] # setup-uv uses uv.lock to pin uv
 
-
-[[tool.mypy.overrides]]
-module = [
-  "securesystemslib.*",
-  "sigstore.*",
-  "PyKCS11.*",
-]
-ignore_missing_imports = true
-
 [tool.ruff]
 src = ["repo/src", "signer/src"]
 

@@ -15,8 +15,8 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum, unique
 
 import click
-from PyKCS11 import CKR_USER_NOT_LOGGED_IN, PyKCS11Error
-from securesystemslib.exceptions import UnverifiedSignatureError
+from pkcs11.exceptions import UserNotLoggedIn
+from securesystemslib.exceptions import KeyMismatchError, UnverifiedSignatureError
 from securesystemslib.formats import encode_canonical
 from securesystemslib.hash import digest
 from securesystemslib.signer import (
@@ -26,6 +26,7 @@ from securesystemslib.signer import (
     Signer,
     SigstoreKey,
     SigstoreSigner,
+    SSlibKey,
 )
 from tuf.api.exceptions import UnsignedMetadataError
 from tuf.api.metadata import (
@@ -45,8 +46,9 @@ from tuf_on_ci_sign._user import User
 
 logger = logging.getLogger(__name__)
 
-# Enable experimental sigstore keys
+# Enable experimental sigstore and ml-dsa keys
 KEY_FOR_TYPE_AND_SCHEME[("sigstore-oidc", "Fulcio")] = SigstoreKey
+KEY_FOR_TYPE_AND_SCHEME[("ml-dsa", "ml-dsa-44/1")] = SSlibKey
 SIGNER_FOR_URI_SCHEME[SigstoreSigner.SCHEME] = SigstoreSigner
 
 TAG_KEYOWNER = "x-tuf-on-ci-keyowner"
@@ -280,19 +282,24 @@ class SignerRepository(Repository):
 
     def _sign(self, role: str, md: Metadata, key: Key) -> None:
         while True:
-            signer = self.user.get_signer(key)
             try:
+                signer = self.user.get_signer(key)
                 sig = md.sign(signer, True)
                 key.verify_signature(sig, md.signed_bytes)
                 self.user.set_signer(key, signer)
                 break
+            except KeyMismatchError:
+                print("Error: Signing key does not match the public key.")
+                if key.keytype == "ml-dsa":
+                    print(
+                        "This could mean incorrect passphrase. "
+                        "Please unplug and re-insert your TKey before retrying."
+                    )
             except UnsignedMetadataError as e:
                 # Very light error handling for specific PKCS11 errors
                 msg = str(e)
-                if isinstance(e.__context__, PyKCS11Error):
-                    pkcs_err = e.__context__
-                    if pkcs_err.value == CKR_USER_NOT_LOGGED_IN:
-                        msg = "Required authentication (e.g. touch) did not happpen"
+                if isinstance(e.__context__, UserNotLoggedIn):
+                    msg = "Required authentication (e.g. touch) did not happen"
 
                 print(f"Failed to sign {role} with {self.user.name} key:\n    {msg}")
                 logger.debug("Sign traceback", exc_info=True)
@@ -304,7 +311,7 @@ class SignerRepository(Repository):
                 logger.debug("Verify traceback", exc_info=True)
 
             click.prompt(
-                "Press any key to try again (Ctrl-C to cancel)",
+                "Press enter to try again (Ctrl-C to cancel)",
                 default=True,
                 show_default=False,
             )

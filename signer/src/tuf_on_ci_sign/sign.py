@@ -43,12 +43,13 @@ def sign(verbose: int, push: bool, event_name: str):
             click.echo(
                 f"You have been invited to become a signer for role(s) {repo.invites}."
             )
-            key = get_signing_key_input()
+            key, uri = get_signing_key_input()
             for rolename in repo.invites.copy():
                 # Modify the delegation
                 role_config = repo.get_role_config(rolename)
                 assert role_config
                 repo.set_role_config(rolename, role_config, key)
+            user_config.save_signing_key_uri(key.keyid, uri)
 
             # Sign everything
             if repo.unsigned:

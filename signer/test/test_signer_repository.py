@@ -27,6 +27,25 @@ class TestUser(unittest.TestCase):
         set_key_field(key, "keyowner", "@testuser")
         self.assertEqual(key.keyid, expected_id)
 
+    def test_mldsa_key_metadata(self):
+        """Test that ML-DSA keys in metadata deserialize correctly."""
+        from tuf.api.metadata import Metadata, Root
+
+        root = Root()
+        mldsa_key = SSlibKey(
+            "mldsa_key_id",
+            "ml-dsa",
+            "ml-dsa-44/1",
+            {"public": "some_pub_bytes"},
+        )
+        root.add_key(mldsa_key, "root")
+        md = Metadata(root)
+        md_bytes = md.to_bytes()
+        reloaded_md = Metadata[Root].from_bytes(md_bytes)
+        self.assertIn("mldsa_key_id", reloaded_md.signed.keys)
+        self.assertEqual(reloaded_md.signed.keys["mldsa_key_id"].keytype, "ml-dsa")
+        self.assertEqual(reloaded_md.signed.keys["mldsa_key_id"].scheme, "ml-dsa-44/1")
+
 
 if __name__ == "__main__":
     unittest.main()
