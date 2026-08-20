@@ -103,7 +103,11 @@ def get_signing_key_input() -> tuple[Key, str]:
             uri, key = TKeySigner.import_(passphrase=passphrase)
         except Exception as e:
             raise click.ClickException(f"Failed to read TKey: {e}") from e
-
+        click.prompt(
+            bold("Please unplug and re-insert your Tillitis TKey, then press enter"),
+            default=True,
+            show_default=False,
+        )
     return key, uri
 
 
