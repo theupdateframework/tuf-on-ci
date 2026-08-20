@@ -286,10 +286,13 @@ class SignerRepository(Repository):
                 key.verify_signature(sig, md.signed_bytes)
                 self.user.set_signer(key, signer)
                 break
-            except RuntimeError as e:
+            except RuntimeError:
                 # workaround for TKey key mismatch case:
                 # Replace with proper error when available https://github.com/secure-systems-lab/securesystemslib/issues/1189
-                print("Failed to find a matching signing key. This could mean incorrect passphrase.")
+                print(
+                    "Failed to find a matching signing key. "
+                    "This could mean incorrect passphrase."
+                )
             except UnsignedMetadataError as e:
                 # Very light error handling for specific PKCS11 errors
                 msg = str(e)

@@ -5,7 +5,7 @@ import sys
 from configparser import ConfigParser
 
 import click
-from securesystemslib.signer import Key, Signer
+from securesystemslib.signer import Key, Signer, TKeySigner
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +75,7 @@ class User:
         The signer sources are (in order):
         * signers cached via set_signer()
         * any configured signer from 'signing-keys' config section
+        * for ml-dsa keys without config, we assume TKey and attempt re-config
         * for sigstore type keys, a Signer is automatically created
         * for any remaining keys, HSM is assumed and a signer is created
         """
@@ -95,16 +96,43 @@ class User:
             return Signer.from_priv_key_uri(uri, key, get_secret)
 
         if key.keytype == "ml-dsa":
-            # Should not happen but just in case...
-            raise click.ClickException(
-                f"No URI configured for ML-DSA key {key.keyid} in {self._config_path}."
+            click.echo(
+                f"No TKey configuration found for key {key.keyid}. Attempting to "
+                "recreate configuration..."
             )
+            click.prompt(
+                bold("Please insert your Tillitis TKey and press enter"),
+                default=True,
+                show_default=False,
+            )
+            passphrase = click.prompt(
+                bold("Enter TKey passphrase (press Enter for none)"),
+                hide_input=True,
+                default="",
+                show_default=False,
+            )
+            if passphrase == "":
+                passphrase = None
+            try:
+                uri, imported_key = TKeySigner.import_(passphrase=passphrase)
+            except Exception as e:
+                raise click.ClickException(f"Failed to read TKey: {e}") from e
 
-        # backwards compatibility for users without keys in config file:
-        # assume anything that is not signed with sigstore is signed with HSM
-        uri = "sigstore:?ambient=false" if key.keytype == "sigstore-oidc" else "hsm:"
+            if imported_key.keyval != key.keyval:
+                raise RuntimeError(
+                    "TKey configuration failed, public key does not match:"
+                    "This can mean incorrect passphrase or the need to configure"
+                    "an older TKey device binary hash."
+                )
+        else:
+            # backwards compatibility for users without keys in config file:
+            # assume anything that is not signed with sigstore is signed with HSM
+            if key.keytype == "sigstore-oidc":
+                uri = "sigstore:?ambient=false"
+            else:
+                uri = "hsm:"
+
         signer = Signer.from_priv_key_uri(uri, key, get_secret)
-
         self.save_signing_key_uri(key.keyid, uri)
         return signer
 

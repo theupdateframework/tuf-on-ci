@@ -163,8 +163,10 @@ class TestUser(unittest.TestCase):
             second_hsm_signer = user.get_signer(HSM_KEY)
             self.assertIs(hsm_signer, second_hsm_signer)
 
+    @unittest.mock.patch("click.prompt")
+    @unittest.mock.patch("securesystemslib.signer.TKeySigner.import_")
     @unittest.mock.patch("securesystemslib.signer.TKeySigner.from_priv_key_uri")
-    def test_tkey_key(self, mock_from_uri):
+    def test_tkey_key(self, mock_from_uri, mock_import, mock_prompt):
         with TemporaryDirectory() as tempdir:
             inifile = os.path.join(tempdir, ".tuf-on-ci-sign.ini")
 
@@ -182,17 +184,53 @@ class TestUser(unittest.TestCase):
             signer = user.get_signer(ML_DSA_KEY)
             self.assertIs(signer, mock_signer)
             mock_from_uri.assert_called_once()
+            mock_import.assert_not_called()
 
-            # 2. Test without configured URI -> should raise ClickException
+            # 2. Test recovery without configured URI
             mock_from_uri.reset_mock()
+            mock_import.reset_mock()
             with open(inifile, "w") as f:
                 f.write(REQUIRED_AND_SIGNING_KEYS)  # No ML-DSA key configured
 
+            # 2a. Successful recovery
+            mock_import.return_value = ("tkey:?digest=7c75714", ML_DSA_KEY)
+            mock_prompt.return_value = ""  # Default empty passphrase
+
             user_no_tkey = User(inifile)
-            with self.assertRaises(click.ClickException) as ctx:
-                user_no_tkey.get_signer(ML_DSA_KEY)
-            self.assertIn("No URI configured for ML-DSA key", str(ctx.exception))
-            mock_from_uri.assert_not_called()
+            signer = user_no_tkey.get_signer(ML_DSA_KEY)
+            self.assertIs(signer, mock_signer)
+            mock_import.assert_called_once_with(passphrase=None)
+            mock_from_uri.assert_called_once()
+            self.assertEqual(
+                user_no_tkey._signing_key_uris[ML_DSA_KEY.keyid],
+                "tkey:?digest=7c75714",
+            )
+
+            # verify it was written to file
+            user_reloaded = User(inifile)
+            self.assertEqual(
+                user_reloaded._signing_key_uris[ML_DSA_KEY.keyid],
+                "tkey:?digest=7c75714",
+            )
+
+            # 2b. Key mismatch during recovery -> raises RuntimeError
+            with open(inifile, "w") as f:
+                f.write(REQUIRED_AND_SIGNING_KEYS)
+            user_mismatch = User(inifile)
+            other_key = SSlibKey(
+                "other_key_id",
+                "ml-dsa",
+                "ml-dsa-44/1",
+                {"public": "different_public_key"},
+            )
+            mock_import.return_value = ("tkey:?digest=7c75714", other_key)
+            with self.assertRaises(RuntimeError):
+                user_mismatch.get_signer(ML_DSA_KEY)
+
+            # 2c. Import failure during recovery -> raises ClickException
+            mock_import.side_effect = Exception("Device communication error")
+            with self.assertRaises(click.ClickException):
+                user_mismatch.get_signer(ML_DSA_KEY)
 
     def test_save_signing_key_uri(self):
         with TemporaryDirectory() as tempdir:
