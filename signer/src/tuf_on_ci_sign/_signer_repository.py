@@ -26,6 +26,7 @@ from securesystemslib.signer import (
     Signer,
     SigstoreKey,
     SigstoreSigner,
+    SSlibKey,
 )
 from tuf.api.exceptions import UnsignedMetadataError
 from tuf.api.metadata import (
@@ -45,8 +46,9 @@ from tuf_on_ci_sign._user import User
 
 logger = logging.getLogger(__name__)
 
-# Enable experimental sigstore keys
+# Enable experimental sigstore and ml-dsa keys
 KEY_FOR_TYPE_AND_SCHEME[("sigstore-oidc", "Fulcio")] = SigstoreKey
+KEY_FOR_TYPE_AND_SCHEME[("ml-dsa", "ml-dsa-44/1")] = SSlibKey
 SIGNER_FOR_URI_SCHEME[SigstoreSigner.SCHEME] = SigstoreSigner
 
 TAG_KEYOWNER = "x-tuf-on-ci-keyowner"
@@ -291,7 +293,8 @@ class SignerRepository(Repository):
                 # Replace with proper error when available https://github.com/secure-systems-lab/securesystemslib/issues/1189
                 print(
                     "Failed to find a matching signing key. "
-                    "This could mean incorrect passphrase."
+                    "This could mean incorrect passphrase.\n"
+                    "Please unplug and re-insert your TKey before retrying."
                 )
             except UnsignedMetadataError as e:
                 # Very light error handling for specific PKCS11 errors
@@ -309,7 +312,7 @@ class SignerRepository(Repository):
                 logger.debug("Verify traceback", exc_info=True)
 
             click.prompt(
-                "Press any key to try again (Ctrl-C to cancel)",
+                "Press enter to try again (Ctrl-C to cancel)",
                 default=True,
                 show_default=False,
             )

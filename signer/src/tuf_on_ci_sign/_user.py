@@ -106,7 +106,7 @@ class User:
             uri = self._config["signing-keys"][key.keyid]
             return Signer.from_priv_key_uri(uri, key, get_secret)
         if key.keyid in self._state["signing-keys"]:
-            # User cache
+            # User cache/state
             uri = self._state["signing-keys"][key.keyid]
             return Signer.from_priv_key_uri(uri, key, get_secret)
 
@@ -140,6 +140,13 @@ class User:
                     "This can mean incorrect passphrase or the need to configure "
                     "an older TKey device binary hash."
                 )
+            click.prompt(
+                bold(
+                    "Please unplug and re-insert your Tillitis TKey, then press enter"
+                ),
+                default=True,
+                show_default=False,
+            )
         else:
             # backwards compatibility for users without keys in config file:
             # assume anything that is not signed with sigstore is signed with HSM

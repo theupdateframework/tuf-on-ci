@@ -39,8 +39,9 @@ from tuf_on_ci_sign._signer_repository import (
 )
 from tuf_on_ci_sign._user import User
 
-# sigstore is not a supported key by default
+# sigstore and ml-dsa are not supported keys by default
 KEY_FOR_TYPE_AND_SCHEME[("sigstore-oidc", "Fulcio")] = SigstoreKey
+KEY_FOR_TYPE_AND_SCHEME[("ml-dsa", "ml-dsa-44/1")] = SSlibKey
 
 TAG_KEYOWNER = "x-tuf-on-ci-keyowner"
 TAG_ONLINE_URI = "x-tuf-on-ci-online-uri"
