@@ -1458,14 +1458,14 @@ version = "0.20.0"
 source = { editable = "repo" }
 dependencies = [
     { name = "click" },
-    { name = "securesystemslib", extra = ["awskms", "azurekms", "gcpkms", "sigstore", "tkey"] },
+    { name = "securesystemslib", extra = ["awskms", "azurekms", "gcpkms", "sigstore"] },
     { name = "tuf" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "click", specifier = "~=8.1" },
-    { name = "securesystemslib", extras = ["awskms", "azurekms", "gcpkms", "sigstore", "tkey"], git = "https://github.com/secure-systems-lab/securesystemslib.git?rev=main" },
+    { name = "securesystemslib", extras = ["awskms", "azurekms", "gcpkms", "sigstore"], git = "https://github.com/secure-systems-lab/securesystemslib.git?rev=main" },
     { name = "tuf", specifier = ">=5.1" },
 ]
 

@@ -134,10 +134,11 @@ class TestUser(unittest.TestCase):
     def test_signing_keys(self):
         with TemporaryDirectory() as tempdir:
             inifile = os.path.join(tempdir, ".tuf-on-ci-sign.ini")
+            statefile = os.path.join(tempdir, "signing-keys.ini")
             with open(inifile, "w") as f:
                 f.write(REQUIRED_AND_SIGNING_KEYS)
 
-            user = User(inifile)
+            user = User(inifile, state_path=statefile)
             # We should get a signer for the configured HSM
             hsm_signer = user.get_signer(HSM_KEY)
             self.assertIsInstance(hsm_signer, HSMSigner)
@@ -151,13 +152,18 @@ class TestUser(unittest.TestCase):
             user.set_signer(HSM_KEY, hsm_signer)
 
             # If the signing key is not configured, we expect a generic HSM signer
+            # and it should be saved to the machine state file
             other_signer = user.get_signer(NONCONFIGURED_KEY)
             self.assertIsInstance(other_signer, HSMSigner)
-            self.assertEqual(user._signing_key_uris[NONCONFIGURED_KEY.keyid], "hsm:")
+            self.assertEqual(
+                user._state["signing-keys"][NONCONFIGURED_KEY.keyid], "hsm:"
+            )
 
-            # verify it was written to file by reloading
-            user3 = User(inifile)
-            self.assertEqual(user3._signing_key_uris[NONCONFIGURED_KEY.keyid], "hsm:")
+            # verify it was written to state file by reloading
+            user3 = User(inifile, state_path=statefile)
+            self.assertEqual(
+                user3._state["signing-keys"][NONCONFIGURED_KEY.keyid], "hsm:"
+            )
 
             # another lookup should return same instance
             second_hsm_signer = user.get_signer(HSM_KEY)
@@ -169,15 +175,16 @@ class TestUser(unittest.TestCase):
     def test_tkey_key(self, mock_from_uri, mock_import, mock_prompt):
         with TemporaryDirectory() as tempdir:
             inifile = os.path.join(tempdir, ".tuf-on-ci-sign.ini")
+            statefile = os.path.join(tempdir, "signing-keys.ini")
 
-            # 1. Test with configured URI
+            # 1. Test with configured URI in local repo config
             config_with_tkey = (
                 REQUIRED_AND_SIGNING_KEYS + "\nmldsa_key_id = tkey:?digest=7c75714\n"
             )
             with open(inifile, "w") as f:
                 f.write(config_with_tkey)
 
-            user = User(inifile)
+            user = User(inifile, state_path=statefile)
             mock_signer = unittest.mock.MagicMock()
             mock_from_uri.return_value = mock_signer
 
@@ -192,31 +199,33 @@ class TestUser(unittest.TestCase):
             with open(inifile, "w") as f:
                 f.write(REQUIRED_AND_SIGNING_KEYS)  # No ML-DSA key configured
 
-            # 2a. Successful recovery
+            # 2a. Successful recovery -> writes to machine state file
             mock_import.return_value = ("tkey:?digest=7c75714", ML_DSA_KEY)
             mock_prompt.return_value = ""  # Default empty passphrase
 
-            user_no_tkey = User(inifile)
+            user_no_tkey = User(inifile, state_path=statefile)
             signer = user_no_tkey.get_signer(ML_DSA_KEY)
             self.assertIs(signer, mock_signer)
             mock_import.assert_called_once_with(passphrase=None)
             mock_from_uri.assert_called_once()
             self.assertEqual(
-                user_no_tkey._signing_key_uris[ML_DSA_KEY.keyid],
+                user_no_tkey._state["signing-keys"][ML_DSA_KEY.keyid],
                 "tkey:?digest=7c75714",
             )
 
-            # verify it was written to file
-            user_reloaded = User(inifile)
+            # verify it was written to state file
+            user_reloaded = User(inifile, state_path=statefile)
             self.assertEqual(
-                user_reloaded._signing_key_uris[ML_DSA_KEY.keyid],
+                user_reloaded._state["signing-keys"][ML_DSA_KEY.keyid],
                 "tkey:?digest=7c75714",
             )
 
             # 2b. Key mismatch during recovery -> raises RuntimeError
             with open(inifile, "w") as f:
                 f.write(REQUIRED_AND_SIGNING_KEYS)
-            user_mismatch = User(inifile)
+            user_mismatch = User(
+                inifile, state_path=os.path.join(tempdir, "state2.ini")
+            )
             other_key = SSlibKey(
                 "other_key_id",
                 "ml-dsa",
@@ -235,18 +244,53 @@ class TestUser(unittest.TestCase):
     def test_save_signing_key_uri(self):
         with TemporaryDirectory() as tempdir:
             inifile = os.path.join(tempdir, ".tuf-on-ci-sign.ini")
+            statefile = os.path.join(tempdir, "signing-keys.ini")
             with open(inifile, "w") as f:
                 f.write(WITH_PYKCS11LIB)
 
-            user = User(inifile)
-            self.assertEqual(user._signing_key_uris, {})
+            user = User(inifile, state_path=statefile)
+            self.assertEqual(dict(user._state["signing-keys"]), {})
 
             user.save_signing_key_uri("some_key_id", "some_uri")
-            self.assertEqual(user._signing_key_uris["some_key_id"], "some_uri")
+            self.assertEqual(user._state["signing-keys"]["some_key_id"], "some_uri")
 
-            # reload user to verify it was written to file
-            user2 = User(inifile)
-            self.assertEqual(user2._signing_key_uris["some_key_id"], "some_uri")
+            # reload user to verify it was written to state file
+            user2 = User(inifile, state_path=statefile)
+            self.assertEqual(user2._state["signing-keys"]["some_key_id"], "some_uri")
+
+            # verify local .tuf-on-ci-sign.ini was not modified
+            with open(inifile) as f:
+                self.assertEqual(f.read(), WITH_PYKCS11LIB)
+
+    @unittest.mock.patch("securesystemslib.signer.Signer.from_priv_key_uri")
+    def test_hierarchy_precedence(self, mock_from_uri):
+        with TemporaryDirectory() as tempdir:
+            inifile = os.path.join(tempdir, ".tuf-on-ci-sign.ini")
+            statefile = os.path.join(tempdir, "signing-keys.ini")
+
+            # Set repo config with a specific URI
+            repo_config = (
+                REQUIRED_AND_SIGNING_KEYS
+                + "\n64eeece964e09c058ef8f9805daca546b01ba4719c80b6fe911b091a7c05124b = hsm:1?label=RepoOverride\n"
+            )
+            with open(inifile, "w") as f:
+                f.write(repo_config)
+
+            # Set state file with a different URI for the same key
+            state_config = (
+                "[signing-keys]\n"
+                "64eeece964e09c058ef8f9805daca546b01ba4719c80b6fe911b091a7c05124b = hsm:2?label=MachineState\n"
+            )
+            with open(statefile, "w") as f:
+                f.write(state_config)
+
+            user = User(inifile, state_path=statefile)
+            user.get_signer(NONCONFIGURED_KEY)
+
+            # Local repo config must take precedence over machine state
+            mock_from_uri.assert_called_once_with(
+                "hsm:1?label=RepoOverride", NONCONFIGURED_KEY, unittest.mock.ANY
+            )
 
 
 if __name__ == "__main__":

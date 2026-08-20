@@ -6,6 +6,7 @@ import tempfile
 from configparser import ConfigParser
 
 import click
+from platformdirs import user_state_dir
 from securesystemslib.signer import Key, Signer, TKeySigner
 
 logger = logging.getLogger(__name__)
@@ -29,7 +30,7 @@ def bold(text: str) -> str:
 class User:
     """Class that manages user configuration and manages the users signer cache"""
 
-    def __init__(self, path: str):
+    def __init__(self, path: str, state_path: str | None = None):
         self._config_path = path
 
         self._config = ConfigParser(interpolation=None)
@@ -49,11 +50,18 @@ class User:
                 f"Failed to find required setting {e} in {path}"
             ) from e
 
-        # signing key config is not required
-        if "signing-keys" in self._config:
-            self._signing_key_uris = dict(self._config.items("signing-keys"))
+        # User cache/state for signing keys
+        if state_path is None:
+            state_dir = user_state_dir("tuf-on-ci-sign")
+            self._state_path = os.path.join(state_dir, "signing-keys.ini")
         else:
-            self._signing_key_uris = {}
+            self._state_path = state_path
+
+        self._state = ConfigParser(interpolation=None)
+        if os.path.exists(self._state_path):
+            self._state.read(self._state_path)
+        if "signing-keys" not in self._state:
+            self._state["signing-keys"] = {}
 
         # probe for pykcs11lib if it's not set
         try:
@@ -75,10 +83,12 @@ class User:
 
         The signer sources are (in order):
         * signers cached via set_signer()
-        * any configured signer from 'signing-keys' config section
-        * for ml-dsa keys without config, we assume TKey and attempt re-config
-        * for sigstore type keys, a Signer is automatically created
-        * for any remaining keys, HSM is assumed and a signer is created
+        * any configured signer from local config file 'signing-keys' section
+        * any configured signer from User cache 'signing-keys' section
+        * remaining keys without config:
+          * ml-dsa keys, we assume TKey and attempt re-config
+          * sigstore keys, a Signer is automatically created
+          * any remaining keys, HSM is assumed and a signer is created
         """
 
         def get_secret(secret: str) -> str:
@@ -91,11 +101,16 @@ class User:
 
         if key.keyid in self._signers:
             return self._signers[key.keyid]
-        if key.keyid in self._signing_key_uris:
-            # signer is not cached yet, but config exists
-            uri = self._signing_key_uris[key.keyid]
+        if "signing-keys" in self._config and key.keyid in self._config["signing-keys"]:
+            # Local repository configuration override
+            uri = self._config["signing-keys"][key.keyid]
+            return Signer.from_priv_key_uri(uri, key, get_secret)
+        if key.keyid in self._state["signing-keys"]:
+            # User cache
+            uri = self._state["signing-keys"][key.keyid]
             return Signer.from_priv_key_uri(uri, key, get_secret)
 
+        # No config found: try to generate it and store in state
         if key.keytype == "ml-dsa":
             click.echo(
                 f"No TKey configuration found for key {key.keyid}. Attempting to "
@@ -121,8 +136,8 @@ class User:
 
             if imported_key.keyval != key.keyval:
                 raise RuntimeError(
-                    "TKey configuration failed, public key does not match:"
-                    "This can mean incorrect passphrase or the need to configure"
+                    "TKey configuration failed, public key does not match: "
+                    "This can mean incorrect passphrase or the need to configure "
                     "an older TKey device binary hash."
                 )
         else:
@@ -145,27 +160,16 @@ class User:
         self._signers[key.keyid] = signer
 
     def save_signing_key_uri(self, keyid: str, uri: str) -> None:
-        """Save a signing key URI to the user configuration file."""
-        if "signing-keys" not in self._config:
-            self._config["signing-keys"] = {}
-        self._config["signing-keys"][keyid] = uri
+        """Save a signing key URI in user cache."""
+        self._state["signing-keys"][keyid] = uri
 
-        config_dir = os.path.dirname(os.path.abspath(self._config_path))
-        try:
-            with tempfile.NamedTemporaryFile(
-                "w", dir=config_dir, delete=False
-            ) as temp_file:
-                temp_path = temp_file.name
-                self._config.write(temp_file)
-                temp_file.flush()
-                if os.path.exists(self._config_path):
-                    mode = os.stat(self._config_path).st_mode
-                    os.chmod(temp_path, mode)
-            os.replace(temp_path, self._config_path)
-        except Exception:
-            if "temp_path" in locals() and os.path.exists(temp_path):
-                os.remove(temp_path)
-            raise
-
-        # Update in-memory cache
-        self._signing_key_uris[keyid] = uri
+        state_dir = os.path.dirname(os.path.abspath(self._state_path))
+        os.makedirs(state_dir, exist_ok=True)
+        with tempfile.NamedTemporaryFile("w", dir=state_dir, delete=False) as temp_file:
+            temp_path = temp_file.name
+            self._state.write(temp_file)
+            temp_file.flush()
+            if os.path.exists(self._state_path):
+                mode = os.stat(self._state_path).st_mode
+                os.chmod(temp_path, mode)
+        os.replace(temp_path, self._state_path)
