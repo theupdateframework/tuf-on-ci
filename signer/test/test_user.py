@@ -138,7 +138,7 @@ class TestUser(unittest.TestCase):
             with open(inifile, "w") as f:
                 f.write(REQUIRED_AND_SIGNING_KEYS)
 
-            user = User(inifile, state_path=statefile)
+            user = User(inifile, data_path=statefile)
             # We should get a signer for the configured HSM
             hsm_signer = user.get_signer(HSM_KEY)
             self.assertIsInstance(hsm_signer, HSMSigner)
@@ -156,13 +156,13 @@ class TestUser(unittest.TestCase):
             other_signer = user.get_signer(NONCONFIGURED_KEY)
             self.assertIsInstance(other_signer, HSMSigner)
             self.assertEqual(
-                user._state["signing-keys"][NONCONFIGURED_KEY.keyid], "hsm:"
+                user._app_data["signing-keys"][NONCONFIGURED_KEY.keyid], "hsm:"
             )
 
             # verify it was written to state file by reloading
-            user3 = User(inifile, state_path=statefile)
+            user3 = User(inifile, data_path=statefile)
             self.assertEqual(
-                user3._state["signing-keys"][NONCONFIGURED_KEY.keyid], "hsm:"
+                user3._app_data["signing-keys"][NONCONFIGURED_KEY.keyid], "hsm:"
             )
 
             # another lookup should return same instance
@@ -184,7 +184,7 @@ class TestUser(unittest.TestCase):
             with open(inifile, "w") as f:
                 f.write(config_with_tkey)
 
-            user = User(inifile, state_path=statefile)
+            user = User(inifile, data_path=statefile)
             mock_signer = unittest.mock.MagicMock()
             mock_from_uri.return_value = mock_signer
 
@@ -203,29 +203,27 @@ class TestUser(unittest.TestCase):
             mock_import.return_value = ("tkey:?digest=7c75714", ML_DSA_KEY)
             mock_prompt.return_value = ""  # Default empty passphrase
 
-            user_no_tkey = User(inifile, state_path=statefile)
+            user_no_tkey = User(inifile, data_path=statefile)
             signer = user_no_tkey.get_signer(ML_DSA_KEY)
             self.assertIs(signer, mock_signer)
             mock_import.assert_called_once_with(passphrase=None)
             mock_from_uri.assert_called_once()
             self.assertEqual(
-                user_no_tkey._state["signing-keys"][ML_DSA_KEY.keyid],
+                user_no_tkey._app_data["signing-keys"][ML_DSA_KEY.keyid],
                 "tkey:?digest=7c75714",
             )
 
             # verify it was written to state file
-            user_reloaded = User(inifile, state_path=statefile)
+            user_reloaded = User(inifile, data_path=statefile)
             self.assertEqual(
-                user_reloaded._state["signing-keys"][ML_DSA_KEY.keyid],
+                user_reloaded._app_data["signing-keys"][ML_DSA_KEY.keyid],
                 "tkey:?digest=7c75714",
             )
 
             # 2b. Key mismatch during recovery -> raises RuntimeError
             with open(inifile, "w") as f:
                 f.write(REQUIRED_AND_SIGNING_KEYS)
-            user_mismatch = User(
-                inifile, state_path=os.path.join(tempdir, "state2.ini")
-            )
+            user_mismatch = User(inifile, data_path=os.path.join(tempdir, "state2.ini"))
             other_key = SSlibKey(
                 "other_key_id",
                 "ml-dsa",
@@ -248,15 +246,15 @@ class TestUser(unittest.TestCase):
             with open(inifile, "w") as f:
                 f.write(WITH_PYKCS11LIB)
 
-            user = User(inifile, state_path=statefile)
-            self.assertEqual(dict(user._state["signing-keys"]), {})
+            user = User(inifile, data_path=statefile)
+            self.assertEqual(dict(user._app_data["signing-keys"]), {})
 
             user.save_signing_key_uri("some_key_id", "some_uri")
-            self.assertEqual(user._state["signing-keys"]["some_key_id"], "some_uri")
+            self.assertEqual(user._app_data["signing-keys"]["some_key_id"], "some_uri")
 
             # reload user to verify it was written to state file
-            user2 = User(inifile, state_path=statefile)
-            self.assertEqual(user2._state["signing-keys"]["some_key_id"], "some_uri")
+            user2 = User(inifile, data_path=statefile)
+            self.assertEqual(user2._app_data["signing-keys"]["some_key_id"], "some_uri")
 
             # verify local .tuf-on-ci-sign.ini was not modified
             with open(inifile) as f:
@@ -284,7 +282,7 @@ class TestUser(unittest.TestCase):
             with open(statefile, "w") as f:
                 f.write(state_config)
 
-            user = User(inifile, state_path=statefile)
+            user = User(inifile, data_path=statefile)
             user.get_signer(NONCONFIGURED_KEY)
 
             # Local repo config must take precedence over machine state

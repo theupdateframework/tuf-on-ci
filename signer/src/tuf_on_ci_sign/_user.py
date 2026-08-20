@@ -6,7 +6,7 @@ import tempfile
 from configparser import ConfigParser
 
 import click
-from platformdirs import user_state_dir
+from platformdirs import user_data_dir
 from securesystemslib.signer import Key, Signer, TKeySigner
 
 logger = logging.getLogger(__name__)
@@ -30,15 +30,15 @@ def bold(text: str) -> str:
 class User:
     """Class that manages user configuration and manages the users signer cache"""
 
-    def __init__(self, path: str, state_path: str | None = None):
-        self._config_path = path
+    def __init__(self, config_path: str, data_path: str | None = None):
+        self._config_path = config_path
 
         self._config = ConfigParser(interpolation=None)
-        self._config.read(path)
+        self._config.read(config_path)
 
         # TODO: create config if missing, ask/confirm values from user
         if not self._config:
-            raise click.ClickException(f"Settings file {path} not found")
+            raise click.ClickException(f"Settings file {config_path} not found")
         try:
             self.name = self._config["settings"]["user-name"].lower()
             if not self.name.startswith("@"):
@@ -47,21 +47,21 @@ class User:
             self.pull_remote = self._config["settings"]["pull-remote"]
         except KeyError as e:
             raise click.ClickException(
-                f"Failed to find required setting {e} in {path}"
+                f"Failed to find required setting {e} in {config_path}"
             ) from e
 
         # User cache/state for signing keys
-        if state_path is None:
-            state_dir = user_state_dir("tuf-on-ci-sign")
-            self._state_path = os.path.join(state_dir, "signing-keys.ini")
+        if data_path is None:
+            data_dir = user_data_dir("tuf-on-ci-sign")
+            self._app_data_path = os.path.join(data_dir, "signing-keys.ini")
         else:
-            self._state_path = state_path
+            self._app_data_path = data_path
 
-        self._state = ConfigParser(interpolation=None)
-        if os.path.exists(self._state_path):
-            self._state.read(self._state_path)
-        if "signing-keys" not in self._state:
-            self._state["signing-keys"] = {}
+        self._app_data = ConfigParser(interpolation=None)
+        if os.path.exists(self._app_data_path):
+            self._app_data.read(self._app_data_path)
+        if "signing-keys" not in self._app_data:
+            self._app_data["signing-keys"] = {}
 
         # probe for pykcs11lib if it's not set
         try:
@@ -105,9 +105,9 @@ class User:
             # Local repository configuration override
             uri = self._config["signing-keys"][key.keyid]
             return Signer.from_priv_key_uri(uri, key, get_secret)
-        if key.keyid in self._state["signing-keys"]:
+        if key.keyid in self._app_data["signing-keys"]:
             # User cache/state
-            uri = self._state["signing-keys"][key.keyid]
+            uri = self._app_data["signing-keys"][key.keyid]
             return Signer.from_priv_key_uri(uri, key, get_secret)
 
         # No config found: try to generate it and store in state
@@ -168,15 +168,15 @@ class User:
 
     def save_signing_key_uri(self, keyid: str, uri: str) -> None:
         """Save a signing key URI in user cache."""
-        self._state["signing-keys"][keyid] = uri
+        self._app_data["signing-keys"][keyid] = uri
 
-        state_dir = os.path.dirname(os.path.abspath(self._state_path))
+        state_dir = os.path.dirname(os.path.abspath(self._app_data_path))
         os.makedirs(state_dir, exist_ok=True)
         with tempfile.NamedTemporaryFile("w", dir=state_dir, delete=False) as temp_file:
             temp_path = temp_file.name
-            self._state.write(temp_file)
+            self._app_data.write(temp_file)
             temp_file.flush()
-            if os.path.exists(self._state_path):
-                mode = os.stat(self._state_path).st_mode
+            if os.path.exists(self._app_data_path):
+                mode = os.stat(self._app_data_path).st_mode
                 os.chmod(temp_path, mode)
-        os.replace(temp_path, self._state_path)
+        os.replace(temp_path, self._app_data_path)
