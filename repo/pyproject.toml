@@ -28,33 +28,3 @@ tuf-on-ci-online-sign = "tuf_on_ci:online_sign"
 tuf-on-ci-online-sign-targets = "tuf_on_ci:online_sign_targets"
 tuf-on-ci-status = "tuf_on_ci:status"
 tuf-on-ci-update-targets = "tuf_on_ci:update_targets"
-
-[[tool.mypy.overrides]]
-module = [
-  "securesystemslib.*",
-  "sigstore.*",
-]
-ignore_missing_imports = true
-
-[tool.ruff.lint]
-select = [
-  "ARG", # flake8-unused-arguments
-  "B",   # flake8-bugbear
-  "BLE", # flake8-blind-except
-  "C4",  # flake8-comprehensions
-  "E",   # pycodestyle errors
-  "F",   # pyflakes
-  "I",   # isort
-  "LOG", # flake8-logging
-  "N",   # pep8-naming
-  "RET", # flake8-return
-  "RUF", # ruff-specific rules
-  "S",   # flake8-bandit
-  "SIM", # flake8-simplify
-  "UP",  # pyupgrade
-  "W",   # pycodestyle warnings
-]
-ignore = [
-  "S101", # Use of `assert` detected
-  "S603", # `subprocess` call: check for execution of untrusted input
-]
