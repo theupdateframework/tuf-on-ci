@@ -1296,7 +1296,7 @@ wheels = [
 [[package]]
 name = "securesystemslib"
 version = "1.4.0"
-source = { git = "https://github.com/secure-systems-lab/securesystemslib.git?rev=main#5aa199dfd1d0d7454cfe808888825f4ac72c8d8e" }
+source = { git = "https://github.com/secure-systems-lab/securesystemslib.git?rev=main#588869b35fe12357b0ac8b14a8cb5a098184effe" }
 
 [package.optional-dependencies]
 awskms = [

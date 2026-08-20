@@ -16,7 +16,7 @@ from enum import Enum, unique
 
 import click
 from pkcs11.exceptions import UserNotLoggedIn
-from securesystemslib.exceptions import UnverifiedSignatureError
+from securesystemslib.exceptions import KeyMismatchError, UnverifiedSignatureError
 from securesystemslib.formats import encode_canonical
 from securesystemslib.hash import digest
 from securesystemslib.signer import (
@@ -288,14 +288,13 @@ class SignerRepository(Repository):
                 key.verify_signature(sig, md.signed_bytes)
                 self.user.set_signer(key, signer)
                 break
-            except RuntimeError:
-                # workaround for TKey key mismatch case:
-                # Replace with proper error when available https://github.com/secure-systems-lab/securesystemslib/issues/1189
-                print(
-                    "Failed to find a matching signing key. "
-                    "This could mean incorrect passphrase.\n"
-                    "Please unplug and re-insert your TKey before retrying."
-                )
+            except KeyMismatchError:
+                print("Error: Signing key does not match the public key.")
+                if key.keytype == "ml-dsa":
+                    print(
+                        "This could mean incorrect passphrase. "
+                        "Please unplug and re-insert your TKey before retrying."
+                    )
             except UnsignedMetadataError as e:
                 # Very light error handling for specific PKCS11 errors
                 msg = str(e)
