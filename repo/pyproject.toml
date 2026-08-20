@@ -10,7 +10,7 @@ license = "MIT"
 license-files = [ "LICENSE" ]
 readme = "README.md"
 dependencies = [
-  "securesystemslib[awskms, azurekms, gcpkms, sigstore, tkey] @ git+https://github.com/secure-systems-lab/securesystemslib.git@main",
+  "securesystemslib[awskms, azurekms, gcpkms, sigstore] @ git+https://github.com/secure-systems-lab/securesystemslib.git@main",
   "tuf >= 5.1",
   "click ~= 8.1",
 ]
