@@ -2,6 +2,7 @@ import logging
 import os
 import platform
 import sys
+import tempfile
 from configparser import ConfigParser
 
 import click
@@ -149,8 +150,22 @@ class User:
             self._config["signing-keys"] = {}
         self._config["signing-keys"][keyid] = uri
 
-        with open(self._config_path, "w") as f:
-            self._config.write(f)
+        config_dir = os.path.dirname(os.path.abspath(self._config_path))
+        try:
+            with tempfile.NamedTemporaryFile(
+                "w", dir=config_dir, delete=False
+            ) as temp_file:
+                temp_path = temp_file.name
+                self._config.write(temp_file)
+                temp_file.flush()
+                if os.path.exists(self._config_path):
+                    mode = os.stat(self._config_path).st_mode
+                    os.chmod(temp_path, mode)
+            os.replace(temp_path, self._config_path)
+        except Exception:
+            if "temp_path" in locals() and os.path.exists(temp_path):
+                os.remove(temp_path)
+            raise
 
         # Update in-memory cache
         self._signing_key_uris[keyid] = uri
