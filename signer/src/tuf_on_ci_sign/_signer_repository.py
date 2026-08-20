@@ -280,12 +280,16 @@ class SignerRepository(Repository):
 
     def _sign(self, role: str, md: Metadata, key: Key) -> None:
         while True:
-            signer = self.user.get_signer(key)
             try:
+                signer = self.user.get_signer(key)
                 sig = md.sign(signer, True)
                 key.verify_signature(sig, md.signed_bytes)
                 self.user.set_signer(key, signer)
                 break
+            except RuntimeError as e:
+                # workaround for TKey key mismatch case:
+                # Replace with proper error when available https://github.com/secure-systems-lab/securesystemslib/issues/1189
+                print("Failed to find a matching signing key. This could mean incorrect passphrase.")
             except UnsignedMetadataError as e:
                 # Very light error handling for specific PKCS11 errors
                 msg = str(e)
