@@ -1295,8 +1295,12 @@ wheels = [
 
 [[package]]
 name = "securesystemslib"
-version = "1.4.0"
-source = { git = "https://github.com/secure-systems-lab/securesystemslib.git?rev=main#588869b35fe12357b0ac8b14a8cb5a098184effe" }
+version = "1.5.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/82/9c/6a7bac8eef1012d100f601beecb0ffa676efe52e5785e6f71b9842075275/securesystemslib-1.5.0.tar.gz", hash = "sha256:3701219c8149a0b1b45f4298d672efc78cd15c0d7d83d5a18bf585e1fce1320d", size = 945978, upload-time = "2026-08-24T08:22:40.311Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/47/01/f0636f9d14bd86974ca242d24005edb81f52092d20a03da9ad7a54de804f/securesystemslib-1.5.0-py3-none-any.whl", hash = "sha256:66d2ea40ae150fb938767935a67252f5cfe37ec7cc2ec6e1d28c2509377014f6", size = 876061, upload-time = "2026-08-24T08:22:38.813Z" },
+]
 
 [package.optional-dependencies]
 awskms = [
@@ -1465,7 +1469,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "click", specifier = "~=8.1" },
-    { name = "securesystemslib", extras = ["awskms", "azurekms", "gcpkms", "sigstore"], git = "https://github.com/secure-systems-lab/securesystemslib.git?rev=main" },
+    { name = "securesystemslib", extras = ["awskms", "azurekms", "gcpkms", "sigstore"], specifier = ">=1.5.0" },
     { name = "tuf", specifier = ">=5.1" },
 ]
 
@@ -1486,7 +1490,7 @@ requires-dist = [
     { name = "click", specifier = ">=8.1" },
     { name = "packaging", specifier = ">=24" },
     { name = "platformdirs", specifier = ">=4.2" },
-    { name = "securesystemslib", extras = ["awskms", "azurekms", "gcpkms", "hsm", "sigstore", "tkey"], git = "https://github.com/secure-systems-lab/securesystemslib.git?rev=main" },
+    { name = "securesystemslib", extras = ["awskms", "azurekms", "gcpkms", "hsm", "sigstore", "tkey"], specifier = ">=1.5.0" },
     { name = "tuf", specifier = ">=5.1" },
 ]
 
