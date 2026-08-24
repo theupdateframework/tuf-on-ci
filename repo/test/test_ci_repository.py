@@ -151,6 +151,25 @@ class TestCIRepository(unittest.TestCase):
                 roles, {"myrole", "targets", "oldrole"}, "unexpect roles found"
             )
 
+    def test_mldsa_key_metadata_deserialization(self):
+        """Test that repo can deserialize metadata containing ML-DSA keys."""
+        from securesystemslib.signer import SSlibKey
+
+        root = Root()
+        mldsa_key = SSlibKey(
+            "mldsa_key_id",
+            "ml-dsa",
+            "ml-dsa-44/1",
+            {"public": "some_pub_bytes"},
+        )
+        root.add_key(mldsa_key, "root")
+        md = Metadata(root)
+        md_bytes = md.to_bytes()
+        reloaded_md = Metadata[Root].from_bytes(md_bytes)
+        self.assertIn("mldsa_key_id", reloaded_md.signed.keys)
+        self.assertEqual(reloaded_md.signed.keys["mldsa_key_id"].keytype, "ml-dsa")
+        self.assertEqual(reloaded_md.signed.keys["mldsa_key_id"].scheme, "ml-dsa-44/1")
+
 
 if __name__ == "__main__":
     unittest.main()
