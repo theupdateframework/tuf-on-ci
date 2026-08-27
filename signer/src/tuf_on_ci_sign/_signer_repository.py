@@ -676,7 +676,7 @@ class SignerRepository(Repository):
             if signed.version != 1:
                 output.append(
                     f"   (expiry period was {old_expiry} days, "
-                    f"signing period was {old_signing} days"
+                    f"signing period was {old_signing} days)"
                 )
 
         return output
@@ -745,13 +745,28 @@ class SignerRepository(Repository):
 
                 if role != old_role:
                     output.append(f" * Modified {title}")
-                    output.append(
-                        f"   * Signers: {role.threshold}/{len(signers)} of {signers}"
-                    )
-                    output.append(
-                        f"     (was: {old_role.threshold}/{len(old_signers)} "
-                        f"of {old_signers}"
-                    )
+                    # Only describe what actually changed. A delegation also
+                    # carries the expiry and signing periods, so a change to
+                    # those alone used to be reported as a signer change.
+                    if role.threshold != old_role.threshold or signers != old_signers:
+                        output.append(
+                            f"   * Signers: {role.threshold}/{len(signers)} "
+                            f"of {signers}"
+                        )
+                        output.append(
+                            f"     (was: {old_role.threshold}/{len(old_signers)} "
+                            f"of {old_signers})"
+                        )
+                    for field, label in (
+                        ("x-tuf-on-ci-expiry-period", "Expiry period"),
+                        ("x-tuf-on-ci-signing-period", "Signing period"),
+                    ):
+                        period = role.unrecognized_fields.get(field)
+                        old_period = old_role.unrecognized_fields.get(field)
+                        if period != old_period:
+                            output.append(
+                                f"   * {label}: {period} days (was: {old_period} days)"
+                            )
                 del old_delegations[name]
 
         for name in old_delegations:
