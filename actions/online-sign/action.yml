@@ -54,14 +54,14 @@ runs:
 
     - name: Authenticate to AWS
       if: inputs.aws_role_to_assume != ''
-      uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c #v6.2.3
+      uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c #v6.2.4
       with:
         aws-region: ${{ inputs.aws_region }}
         role-to-assume: ${{ inputs.aws_role_to_assume }}
 
     - name: Authenticate to Azure cloud
       if: inputs.azure_client_id != ''
-      uses: azure/login@f5d393ae46f8fde4be8b75f32e3fc50e654ad0ca # v3.0.1
+      uses: azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c # v3.0.2
       with:
         client-id: ${{ inputs.azure_client_id }}
         tenant-id: ${{ inputs.azure_tenant_id }}
