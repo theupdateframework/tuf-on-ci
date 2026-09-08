@@ -91,7 +91,7 @@ def get_signing_key_input() -> tuple[Key, str]:
             default=True,
             show_default=False,
         )
-        passphrase = click.prompt(
+        passphrase: str | None = click.prompt(
             bold("Enter TKey passphrase (press Enter for none)"),
             hide_input=True,
             default="",
