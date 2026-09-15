@@ -1619,7 +1619,7 @@ wheels = [
 
 [[package]]
 name = "tuf-on-ci"
-version = "0.20.0"
+version = "0.21.0"
 source = { editable = "repo" }
 dependencies = [
     { name = "click" },
@@ -1636,7 +1636,7 @@ requires-dist = [
 
 [[package]]
 name = "tuf-on-ci-sign"
-version = "0.20.0"
+version = "0.21.0"
 source = { editable = "signer" }
 dependencies = [
     { name = "click" },

@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "tuf-on-ci-sign"
-version = "0.20.0"
+version = "0.21.0"
 description = "Signing tools for TUF-on-CI"
 license = "MIT"
 license-files = [ "LICENSE" ]

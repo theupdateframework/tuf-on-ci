@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## v0.21.0
+
+* Support Tillitis TKey (ML-DSA) hardware tokens (#815)
+* repo: Support ML-DSA as signing algorithm. KMS platform specific support
+  depends on securesystemslib: currently Google Cloud KMS only (#815)
+* Improved status reporting for online delegation changes (#843)
+* Build system and dependency management migrated to uv and uv_build (#802)
+* Type annotation improvements in signer (#849)
+* Dependency updates
+
+Updating a repository from 0.20 does not require changes in GitHub workflow files.
+
 ## v0.20.0
 
 * Option to disable key ID verifiation (#792)

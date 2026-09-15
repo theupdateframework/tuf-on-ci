@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "tuf-on-ci"
-version = "0.20.0"
+version = "0.21.0"
 description = "TUF-on-CI repository tools, intended to be executed on a CI system"
 license = "MIT"
 license-files = [ "LICENSE" ]
