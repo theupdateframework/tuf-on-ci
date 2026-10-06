@@ -5,18 +5,32 @@ ongoing maintenance.
 
 ## New Repository Setup
 
+### Setup decisions
+
+Before initializing the repository, decide on two configuration choices (both can also be
+changed later):
+* **Online signing method**: Automated signing of `timestamp` and `snapshot` roles supports
+  Google Cloud KMS, Azure Key Vault, AWS KMS, and Sigstore (experimental). See
+  [ONLINE-SIGNING-SETUP.md](ONLINE-SIGNING-SETUP.md) for details.
+* **GitHub workflow authentication**: Workflows use the default `GITHUB_TOKEN` out of the
+  box, or can use a **GitHub App** to allow stricter repository security settings (such as
+  branch protection on `main` and disabling pull request creation for `GITHUB_TOKEN`)
+  without maintaining long-lived Personal Access Tokens. See
+  [GITHUB-APP-SETUP.md](GITHUB-APP-SETUP.md) for details.
+
+### Setup steps
+
 1. [Create new repository](https://github.com/new?template_name=tuf-on-ci-template&template_owner=theupdateframework)
    using the tuf-on-ci template: the created repository contains all the required workflows.
 1. Configure the new repository:
    * set _Settings->Pages->Source_ to `GitHub Actions`
    * Change _Settings->Environments->github-pages_ deployment branch from `main` to
      `publish`
-   * Check _Settings->Actions->General->Allow GitHub Actions to create and approve pull requests_
-     (not required if you are using a custom token, see below)
+   * Either [configure a GitHub App](GITHUB-APP-SETUP.md) or check
+     _Settings->Actions->General->Allow GitHub Actions to create and approve pull requests_
+     (to use the default `GITHUB_TOKEN`)
 1. Clone the repository locally and [configure your local signing tool](SIGNER-SETUP.md)
-1. Choose your online signing method and [configure it](ONLINE-SIGNING-SETUP.md):
-   * Google Cloud KMS, Azure Key Vault, and AWS KMS are fully supported
-   * Sigstore requires no configuration (but is experimental)
+1. [Configure your chosen online signing method](ONLINE-SIGNING-SETUP.md)
 1. Run `tuf-on-ci-delegate sign/init` to configure the repository and to start the
    first signing event
    * The tool prompts for various repository details and finally prompts to
@@ -103,40 +117,17 @@ upgrade mechanism is to copy the modified workflows from tuf-on-ci-template.
 Supported ways to configure and modify tuf-on-ci workflows:
 * online signing is configured using signing method specific _Repository Variables_,
   see [ONLINE-SIGNING-SETUP.md](ONLINE-SIGNING-SETUP.md) for details
-* A custom GitHub token can be optionally configured with _Repository Secret_
-  `TUF_ON_CI_TOKEN`, see details below
+* A GitHub App can be optionally configured with _Repository Variable_
+  `TUF_ON_CI_APP_ID` and _Repository Secret_ `TUF_ON_CI_APP_PRIVATE_KEY`, see
+  [GITHUB-APP-SETUP.md](GITHUB-APP-SETUP.md) for details
 * Workflow failure messages can be configured with `.github/TUF_ON_CI_TEMPLATE/failure.md`:
   Contents of this file will be included in issues that are opened if workflows fail. This is
-  useful to e.g. notify the maintenance team with @-mentions.
+  useful to e.g. notify the maintenance team with individual `@username` mentions (note that
+  `@org/team` mentions are not supported because failure issues are opened using the default
+  `GITHUB_TOKEN`).
 * Signing pull request templates can be configured with
   `.github/PULL_REQUEST_TEMPLATE/signing_event.md`. Contents of this file will be included in
   the pull request message when non-maintainer signers contribute to signing events. This is
   useful to e.g. notify the maintenance team with @-mentions.
 * The `publish` workflow can be customized to publish to a destination that is not
   the default GitHub Pages
-
-### Custom GitHub token
-
-tuf-on-ci uses GITHUB_TOKEN by default but supports using a custom fine-grained Github
-token. This allows the project to limit the default GITHUB_TOKEN permissions
-(in practice this means other workflows in the repository can operate with this lower
-permission default token while tuf-on-ci workflows still have higher permissions).
-
-The custom token needs the following repository permissions:
-* `Actions: write` to dispatch other workflows when needed
-* `Contents: write` to create online signing commits, and to create targets metadata
-  change commits in signing event
-* `Issues: write` to create issues on workflow failures
-* `Pull requests: write` to create and modify signing event pull requests
-
-To use a custom token, define a _repository secret_ `TUF_ON_CI_TOKEN` with a fine grained
-token as the secrets value. No workflow changes are needed. Note that all automated comments
-in signing event pull requests will be seemingly made by the account that created the custom
-token: Creating the token on a "bot" account is sensible for this reason.
-
-When a custom token is used, some repository security settings can be tightened:
-* _Settings->Actions->General->Allow GitHub Actions to create and approve pull requests_
-  can be disabled
-* Custom token owner (bot) can be added to _Allow specified actors to bypass required
-  pull requests_ list in GitHub branch protection settings, and _Settings->Branches->
-  main->Require a pull request before merging_ can then be enabled
