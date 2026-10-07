@@ -38,8 +38,7 @@ This feature is still experimental, and also there are some known issues
   GitHub Action token, automated signing may be required to be
   dispatched manually.
 
-  A solution to this can be to use a different token, such as a PAT or
-  an OAuth application.
+  A solution to this is to configure a [GitHub App](GITHUB-APP-SETUP.md).
 
 * **Number of signers**: Currently only a single online signer can be
   configured for a delegation. This also means that there can not be a
@@ -84,10 +83,17 @@ jobs:
     name: TUF-on-CI Foo Delegate sign
     runs-on: ubuntu-latest
     permissions:
-      contents: write # for making commits in signing event and for modifying draft state
-      pull-requests: write # for modifying signing event pull requests
-      actions: write # for dispatching another signing-event workflow
+      contents: write # for making commits in signing event (not needed if using GitHub App)
+      actions: write # for dispatching another signing-event workflow (not needed if using GitHub App)
     steps:
+      - name: Create GitHub App token
+        id: app-token
+        if: vars.TUF_ON_CI_APP_ID != ''
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.TUF_ON_CI_APP_ID }}
+          private-key: ${{ secrets.TUF_ON_CI_APP_PRIVATE_KEY }}
+          permission-contents: write
 
       - name: Sign delegation
         uses: theupdateframework/tuf-on-ci/actions/online-sign-targets@main
@@ -96,7 +102,7 @@ jobs:
           azure_tenant_id: secrets.AZURE_TENANT_ID
           azure_subscription_id: secrets.AZURE_SUBSCRIPTION_ID
           targets_to_sign: foo-delegate
-          token: ${{ secrets.TUF_ON_CI_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
 ```
 
 The steps to work with automated delegation signing would thus be:

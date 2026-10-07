@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+* Support GitHub App authentication instead of long-lived token `TUF_ON_CI_TOKEN`
+  (this is purely a documentation & template workflow change)
+
+Updating a repository from 0.21 does not require changes in GitHub workflow files.
+However, users are adviced to switch to the new GitHub App authentication mechanism
+by integrating workflow changes from
+[tuf-on-ci-template](https://github.com/theupdateframework/tuf-on-ci-template) and
+configuring a GitHub App as documented in [GITHUB-APP-SETUP.md](GITHUB-APP-SETUP.md).
+
 ## v0.21.0
 
 * Support Tillitis TKey (ML-DSA) hardware tokens (#815)
