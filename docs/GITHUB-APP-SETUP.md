@@ -38,13 +38,13 @@ Using a GitHub App allows you to:
      * `Contents`: _Read and write_ (to push online signing commits, `publish` branch updates, and signing event branches/commits)
      * `Pull requests`: _Read and write_ (to create, update, and comment on signing event pull requests)
    * **Where can this GitHub App be installed?**: _Only on this account_
-1. **Generate credentials**:
-   * On the App settings page, copy the **Client ID**
-   * Under **Private keys**, click **Generate a private key** to download the `.pem` file.
+1. **Generate credentials** in app settings:
+   * Copy the **Client ID**
+   * Under _Credentials->Key pairs_, click **New key** to download the `.pem` file.
 1. **Install the GitHub App**:
    * In the App settings sidebar, select **Install App** and **Only select repositories**
      -> your TUF-on-CI repository.
-1. **Configure the repository**:
+1. **Configure variables** in your repository settings:
    * Create a _Repository Variable_ (_Settings -> Secrets and variables -> Actions -> Variables_)
      `TUF_ON_CI_APP_ID` with the App's Client ID
    * Create a _Repository Secret_ (_Settings -> Secrets and variables -> Actions -> Secrets_)
