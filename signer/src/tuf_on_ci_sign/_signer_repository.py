@@ -11,7 +11,7 @@ import logging
 import os
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from enum import Enum, unique
 
 import click
@@ -360,7 +360,7 @@ class SignerRepository(Repository):
 
         # Set expiry based on custom metadata
         days = md.signed.unrecognized_fields["x-tuf-on-ci-expiry-period"]
-        md.signed.expires = datetime.now(timezone.utc) + timedelta(days=days)
+        md.signed.expires = datetime.now(UTC) + timedelta(days=days)
 
         # figure out if there are open invites to delegations of this role
         open_invites = False
