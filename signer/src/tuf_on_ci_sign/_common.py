@@ -229,7 +229,7 @@ def push_changes(user: User, event_name: str, title: str) -> None:
 def get_repo_name(remote: str) -> str:
     """Return 'owner/repo' string for given GitHub remote"""
     url = parse.urlparse(git_expect(["config", "--get", f"remote.{remote}.url"]))
-    owner_repo = url.path[: -len(".git")]
+    owner_repo = url.path.removesuffix(".git")
     # ssh-urls are relative URLs according to urllib: host is actually part of
     # path. We don't want the host part:
     _, _, owner_repo = owner_repo.rpartition(":")
