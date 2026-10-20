@@ -14,7 +14,7 @@ dependencies = [
   "tuf >= 5.1",
   "click ~= 8.1",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 
 [project.urls]
 issues = "https://github.com/theupdateframework/tuf-on-ci/issues"
