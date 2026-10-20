@@ -16,24 +16,24 @@ jobs:
       fail-fast: false
       matrix:
         target: [test-signer]
-        pyversion: ['3.10', '3.14']
+        pyversion: ['3.11', '3.15']
         os: [ubuntu-latest, macos-latest]
-        # Only run repository on 3.14 (dependency pinning is easier with single version)
+        # Only run repository on 3.15 (dependency pinning is easier with single version)
         include:
           - target: lint-signer
-            pyversion: '3.14'
+            pyversion: '3.15'
             os: ubuntu-latest
           - target: lint-repo
-            pyversion: '3.14'
+            pyversion: '3.15'
             os: ubuntu-latest
           - target: test-repo
-            pyversion: '3.14'
+            pyversion: '3.15'
             os: ubuntu-latest
           - target: test-e2e
-            pyversion: '3.14'
+            pyversion: '3.15'
             os: ubuntu-latest
           - target: lint-actions
-            pyversion: '3.14'
+            pyversion: '3.15'
             os: ubuntu-latest
     runs-on: ${{ matrix.os }}
     env:
