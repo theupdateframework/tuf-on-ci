@@ -152,6 +152,25 @@ def _role_status(repo: CIRepository, role: str, event_name) -> bool:
     return role_is_valid and not status.invites
 
 
+def _push_signing_event(event_name: str) -> None:
+    """Push the signing event branch to origin
+
+    If the push is rejected because the remote branch has moved on, print a
+    message and return: the workflow run started by that other push handles
+    the changes. Any other push failure is raised.
+    """
+    try:
+        _git(["push", "origin", event_name])
+    except subprocess.CalledProcessError as e:
+        # git writes the "remote is ahead" hint to stderr
+        msg = "Updates were rejected because the remote contains work that you do"
+        if msg in e.stderr:
+            print("There are changes in the signing event. Skipping metadata update")
+        else:
+            print("Git output on error:", e.stdout, e.stderr)
+            raise
+
+
 @click.command()  # type: ignore[arg-type]
 @click.option("-v", "--verbose", count=True, default=0)
 @click.option("--push/--no-push", default=True)
@@ -208,19 +227,7 @@ def update_targets(verbose: int, push: bool) -> None:
         click.echo("Updating signing event state, please wait.")
 
     if push and updated_targets:
-        try:
-            _git(["push", "origin", event_name])
-        except subprocess.CalledProcessError as e:
-            # Figure out if this is an error caused by remote being ahead
-            # of local branch
-            msg = "Updates were rejected because the remote contains work that you do"
-            found = e.stdout.find(msg)
-            if found:
-                m = "There are changes in the signing event. Skipping metadata update"
-                print(m)
-            else:
-                print("Git output on error:", e.stdout, e.stderr)
-                raise e
+        _push_signing_event(event_name)
 
     sys.exit(0 if updated_targets else 1)
 
@@ -269,19 +276,7 @@ def online_sign_targets(verbose: int, push: bool, roles: list[str]) -> None:
         click.echo("Updating signing event state, please wait.")
 
     if push and signed_targets:
-        try:
-            _git(["push", "origin", event_name])
-        except subprocess.CalledProcessError as e:
-            # Figure out if this is an error caused by remote being ahead
-            # of local branch
-            msg = "Updates were rejected because the remote contains work that you do"
-            found = e.stdout.find(msg)
-            if found:
-                m = "There are changes in the signing event. Skipping metadata update"
-                print(m)
-            else:
-                print("Git output on error:", e.stdout, e.stderr)
-                raise e
+        _push_signing_event(event_name)
 
     sys.exit(0 if signed_targets else 1)
 
