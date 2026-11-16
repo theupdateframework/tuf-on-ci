@@ -1,5 +1,6 @@
 import os
 import shutil
+import subprocess
 import unittest
 from copy import deepcopy
 from tempfile import TemporaryDirectory
@@ -10,7 +11,7 @@ from securesystemslib.hash import digest
 from tuf.api.metadata import Metadata, Root
 
 from tuf_on_ci._repository import CIRepository, _keyid_matches_content
-from tuf_on_ci.signing_event import _find_changed_target_roles
+from tuf_on_ci.signing_event import _find_changed_target_roles, _push_signing_event
 
 
 class TestKeyidMatchesContent(unittest.TestCase):
@@ -169,6 +170,37 @@ class TestCIRepository(unittest.TestCase):
         self.assertIn("mldsa_key_id", reloaded_md.signed.keys)
         self.assertEqual(reloaded_md.signed.keys["mldsa_key_id"].keytype, "ml-dsa")
         self.assertEqual(reloaded_md.signed.keys["mldsa_key_id"].scheme, "ml-dsa-44/1")
+
+
+class TestPushSigningEvent(unittest.TestCase):
+    @staticmethod
+    def _push_failure(stderr: str) -> subprocess.CalledProcessError:
+        # git push writes nothing on stdout when it fails
+        return subprocess.CalledProcessError(1, ["git", "push"], "", stderr)
+
+    def test_remote_ahead_is_skipped(self):
+        stderr = (
+            "error: failed to push some refs to 'https://example.com/repo'\n"
+            "hint: Updates were rejected because the remote contains work that "
+            "you do not\nhint: have locally.\n"
+        )
+        with mock.patch(
+            "tuf_on_ci.signing_event._git", side_effect=self._push_failure(stderr)
+        ):
+            _push_signing_event("sign/targets-v2")
+
+    def test_other_push_failure_is_raised(self):
+        stderr = (
+            "fatal: could not read Username for 'https://example.com': "
+            "No such device or address\n"
+        )
+        with (
+            mock.patch(
+                "tuf_on_ci.signing_event._git", side_effect=self._push_failure(stderr)
+            ),
+            self.assertRaises(subprocess.CalledProcessError),
+        ):
+            _push_signing_event("sign/targets-v2")
 
 
 if __name__ == "__main__":
